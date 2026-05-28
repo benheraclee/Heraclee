@@ -1,0 +1,257 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
+<title>K Océane · Disponibilités · Heraclee</title>
+<script src="https://unpkg.com/@supabase/supabase-js@2/dist/umd/supabase.js"></script>
+<link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;0,500;1,300;1,400&family=DM+Sans:wght@300;400;500&display=swap" rel="stylesheet">
+<style>
+*{margin:0;padding:0;box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+:root{
+  --bg:#F8F6F0;--bg2:#FDFBF5;--fg:#1A1508;
+  --acc:#C4A96B;--acc2:#8A7245;
+  --res:#0D2340;--res-t:#FDFBF5;
+  --av:#2E7D32;--av-t:#FFFFFF;
+  --own:#7B5EA7;--own-t:#fff;
+  --muted:#8A7A5A;--border:rgba(196,169,107,0.2);
+}
+body{font-family:"DM Sans",sans-serif;background:var(--bg);color:var(--fg);min-height:100vh;}
+.hdr{background:var(--bg2);border-bottom:1px solid var(--border);padding:14px 20px;position:sticky;top:0;z-index:50;}
+.hdr-logo{font-family:"Cormorant Garamond",serif;font-size:12px;letter-spacing:0.4em;color:var(--acc);text-transform:uppercase;}
+.hdr-title{font-family:"Cormorant Garamond",serif;font-size:20px;font-weight:400;color:var(--fg);}
+.hdr-sub{font-size:11px;color:var(--muted);margin-top:1px;}
+.hdr-row{display:flex;justify-content:space-between;align-items:center;}
+.admin-btn{font-size:11px;padding:4px 10px;border-radius:20px;border:1px solid var(--border);background:transparent;color:var(--muted);cursor:pointer;font-family:"DM Sans",sans-serif;}
+.admin-btn.active{background:var(--acc);color:white;border-color:var(--acc);}
+.nav-mois{display:flex;gap:6px;overflow-x:auto;padding:12px 20px;background:var(--bg2);border-bottom:1px solid var(--border);scrollbar-width:none;}
+.nav-mois::-webkit-scrollbar{display:none;}
+.nav-btn{font-size:11px;font-family:"DM Sans",sans-serif;padding:5px 12px;border-radius:20px;border:1px solid var(--border);background:transparent;color:var(--muted);cursor:pointer;white-space:nowrap;transition:all 0.15s;}
+.nav-btn.active,.nav-btn:hover{background:var(--acc);color:var(--bg);border-color:var(--acc);}
+.content{padding:16px 16px 60px;max-width:480px;margin:0 auto;width:100%;}
+.sync-bar{display:flex;align-items:center;gap:6px;font-size:11px;color:var(--muted);margin-bottom:12px;}
+.sync-dot{width:7px;height:7px;border-radius:50%;background:#4A7C59;}
+.sync-dot.loading{background:var(--acc);animation:pulse 1s infinite;}
+.sync-dot.error{background:#E53E3E;}
+@keyframes pulse{0%,100%{opacity:1}50%{opacity:0.3}}
+.mc{background:var(--bg2);border:1px solid var(--border);border-radius:10px;padding:14px;margin-bottom:14px;display:none;}
+.mn{font-family:"Cormorant Garamond",serif;font-size:17px;font-weight:400;color:var(--fg);margin-bottom:10px;text-align:center;}
+.dh,.dg{display:grid;grid-template-columns:repeat(7,1fr);gap:3px;}
+.dh div{font-size:10px;color:var(--muted);text-align:center;padding:2px 0;font-weight:500;}
+.dg div{aspect-ratio:1;display:flex;align-items:center;justify-content:center;font-size:13px;border-radius:6px;transition:transform 0.1s;}
+.dg div.av{background:var(--av);color:var(--av-t);font-weight:500;}
+.dg div.res{background:var(--res);color:var(--res-t);font-weight:500;}
+.dg div.own{background:var(--own);color:var(--own-t);font-weight:500;}
+.dg div.past{color:var(--muted);opacity:0.35;}
+.admin-mode .dg div:not(.past):not(.empty){cursor:pointer;}
+.admin-mode .dg div:not(.past):not(.empty):hover{transform:scale(1.1);box-shadow:0 2px 8px rgba(0,0,0,0.2);}
+.legend{display:flex;gap:12px;flex-wrap:wrap;margin-bottom:14px;padding:12px 14px;background:var(--bg2);border:1px solid var(--border);border-radius:10px;}
+.leg-item{display:flex;align-items:center;gap:6px;font-size:11px;color:var(--muted);}
+.leg-dot{width:10px;height:10px;border-radius:3px;}
+.leg-dot.av{background:var(--av);} .leg-dot.res{background:var(--res);} .leg-dot.own{background:var(--own);}
+.admin-panel{background:var(--bg2);border:1px solid var(--border);border-radius:10px;padding:14px;margin-bottom:14px;display:none;}
+.admin-panel.open{display:block;}
+.admin-title{font-size:12px;font-weight:500;color:var(--acc);margin-bottom:10px;letter-spacing:0.05em;text-transform:uppercase;}
+.admin-hint{font-size:11px;color:var(--muted);line-height:1.5;margin-bottom:10px;}
+.admin-login{display:flex;gap:8px;}
+.admin-input{flex:1;border:1px solid var(--border);border-radius:7px;padding:8px 10px;font-family:"DM Sans",sans-serif;font-size:13px;background:var(--bg);color:var(--fg);}
+.admin-input:focus{outline:none;border-color:var(--acc);}
+.admin-ok{background:var(--acc);color:white;border:none;border-radius:7px;padding:8px 14px;font-family:"DM Sans",sans-serif;font-size:13px;cursor:pointer;}
+.admin-err{font-size:11px;color:#E53E3E;margin-top:6px;display:none;}
+.status-selector{display:flex;gap:6px;margin-bottom:10px;}
+.stat-btn{flex:1;padding:7px;border-radius:7px;border:1px solid var(--border);font-family:"DM Sans",sans-serif;font-size:11px;cursor:pointer;background:var(--bg);color:var(--fg);transition:all 0.15s;}
+.stat-btn.sel-av{background:var(--av);color:white;border-color:var(--av);}
+.stat-btn.sel-res{background:var(--res);color:white;border-color:var(--res);}
+.stat-btn.sel-own{background:var(--own);color:white;border-color:var(--own);}
+.quit-btn{width:100%;margin-top:8px;background:var(--muted);color:white;border:none;border-radius:7px;padding:8px;font-family:"DM Sans",sans-serif;font-size:13px;cursor:pointer;}
+.desc-card{background:var(--bg2);border:1px solid var(--border);border-radius:10px;padding:16px;margin-bottom:14px;}
+.desc-title{font-family:"Cormorant Garamond",serif;font-size:15px;font-weight:500;color:var(--fg);margin-bottom:8px;}
+.desc-text{font-size:12px;color:var(--muted);line-height:1.7;}
+.contact-btn{display:block;width:100%;background:var(--acc);color:var(--bg);border:none;border-radius:10px;padding:13px;font-family:"DM Sans",sans-serif;font-size:14px;font-weight:500;text-align:center;cursor:pointer;text-decoration:none;}
+</style>
+</head>
+<body>
+<div class="hdr">
+  <div class="hdr-row">
+    <div class="hdr-logo">Heraclee Agency</div>
+    <button class="admin-btn" id="adminToggle" onclick="toggleAdminPanel()">⚙ Admin</button>
+  </div>
+  <div class="hdr-title">K Océane</div>
+  <div class="hdr-sub">Saint-Tropez · Vue mer · Luxe contemporain</div>
+</div>
+<div class="nav-mois">
+  <button class="nav-btn" onclick="showMonth(5,this)">Mai</button>
+  <button class="nav-btn" onclick="showMonth(6,this)">Juin</button>
+  <button class="nav-btn" onclick="showMonth(7,this)">Juillet</button>
+  <button class="nav-btn" onclick="showMonth(8,this)">Août</button>
+  <button class="nav-btn" onclick="showMonth(9,this)">Septembre</button>
+  <button class="nav-btn" onclick="showMonth(10,this)">Octobre</button>
+</div>
+<div class="content">
+  <div class="sync-bar"><div class="sync-dot loading" id="syncDot"></div><span id="syncLabel">Chargement…</span></div>
+  <div class="admin-panel" id="adminPanel">
+    <div class="admin-title">Accès propriétaire</div>
+    <div id="adminLoginWrap">
+      <div class="admin-hint">Entrez votre code pour modifier les disponibilités.</div>
+      <div class="admin-login">
+        <input class="admin-input" type="password" id="adminPw" placeholder="Code propriétaire" onkeydown="if(event.key==='Enter')checkAdmin()">
+        <button class="admin-ok" onclick="checkAdmin()">OK</button>
+      </div>
+      <div class="admin-err" id="adminErr">Code incorrect</div>
+    </div>
+    <div id="adminActiveWrap" style="display:none;">
+      <button class="quit-btn" onclick="logoutAdmin()">✕ Quitter le mode admin</button>
+      <div class="admin-hint" style="margin-top:10px;">Cliquez sur une date pour changer son statut.</div>
+      <div class="status-selector">
+        <button class="stat-btn sel-av" id="btn-av" onclick="setMode('av')">✅ Dispo</button>
+        <button class="stat-btn" id="btn-res" onclick="setMode('res')">🔴 Réservé</button>
+        <button class="stat-btn" id="btn-own" onclick="setMode('own')">🟣 Proprio</button>
+      </div>
+    </div>
+  </div>
+  <div class="legend">
+    <div class="leg-item"><div class="leg-dot av"></div><span>Disponible</span></div>
+    <div class="leg-item"><div class="leg-dot res"></div><span>Réservé</span></div>
+    <div class="leg-item"><div class="leg-dot own"></div><span>Propriétaire</span></div>
+  </div>
+  <div id="calendars"></div>
+  <div class="desc-card">
+    <div class="desc-title">À propos</div>
+    <div class="desc-text">Villa K Océane — architecture contemporaine et vue mer exceptionnelle. Matériaux nobles, piscine à débordement, terrasses face au large. Une adresse d'exception pour les connaisseurs du golfe de Saint-Tropez.</div>
+  </div>
+  <a class="contact-btn" href="mailto:contact@heraclee.com">Contacter Heraclee</a>
+</div>
+<script>
+const SUPA_URL = 'https://fgocsdozvgkpkjbzuyyp.supabase.co';
+const SUPA_KEY = 'sb_publishable_wXSjTHbfXYYXcU2-Af8w1g_pnkRuYA6';
+const { createClient } = supabase;
+const db = createClient(SUPA_URL, SUPA_KEY);
+const VILLA = 'koceane';
+const ADMIN_CODE = 'koceane2026';
+const MONTHS = ['Mai','Juin','Juillet','Août','Septembre','Octobre'];
+const JOURS = ['L','M','M','J','V','S','D'];
+const TODAY = new Date();
+const DEFAULT_RES = [[7, 11, 7, 26], [8, 24, 8, 31]];
+const DEFAULT_OWN = [];
+let avail = {};
+let isAdmin = false;
+let currentMode = 'av';
+
+function setSync(state, msg) {
+  const dot = document.getElementById('syncDot');
+  const lbl = document.getElementById('syncLabel');
+  dot.className = 'sync-dot' + (state==='loading'?' loading':state==='error'?' error':'');
+  lbl.textContent = msg;
+}
+
+function isInRange(m, d, ranges) {
+  return ranges.some(([sm,sd,em,ed]) => {
+    const date = new Date(2026,m-1,d);
+    return date >= new Date(2026,sm-1,sd) && date <= new Date(2026,em-1,ed);
+  });
+}
+
+async function loadData() {
+  setSync('loading','Chargement…');
+  const { data, error } = await db.from('availability').select('date_key,status').eq('villa',VILLA);
+  for (let m=5;m<=10;m++) {
+    const days = new Date(2026,m,0).getDate();
+    for (let d=1;d<=days;d++) {
+      const key = `2026-${String(m).padStart(2,'0')}-${String(d).padStart(2,'0')}`;
+      const date = new Date(2026,m-1,d);
+      if (date < new Date(TODAY.getFullYear(),TODAY.getMonth(),TODAY.getDate())) { avail[key]='past'; continue; }
+      if (isInRange(m,d,DEFAULT_RES)) avail[key]='res';
+      else if (isInRange(m,d,DEFAULT_OWN)) avail[key]='own';
+      else avail[key]='av';
+    }
+  }
+  if (!error && data) data.forEach(r => { if(avail[r.date_key]!=='past') avail[r.date_key]=r.status; });
+  setSync('ok','Synchronisé');
+  renderAll();
+}
+
+function renderAll() {
+  const container = document.getElementById('calendars');
+  container.innerHTML = '';
+  for (let m=5;m<=10;m++) {
+    const days = new Date(2026,m,0).getDate();
+    const fd = new Date(2026,m-1,1).getDay();
+    const offset = fd===0?6:fd-1;
+    let html = `<div class="mc" id="m-${m}"><div class="mn">${MONTHS[m-5]} 2026</div>`;
+    html += `<div class="dh">${JOURS.map(j=>`<div>${j}</div>`).join('')}</div><div class="dg">`;
+    for (let i=0;i<offset;i++) html+=`<div class="empty"></div>`;
+    for (let d=1;d<=days;d++) {
+      const key=`2026-${String(m).padStart(2,'0')}-${String(d).padStart(2,'0')}`;
+      const st=avail[key]||'av';
+      html+=`<div class="${st}" data-key="${key}" onclick="handleClick(this,'${key}')">${d}</div>`;
+    }
+    html+=`</div></div>`;
+    container.innerHTML+=html;
+  }
+  showMonths();
+}
+
+function showMonths() {
+  const m = new Date().getMonth()+1;
+  const cur = (m>=5&&m<=10)?m:5;
+  const btns = document.querySelectorAll('.nav-btn');
+  showMonth(cur, btns[cur-5]);
+}
+
+function showMonth(m,btn) {
+  document.querySelectorAll('.mc').forEach(el=>el.style.display='none');
+  const el=document.getElementById('m-'+m);
+  if(el) el.style.display='block';
+  document.querySelectorAll('.nav-btn').forEach(b=>b.classList.remove('active'));
+  if(btn) btn.classList.add('active');
+}
+
+function toggleAdminPanel() {
+  document.getElementById('adminPanel').classList.toggle('open');
+}
+
+function checkAdmin() {
+  if(document.getElementById('adminPw').value===ADMIN_CODE) {
+    isAdmin=true;
+    document.getElementById('adminLoginWrap').style.display='none';
+    document.getElementById('adminActiveWrap').style.display='block';
+    document.getElementById('adminToggle').classList.add('active');
+    document.getElementById('adminToggle').textContent='✓ Admin';
+    document.body.classList.add('admin-mode');
+  } else {
+    document.getElementById('adminErr').style.display='block';
+  }
+}
+
+function logoutAdmin() {
+  isAdmin=false;
+  document.body.classList.remove('admin-mode');
+  document.getElementById('adminToggle').classList.remove('active');
+  document.getElementById('adminToggle').textContent='⚙ Admin';
+  document.getElementById('adminPanel').classList.remove('open');
+  document.getElementById('adminLoginWrap').style.display='block';
+  document.getElementById('adminActiveWrap').style.display='none';
+  document.getElementById('adminPw').value='';
+}
+
+function setMode(mode) {
+  currentMode=mode;
+  ['av','res','own'].forEach(m=>{
+    document.getElementById('btn-'+m).className='stat-btn'+(m===mode?` sel-${m}`:'');
+  });
+}
+
+async function handleClick(el,key) {
+  if(!isAdmin||avail[key]==='past') return;
+  avail[key]=currentMode;
+  el.className=currentMode;
+  setSync('loading','Sauvegarde…');
+  const {error} = await db.from('availability').upsert({villa:VILLA,date_key:key,status:currentMode},{onConflict:'villa,date_key'});
+  setSync(error?'error':'ok', error?'Erreur':'Sauvegardé ✓');
+  if(!error) setTimeout(()=>setSync('ok','Synchronisé'),2000);
+}
+
+loadData();
+</script>
+</body>
+</html>
