@@ -3,18 +3,18 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
-<title>Villa Tilwil · Disponibilités · Heraclee</title>
+<title>Villa des Salins · Disponibilités · Heraclee</title>
 <script src="https://unpkg.com/@supabase/supabase-js@2/dist/umd/supabase.js"></script>
 <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;0,500;1,300;1,400&family=DM+Sans:wght@300;400;500&display=swap" rel="stylesheet">
 <style>
 *{margin:0;padding:0;box-sizing:border-box;-webkit-tap-highlight-color:transparent}
 :root{
-  --bg:#FAF6F0;--bg2:#FFF8F2;--fg:#1E0E0A;
-  --acc:#7B2D2D;--acc2:#5C2020;
-  --res:#7B2D2D;--res-t:#FFF8F2;
-  --av:#3D7A5A;--av-t:#FFFFFF;
+  --bg:#F2F7FB;--bg2:#F8FBFE;--fg:#0D1E2E;
+  --acc:#1A5276;--acc2:#154360;
+  --res:#1A5276;--res-t:#F8FBFE;
+  --av:#1E8449;--av-t:#FFFFFF;
   --own:#7B5EA7;--own-t:#fff;
-  --muted:#9A7060;--border:rgba(123,45,45,0.15);
+  --muted:#6B8EA8;--border:rgba(26,82,118,0.15);
 }
 body{font-family:"DM Sans",sans-serif;background:var(--bg);color:var(--fg);min-height:100vh;}
 .hdr{background:var(--bg2);border-bottom:1px solid var(--border);padding:14px 20px;position:sticky;top:0;z-index:50;}
@@ -76,8 +76,8 @@ body{font-family:"DM Sans",sans-serif;background:var(--bg);color:var(--fg);min-h
     <div class="hdr-logo">Heraclee Agency</div>
     <button class="admin-btn" id="adminToggle" onclick="toggleAdminPanel()">⚙ Admin</button>
   </div>
-  <div class="hdr-title">Villa Tilwil</div>
-  <div class="hdr-sub">Saint-Tropez · Disponibilités 2026</div>
+  <div class="hdr-title">Villa des Salins</div>
+  <div class="hdr-sub">Saint-Tropez · Les Salins</div>
 </div>
 <div class="nav-mois">
   <button class="nav-btn" onclick="showMonth(5,this)">Mai</button>
@@ -117,7 +117,7 @@ body{font-family:"DM Sans",sans-serif;background:var(--bg);color:var(--fg);min-h
   <div id="calendars"></div>
   <div class="desc-card">
     <div class="desc-title">À propos</div>
-    <div class="desc-text">Villa Tilwil — élégance et raffinement dans l'arrière-pays tropézien. Disponible pour toute la saison 2026. Contactez Heraclee pour obtenir les détails et tarifs.</div>
+    <div class="desc-text">Nichée aux abords des Salins, cette villa d'exception offre une vue imprenable et un accès privilégié à l'une des plus belles plages du golfe. Raffinement absolu, piscine, terrasses panoramiques.</div>
   </div>
   <a class="contact-btn" href="mailto:contact@heraclee.com">Contacter Heraclee</a>
 </div>
@@ -126,13 +126,13 @@ const SUPA_URL = 'https://fgocsdozvgkpkjbzuyyp.supabase.co';
 const SUPA_KEY = 'sb_publishable_wXSjTHbfXYYXcU2-Af8w1g_pnkRuYA6';
 const { createClient } = supabase;
 const db = createClient(SUPA_URL, SUPA_KEY);
-const VILLA = 'tilwil';
-const ADMIN_CODE = 'tilwil2026';
+const VILLA = 'salins';
+const ADMIN_CODE = 'salins2026';
 const MONTHS = ['Mai','Juin','Juillet','Août','Septembre','Octobre'];
 const JOURS = ['L','M','M','J','V','S','D'];
 const TODAY = new Date();
-const DEFAULT_RES = [];
-const DEFAULT_OWN = [];
+const DEFAULT_RES = [[7, 1, 7, 31], [8, 1, 8, 8], [9, 25, 10, 6]];
+const DEFAULT_OWN = [[6, 1, 6, 15]];
 let avail = {};
 let isAdmin = false;
 let currentMode = 'av';
