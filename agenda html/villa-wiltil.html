@@ -1,0 +1,179 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
+<title>Villa Wiltil · Disponibilités · Heraclee</title>
+<link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;0,500;1,300;1,400&family=DM+Sans:wght@300;400;500&display=swap" rel="stylesheet">
+<style>
+*{margin:0;padding:0;box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+:root{
+  --bg:#FDF7F2;
+  --bg2:#FFF9F5;
+  --fg:#2A1A0E;
+  --acc:#8B4513;
+  --acc2:#6B3410;
+  --res:#8B4513;
+  --res-t:#FFF9F5;
+  --av:#4A7C3F;
+  --av-t:#FFFFFF;
+  --own:#7B5EA7;
+  --own-t:#fff;
+  --muted:#9B7E6A;
+  --border:rgba(139,69,19,0.15);
+}
+body{font-family:'DM Sans',sans-serif;background:var(--bg);color:var(--fg);min-height:100vh;}
+
+/* LOGIN */
+.login-wrap{display:flex;align-items:center;justify-content:center;min-height:100vh;padding:20px;background:var(--bg);}
+.login-box{background:var(--bg2);border:1px solid var(--border);border-radius:12px;padding:32px 28px;width:100%;max-width:340px;text-align:center;}
+.login-logo{font-family:'Cormorant Garamond',serif;font-size:13px;letter-spacing:0.4em;color:var(--acc);text-transform:uppercase;margin-bottom:6px;}
+.login-title{font-family:'Cormorant Garamond',serif;font-size:24px;font-weight:400;margin-bottom:4px;}
+.login-sub{font-size:12px;color:var(--muted);margin-bottom:24px;}
+.login-input{width:100%;border:1px solid var(--border);border-radius:8px;padding:10px 14px;font-family:'DM Sans',sans-serif;font-size:14px;background:var(--bg);color:var(--fg);margin-bottom:12px;}
+.login-input:focus{outline:none;border-color:var(--acc);}
+.login-btn{width:100%;background:var(--acc);color:var(--bg);border:none;border-radius:8px;padding:11px;font-family:'DM Sans',sans-serif;font-size:14px;font-weight:500;cursor:pointer;letter-spacing:0.05em;}
+.login-btn:hover{background:var(--acc2);}
+.login-err{font-size:12px;color:#E53E3E;margin-top:8px;display:none;}
+
+/* APP */
+.app{display:none;flex-direction:column;min-height:100vh;}
+
+/* HEADER */
+.hdr{background:var(--bg2);border-bottom:1px solid var(--border);padding:14px 20px;position:sticky;top:0;z-index:50;}
+.hdr-top{display:flex;justify-content:space-between;align-items:center;}
+.hdr-logo{font-family:'Cormorant Garamond',serif;font-size:12px;letter-spacing:0.4em;color:var(--acc);text-transform:uppercase;}
+.hdr-title{font-family:'Cormorant Garamond',serif;font-size:20px;font-weight:400;color:var(--fg);}
+.hdr-sub{font-size:11px;color:var(--muted);margin-top:1px;}
+
+/* NAV MOIS */
+.nav-mois{display:flex;gap:6px;overflow-x:auto;padding:12px 20px;background:var(--bg2);border-bottom:1px solid var(--border);scrollbar-width:none;}
+.nav-mois::-webkit-scrollbar{display:none;}
+.nav-btn{font-size:11px;font-family:'DM Sans',sans-serif;padding:5px 12px;border-radius:20px;border:1px solid var(--border);background:transparent;color:var(--muted);cursor:pointer;white-space:nowrap;transition:all 0.15s;}
+.nav-btn.active,.nav-btn:hover{background:var(--acc);color:var(--bg);border-color:var(--acc);}
+
+/* CONTENT */
+.content{padding:16px 16px 40px;max-width:480px;margin:0 auto;width:100%;}
+
+/* CALENDRIER */
+.mc{background:var(--bg2);border:1px solid var(--border);border-radius:10px;padding:14px;margin-bottom:14px;}
+.mn{font-family:'Cormorant Garamond',serif;font-size:17px;font-weight:400;color:var(--fg);margin-bottom:10px;text-align:center;}
+.dh,.dg{display:grid;grid-template-columns:repeat(7,1fr);gap:3px;}
+.dh div{font-size:10px;color:var(--muted);text-align:center;padding:2px 0;font-weight:500;}
+.dg div{aspect-ratio:1;display:flex;align-items:center;justify-content:center;font-size:13px;border-radius:6px;}
+.dg div.av{background:var(--av);color:var(--av-t);font-weight:500;}
+.dg div.res{background:var(--res);color:var(--res-t);font-weight:500;}
+.dg div.own{background:var(--own);color:var(--own-t);font-weight:500;}
+.dg div.past{color:var(--muted);opacity:0.35;}
+
+/* LÉGENDE */
+.legend{display:flex;gap:12px;flex-wrap:wrap;margin-bottom:14px;padding:12px 14px;background:var(--bg2);border:1px solid var(--border);border-radius:10px;}
+.leg-item{display:flex;align-items:center;gap:6px;font-size:11px;color:var(--muted);}
+.leg-dot{width:10px;height:10px;border-radius:3px;flex-shrink:0;}
+.leg-dot.av{background:var(--av);}
+.leg-dot.res{background:var(--res);}
+.leg-dot.own{background:var(--own);}
+
+/* DESCRIPTION */
+.desc-card{background:var(--bg2);border:1px solid var(--border);border-radius:10px;padding:16px;margin-bottom:14px;}
+.desc-title{font-family:'Cormorant Garamond',serif;font-size:15px;font-weight:500;color:var(--fg);margin-bottom:8px;}
+.desc-text{font-size:12px;color:var(--muted);line-height:1.7;}
+
+/* CONTACT */
+.contact-btn{display:block;width:100%;background:var(--acc);color:var(--bg);border:none;border-radius:10px;padding:13px;font-family:'DM Sans',sans-serif;font-size:14px;font-weight:500;text-align:center;cursor:pointer;letter-spacing:0.05em;text-decoration:none;}
+.contact-btn:hover{background:var(--acc2);}
+</style>
+</head>
+<body>
+
+<!-- LOGIN -->
+<div class="login-wrap" id="loginWrap">
+  <div class="login-box">
+    <div class="login-logo">Heraclee Agency</div>
+    <div class="login-title">Villa Wiltil</div>
+    <div class="login-sub">Ramatuelle · 5 chambres · Piscine chauffée</div>
+    <input class="login-input" type="password" id="pwInput" placeholder="Mot de passe" onkeydown="if(event.key==='Enter')checkPw()">
+    <button class="login-btn" onclick="checkPw()">Accéder</button>
+    <div class="login-err" id="pwErr">Mot de passe incorrect</div>
+  </div>
+</div>
+
+<!-- APP -->
+<div class="app" id="app">
+  <div class="hdr">
+    <div class="hdr-top">
+      <div class="hdr-logo">Heraclee Agency</div>
+    </div>
+    <div class="hdr-title">Villa Wiltil</div>
+    <div class="hdr-sub">Ramatuelle · 5 chambres · Piscine chauffée</div>
+  </div>
+
+  <div class="nav-mois">
+    <button class="nav-btn" onclick="showMonth(5,this)">Mai</button>
+    <button class="nav-btn" onclick="showMonth(6,this)">Juin</button>
+    <button class="nav-btn" onclick="showMonth(7,this)">Juillet</button>
+    <button class="nav-btn" onclick="showMonth(8,this)">Août</button>
+    <button class="nav-btn" onclick="showMonth(9,this)">Septembre</button>
+    <button class="nav-btn" onclick="showMonth(10,this)">Octobre</button>
+  </div>
+
+  <div class="content">
+    <div class="legend">
+      <div class="leg-item"><div class="leg-dot av"></div><span>Disponible</span></div>
+      <div class="leg-item"><div class="leg-dot res"></div><span>Réservé</span></div>
+      
+    </div>
+
+    <div class="mc" id="m-5" style="display:none"><div class="mn">Mai 2026</div><div class="dh"><div>L</div><div>M</div><div>M</div><div>J</div><div>V</div><div>S</div><div>D</div></div><div class="dg"><div></div><div></div><div></div><div></div><div class="past">1</div><div class="past">2</div><div class="past">3</div><div class="past">4</div><div class="past">5</div><div class="past">6</div><div class="past">7</div><div class="past">8</div><div class="past">9</div><div class="past">10</div><div class="past">11</div><div class="past">12</div><div class="past">13</div><div class="past">14</div><div class="past">15</div><div class="past">16</div><div class="past">17</div><div class="past">18</div><div class="past">19</div><div class="past">20</div><div class="past">21</div><div class="past">22</div><div class="past">23</div><div class="past">24</div><div class="past">25</div><div class="past">26</div><div class="past">27</div><div class="av">28</div><div class="av">29</div><div class="av">30</div><div class="av">31</div></div></div><div class="mc" id="m-6" style="display:none"><div class="mn">Juin 2026</div><div class="dh"><div>L</div><div>M</div><div>M</div><div>J</div><div>V</div><div>S</div><div>D</div></div><div class="dg"><div class="av">1</div><div class="av">2</div><div class="av">3</div><div class="av">4</div><div class="av">5</div><div class="av">6</div><div class="av">7</div><div class="av">8</div><div class="av">9</div><div class="av">10</div><div class="av">11</div><div class="av">12</div><div class="av">13</div><div class="av">14</div><div class="av">15</div><div class="av">16</div><div class="av">17</div><div class="av">18</div><div class="av">19</div><div class="av">20</div><div class="av">21</div><div class="av">22</div><div class="av">23</div><div class="av">24</div><div class="av">25</div><div class="av">26</div><div class="av">27</div><div class="av">28</div><div class="av">29</div><div class="av">30</div></div></div><div class="mc" id="m-7" style="display:none"><div class="mn">Juillet 2026</div><div class="dh"><div>L</div><div>M</div><div>M</div><div>J</div><div>V</div><div>S</div><div>D</div></div><div class="dg"><div></div><div></div><div class="av">1</div><div class="av">2</div><div class="av">3</div><div class="av">4</div><div class="av">5</div><div class="av">6</div><div class="av">7</div><div class="av">8</div><div class="av">9</div><div class="av">10</div><div class="res">11</div><div class="res">12</div><div class="res">13</div><div class="res">14</div><div class="res">15</div><div class="res">16</div><div class="res">17</div><div class="res">18</div><div class="res">19</div><div class="res">20</div><div class="res">21</div><div class="res">22</div><div class="res">23</div><div class="res">24</div><div class="res">25</div><div class="av">26</div><div class="av">27</div><div class="av">28</div><div class="av">29</div><div class="av">30</div><div class="av">31</div></div></div><div class="mc" id="m-8" style="display:none"><div class="mn">Août 2026</div><div class="dh"><div>L</div><div>M</div><div>M</div><div>J</div><div>V</div><div>S</div><div>D</div></div><div class="dg"><div></div><div></div><div></div><div></div><div></div><div class="av">1</div><div class="av">2</div><div class="av">3</div><div class="av">4</div><div class="av">5</div><div class="av">6</div><div class="av">7</div><div class="av">8</div><div class="av">9</div><div class="av">10</div><div class="av">11</div><div class="av">12</div><div class="av">13</div><div class="av">14</div><div class="av">15</div><div class="av">16</div><div class="av">17</div><div class="av">18</div><div class="av">19</div><div class="av">20</div><div class="av">21</div><div class="av">22</div><div class="av">23</div><div class="av">24</div><div class="av">25</div><div class="av">26</div><div class="av">27</div><div class="av">28</div><div class="av">29</div><div class="av">30</div><div class="av">31</div></div></div><div class="mc" id="m-9" style="display:none"><div class="mn">Septembre 2026</div><div class="dh"><div>L</div><div>M</div><div>M</div><div>J</div><div>V</div><div>S</div><div>D</div></div><div class="dg"><div></div><div class="av">1</div><div class="av">2</div><div class="av">3</div><div class="av">4</div><div class="av">5</div><div class="av">6</div><div class="av">7</div><div class="av">8</div><div class="av">9</div><div class="av">10</div><div class="av">11</div><div class="av">12</div><div class="av">13</div><div class="av">14</div><div class="av">15</div><div class="av">16</div><div class="av">17</div><div class="av">18</div><div class="av">19</div><div class="av">20</div><div class="av">21</div><div class="av">22</div><div class="av">23</div><div class="av">24</div><div class="av">25</div><div class="av">26</div><div class="av">27</div><div class="av">28</div><div class="av">29</div><div class="av">30</div></div></div><div class="mc" id="m-10" style="display:none"><div class="mn">Octobre 2026</div><div class="dh"><div>L</div><div>M</div><div>M</div><div>J</div><div>V</div><div>S</div><div>D</div></div><div class="dg"><div></div><div></div><div></div><div class="av">1</div><div class="av">2</div><div class="av">3</div><div class="av">4</div><div class="av">5</div><div class="av">6</div><div class="av">7</div><div class="av">8</div><div class="av">9</div><div class="av">10</div><div class="av">11</div><div class="av">12</div><div class="av">13</div><div class="av">14</div><div class="av">15</div><div class="av">16</div><div class="av">17</div><div class="av">18</div><div class="av">19</div><div class="av">20</div><div class="av">21</div><div class="av">22</div><div class="av">23</div><div class="av">24</div><div class="av">25</div><div class="av">26</div><div class="av">27</div><div class="av">28</div><div class="av">29</div><div class="av">30</div><div class="av">31</div></div></div>
+
+    <div class="desc-card">
+      <div class="desc-title">À propos</div>
+      <div class="desc-text">À l'entrée du village de Ramatuelle, cette superbe villa mêle charme provençal et confort contemporain dans un cadre naturel préservé. 5 chambres raffinées avec baignoires, grand salon, cuisine d'exception (3 réfrigérateurs, cave à vin Sub-Zero, rôtissoire). Grande piscine chauffée 14,5×4,5m, cuisine d'été avec barbecue argentin, table pour 12 convives au cœur des vignes. Parking 5 véhicules.</div>
+    </div>
+
+    <a class="contact-btn" href="mailto:contact@heraclee.com">Contacter Heraclee</a>
+  </div>
+</div>
+
+<script>
+const PWD = 'heraclee2025';
+
+function checkPw() {
+  const v = document.getElementById('pwInput').value;
+  if (v === PWD) {
+    document.getElementById('loginWrap').style.display = 'none';
+    document.getElementById('app').style.display = 'flex';
+    showMonths();
+  } else {
+    document.getElementById('pwErr').style.display = 'block';
+  }
+}
+
+function showMonths() {
+  const now = new Date();
+  const m = now.getMonth() + 1;
+  const cur = (m >= 5 && m <= 10) ? m : 5;
+  const btns = document.querySelectorAll('.nav-btn');
+  const idx = cur - 5;
+  if (btns[idx]) {
+    showMonth(cur, btns[idx]);
+  } else {
+    showMonth(5, btns[0]);
+  }
+}
+
+function showMonth(m, btn) {
+  document.querySelectorAll('.mc').forEach(el => el.style.display = 'none');
+  const el = document.getElementById('m-' + m);
+  if (el) el.style.display = 'block';
+  document.querySelectorAll('.nav-btn').forEach(b => b.classList.remove('active'));
+  if (btn) btn.classList.add('active');
+}
+
+// Auto-login check
+window.addEventListener('load', function() {
+  showMonths();
+});
+</script>
+</body>
+</html>
