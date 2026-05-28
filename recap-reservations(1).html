@@ -1,0 +1,329 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Heraclee — Calendrier 2026</title>
+<link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,400;0,500;0,600;1,400&family=DM+Sans:wght@300;400;500&display=swap" rel="stylesheet">
+<style>
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+:root{
+  --gold:#C4A96B;--gold-l:#E8D9B5;--gold-d:#8A7245;
+  --ink:#1A1612;--ink2:#2C2720;--ink3:#3D3528;
+  --ink-s:#7A6E5F;--ink-xs:#9A8E82;
+  --parch:#FAF7F2;
+  --border:rgba(196,169,107,.2);--border2:rgba(196,169,107,.4);
+  --r:10px;--rs:7px
+}
+body{font-family:'DM Sans',sans-serif;background:var(--ink);color:var(--parch);min-height:100vh}
+
+/* VILLA COLORS */
+--c-kova:#3B82F6;--c-rosalie:#22C55E;--c-venus:#EC4899;--c-blanca:#06B6D4;
+--c-rosemary:#F59E0B;--c-peach:#F97316;--c-tremoliere:#A855F7;--c-lys:#14B8A6;--c-cascadelle:#EF4444;--c-other:#6B7280;
+
+header{background:var(--ink);height:64px;padding:0 1.5rem;display:flex;align-items:center;justify-content:space-between;position:sticky;top:0;z-index:300;border-bottom:1px solid var(--border)}
+.hl{display:flex;align-items:center;gap:20px}
+.brand{font-family:'Cormorant Garamond',serif;font-size:22px;font-weight:600;color:#fff;letter-spacing:.06em}
+.brand em{font-style:italic;color:var(--gold)}
+.brand-sub{font-size:9px;letter-spacing:.2em;text-transform:uppercase;color:var(--ink-xs);display:block;margin-top:1px}
+.npill{font-size:12px;color:rgba(255,255,255,.35);text-decoration:none;padding:5px 14px;border-radius:20px;border:1px solid rgba(255,255,255,.08);transition:all .15s}
+.npill:hover{color:var(--gold);border-color:var(--border2)}
+.npill.on{color:var(--gold);background:rgba(196,169,107,.1);border-color:var(--border2)}
+.sync{display:flex;align-items:center;gap:7px;font-size:11px;color:var(--ink-xs)}
+.dot{width:7px;height:7px;border-radius:50%;background:#4CAF7A;flex-shrink:0}
+.dot.spin{background:var(--gold);animation:pulse 1s ease-in-out infinite}
+.dot.err{background:#E55}
+@keyframes pulse{0%,100%{opacity:1}50%{opacity:.3}}
+
+main{max-width:1100px;margin:0 auto;padding:1.5rem 1.5rem 5rem}
+
+.page-top{display:flex;align-items:center;justify-content:space-between;margin-bottom:1.5rem;flex-wrap:wrap;gap:12px}
+.page-top h1{font-family:'Cormorant Garamond',serif;font-size:28px;font-weight:400;color:var(--parch);letter-spacing:.02em}
+.page-top h1 em{font-style:normal;color:var(--gold)}
+.sync-label{font-size:11px;color:var(--ink-xs)}
+
+/* LEGEND */
+.legend{display:flex;gap:10px;flex-wrap:wrap;margin-bottom:1.5rem;padding:12px 16px;background:var(--ink2);border:1px solid var(--border);border-radius:var(--r)}
+.legend-item{display:flex;align-items:center;gap:6px;font-size:12px;color:var(--parch)}
+.legend-dot{width:10px;height:10px;border-radius:3px;flex-shrink:0}
+
+/* MONTH NAV */
+.month-nav{display:flex;align-items:center;gap:10px;margin-bottom:1rem}
+.btn-nav{background:rgba(255,255,255,.06);border:1px solid var(--border);color:var(--parch);width:32px;height:32px;border-radius:50%;font-size:16px;cursor:pointer;display:flex;align-items:center;justify-content:center;transition:all .15s;flex-shrink:0}
+.btn-nav:hover{background:rgba(196,169,107,.15);border-color:var(--border2)}
+.month-tabs{display:flex;gap:5px;flex-wrap:wrap;flex:1}
+.mtab{padding:6px 14px;border-radius:20px;border:1px solid var(--border);background:transparent;font-family:'DM Sans',sans-serif;font-size:12px;color:var(--ink-s);cursor:pointer;transition:all .15s;white-space:nowrap}
+.mtab:hover{border-color:var(--border2);color:var(--parch)}
+.mtab.on{background:rgba(196,169,107,.12);color:var(--gold);border-color:var(--border2)}
+
+/* CALENDAR */
+.calendar{background:var(--ink2);border:1px solid var(--border);border-radius:var(--r);overflow:hidden}
+.cal-header{display:grid;grid-template-columns:repeat(7,1fr);border-bottom:1px solid var(--border)}
+.cal-dow{padding:10px 0;text-align:center;font-size:10px;text-transform:uppercase;letter-spacing:.12em;color:var(--ink-xs)}
+.cal-grid{display:grid;grid-template-columns:repeat(7,1fr)}
+.cal-day{min-height:80px;border-right:1px solid rgba(255,255,255,.04);border-bottom:1px solid rgba(255,255,255,.04);padding:6px 5px;position:relative;transition:background .15s;cursor:default}
+.cal-day:nth-child(7n){border-right:none}
+.cal-day.other-month{opacity:.3}
+.cal-day.today .day-num{color:var(--gold);font-weight:600}
+.cal-day.today::after{content:'';position:absolute;top:5px;right:5px;width:5px;height:5px;border-radius:50%;background:var(--gold)}
+.day-num{font-size:12px;color:var(--ink-xs);margin-bottom:4px;display:block}
+.res-bar{display:block;font-size:10px;padding:2px 5px;border-radius:3px;margin-bottom:2px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;cursor:pointer;transition:opacity .15s;font-weight:500}
+.res-bar:hover{opacity:.8}
+
+/* TOOLTIP */
+.tooltip{position:fixed;z-index:999;background:var(--ink3);border:1px solid var(--border2);border-radius:var(--rs);padding:10px 14px;font-size:12px;color:var(--parch);pointer-events:none;opacity:0;transition:opacity .15s;max-width:220px;line-height:1.6}
+.tooltip.show{opacity:1}
+.tooltip-villa{font-family:'Cormorant Garamond',serif;font-size:15px;font-weight:600;color:var(--gold-l);margin-bottom:4px}
+
+/* MONTH TITLE */
+.month-title{font-family:'Cormorant Garamond',serif;font-size:20px;font-weight:400;color:var(--parch);padding:14px 18px;border-bottom:1px solid var(--border);letter-spacing:.04em}
+
+/* STATE */
+.state-block{text-align:center;padding:3rem 2rem;color:var(--ink-s);font-size:14px}
+.state-block .ico{font-size:36px;margin-bottom:10px;opacity:.5}
+
+@media(max-width:700px){
+  .cal-day{min-height:52px;padding:3px}
+  .day-num{font-size:10px}
+  .res-bar{font-size:9px;padding:1px 3px}
+  .cal-dow{font-size:9px;padding:7px 0}
+}
+</style>
+</head>
+<body>
+
+<header>
+  <div class="hl">
+    <div>
+      <div class="brand">HERACLEE <em>Agency</em></div>
+      <span class="brand-sub">Gestion des réservations</span>
+    </div>
+    <a href="index.html" class="npill">Dossiers</a>
+    <a href="recap-reservations.html" class="npill on">Calendrier</a>
+  </div>
+  <div class="sync">
+    <div class="dot spin" id="syncDot"></div>
+    <span id="syncLabel">Connexion…</span>
+  </div>
+</header>
+
+<main>
+  <div class="page-top">
+    <h1>Calendrier <em>2026</em></h1>
+    <span class="sync-label" id="lastRef"></span>
+  </div>
+
+  <div class="legend" id="legend"></div>
+
+  <div class="month-tabs" id="monthTabs" style="margin-bottom:1rem;display:flex;gap:5px;flex-wrap:wrap;"></div>
+
+  <div id="calContainer"></div>
+</main>
+
+<div class="tooltip" id="tooltip"></div>
+
+<script>
+const SB='https://fgocsdozvgkpkjbzuyyp.supabase.co';
+const KEY='sb_publishable_wXSjTHbfXYYXcU2-Af8w1g_pnkRuYA6';
+const H={'apikey':KEY,'Authorization':'Bearer '+KEY};
+
+const VILLA_COLORS={
+  'KOVA':'#3B82F6','K OCEANE':'#3B82F6',
+  'ROSALIE':'#22C55E',
+  'VENUS':'#EC4899',
+  'BLANCA':'#06B6D4',
+  'ROSEMARY':'#F59E0B',
+  'PEACH ON THE BEACH':'#F97316','PEACH':'#F97316',
+  'LA TRÉMOLIÈRE':'#A855F7','TREMOLIERE':'#A855F7',
+  'LYS DES MERS':'#14B8A6','LYS':'#14B8A6',
+  'APP CASCADELLE':'#EF4444','CASCADELLE':'#EF4444',
+};
+const PALETTE=['#3B82F6','#22C55E','#EC4899','#06B6D4','#F59E0B','#F97316','#A855F7','#14B8A6','#EF4444','#8B5CF6','#84CC16'];
+let extraColors={};
+
+function getColor(villa){
+  if(!villa)return'#6B7280';
+  const v=villa.toUpperCase();
+  for(const[k,c]of Object.entries(VILLA_COLORS)){if(v.includes(k))return c;}
+  if(!extraColors[villa]){
+    const used=Object.values(extraColors).length;
+    extraColors[villa]=PALETTE[used%PALETTE.length];
+  }
+  return extraColors[villa];
+}
+
+function hexToRgba(hex,a){
+  const r=parseInt(hex.slice(1,3),16),g=parseInt(hex.slice(3,5),16),b=parseInt(hex.slice(5,7),16);
+  return`rgba(${r},${g},${b},${a})`;
+}
+
+const MONTHS=['Janvier','Février','Mars','Avril','Mai','Juin','Juillet','Août','Septembre','Octobre','Novembre','Décembre'];
+const JOURS=['Lun','Mar','Mer','Jeu','Ven','Sam','Dim'];
+let allData=[],currentMonth=new Date().getMonth();
+
+function fd(d){if(!d)return null;const dt=new Date(d);return isNaN(dt)?null:dt;}
+
+async function loadData(){
+  setSt('loading','Chargement…');
+  try{
+    const r=await fetch(`${SB}/rest/v1/reservations?select=*&order=date_arrivee.asc`,{headers:H});
+    if(!r.ok)throw new Error('HTTP '+r.status);
+    allData=await r.json();
+    setSt('ok','Synchronisé');
+    document.getElementById('lastRef').textContent='Actualisé à '+new Date().toLocaleTimeString('fr-FR',{hour:'2-digit',minute:'2-digit'});
+    buildLegend();
+    buildMonthTabs();
+    renderMonth(currentMonth);
+  }catch(e){
+    setSt('error','Erreur');
+    document.getElementById('calContainer').innerHTML=`<div class="state-block err"><div class="ico">⚠️</div>Erreur : ${e.message}</div>`;
+  }
+}
+
+function setSt(s,l){const d=document.getElementById('syncDot');d.className='dot '+(s==='loading'?'spin':s==='error'?'err':'');document.getElementById('syncLabel').textContent=l;}
+
+function buildLegend(){
+  const villas=[...new Set(allData.map(r=>r.villa).filter(Boolean))];
+  document.getElementById('legend').innerHTML=villas.map(v=>`
+    <div class="legend-item">
+      <div class="legend-dot" style="background:${getColor(v)}"></div>
+      <span>${v}</span>
+    </div>`).join('');
+}
+
+function buildMonthTabs(){
+  const container=document.getElementById('monthTabs');
+  // Find months with reservations
+  const activeMonths=new Set();
+  allData.forEach(r=>{
+    if(!r.date_arrivee&&!r.date_depart)return;
+    const start=fd(r.date_arrivee),end=fd(r.date_depart);
+    if(!start)return;
+    const s=new Date(start),e=end?new Date(end):new Date(start);
+    for(let d=new Date(s.getFullYear(),s.getMonth(),1);d<=e;d.setMonth(d.getMonth()+1)){
+      if(d.getFullYear()===2026)activeMonths.add(d.getMonth());
+    }
+  });
+  container.innerHTML=MONTHS.map((m,i)=>`
+    <button class="mtab ${i===currentMonth?'on':''}" onclick="switchMonth(${i},this)">${m.substring(0,4)}.</button>`
+  ).join('');
+}
+
+function switchMonth(m,btn){
+  currentMonth=m;
+  document.querySelectorAll('.mtab').forEach(b=>b.classList.remove('on'));
+  btn.classList.add('on');
+  renderMonth(m);
+}
+
+function renderMonth(month){
+  const year=2026;
+  const firstDay=new Date(year,month,1);
+  const lastDay=new Date(year,month+1,0);
+  // Monday-first: 0=Mon … 6=Sun
+  let startDow=(firstDay.getDay()+6)%7;
+  const totalCells=Math.ceil((startDow+lastDay.getDate())/7)*7;
+
+  // Get reservations that overlap this month
+  const monthStart=new Date(year,month,1);
+  const monthEnd=new Date(year,month+1,0);
+
+  const resos=allData.filter(r=>{
+    const s=fd(r.date_arrivee),e=fd(r.date_depart);
+    if(!s)return false;
+    const start=new Date(s),end=e?new Date(e):new Date(s);
+    return start<=monthEnd&&end>=monthStart;
+  });
+
+  // Build day map: date string -> [{villa,color,client,nights,start,end,id}]
+  const dayMap={};
+  resos.forEach(r=>{
+    const s=fd(r.date_arrivee),e=fd(r.date_depart);
+    if(!s)return;
+    const start=new Date(s),end=e?new Date(e):new Date(s);
+    const color=getColor(r.villa);
+    let cur=new Date(Math.max(start,monthStart));
+    const last=new Date(Math.min(end,monthEnd));
+    while(cur<=last){
+      const key=cur.toISOString().slice(0,10);
+      if(!dayMap[key])dayMap[key]=[];
+      dayMap[key].push({
+        villa:r.villa||'?',color,
+        client:r.client_nom||'',
+        loyer:r.loyer_total,
+        date_arrivee:r.date_arrivee,
+        date_depart:r.date_depart,
+        id:r.id,
+        isStart:cur.getTime()===start.getTime(),
+        isEnd:cur.getTime()===end.getTime()
+      });
+      cur.setDate(cur.getDate()+1);
+    }
+  });
+
+  const today=new Date();
+  let html=`<div class="calendar">
+    <div class="month-title">${MONTHS[month]} ${year}</div>
+    <div class="cal-header">${JOURS.map(d=>`<div class="cal-dow">${d}</div>`).join('')}</div>
+    <div class="cal-grid">`;
+
+  for(let i=0;i<totalCells;i++){
+    const dayOffset=i-startDow+1;
+    const isCurrentMonth=dayOffset>=1&&dayOffset<=lastDay.getDate();
+    const date=new Date(year,month,dayOffset);
+    const dateStr=date.toISOString().slice(0,10);
+    const isToday=date.getFullYear()===today.getFullYear()&&date.getMonth()===today.getMonth()&&date.getDate()===today.getDate();
+    const entries=dayMap[dateStr]||[];
+
+    html+=`<div class="cal-day${!isCurrentMonth?' other-month':''}${isToday?' today':''}">`;
+    if(isCurrentMonth||entries.length){
+      html+=`<span class="day-num">${dayOffset>0&&dayOffset<=lastDay.getDate()?dayOffset:''}</span>`;
+    }
+    // Show up to 3 reservations per day
+    entries.slice(0,3).forEach(e=>{
+      const label=e.isStart?e.villa.split(' ')[0]:(e.isEnd?'↵':'');
+      const bg=hexToRgba(e.color,.25);
+      const border=e.color;
+      const nights=e.date_arrivee&&e.date_depart?Math.round((new Date(e.date_depart)-new Date(e.date_arrivee))/86400000):0;
+      html+=`<span class="res-bar" 
+        style="background:${bg};border-left:2px solid ${border};color:${e.color}"
+        data-villa="${e.villa}" data-client="${e.client}" data-arrivee="${e.date_arrivee||''}" 
+        data-depart="${e.date_depart||''}" data-loyer="${e.loyer||''}" data-nights="${nights}"
+        onmouseenter="showTip(event,this)" onmouseleave="hideTip()"
+      >${label||'·'}</span>`;
+    });
+    if(entries.length>3){
+      html+=`<span style="font-size:9px;color:var(--ink-xs)">+${entries.length-3}</span>`;
+    }
+    html+='</div>';
+  }
+  html+='</div></div>';
+  document.getElementById('calContainer').innerHTML=html;
+}
+
+const tip=document.getElementById('tooltip');
+function showTip(e,el){
+  const villa=el.dataset.villa,client=el.dataset.client;
+  const arr=el.dataset.arrivee,dep=el.dataset.depart;
+  const loyer=el.dataset.loyer,nights=el.dataset.nights;
+  const color=getColor(villa);
+  const fmtD=d=>{if(!d)return'?';const dt=new Date(d);return dt.toLocaleDateString('fr-FR',{day:'numeric',month:'short'});};
+  tip.innerHTML=`<div class="tooltip-villa" style="color:${color}">${villa}</div>
+    ${client?`<div>${client}</div>`:''}
+    <div style="color:var(--ink-xs);margin-top:3px">${fmtD(arr)} → ${fmtD(dep)}${nights>0?' · '+nights+' nuits':''}</div>
+    ${loyer?`<div style="color:var(--gold-l);margin-top:2px">${Number(loyer).toLocaleString('fr-FR')} €</div>`:''}`;
+  tip.classList.add('show');
+  moveTip(e);
+}
+function moveTip(e){
+  const x=e.clientX+12,y=e.clientY-10;
+  tip.style.left=Math.min(x,window.innerWidth-230)+'px';
+  tip.style.top=Math.max(y,10)+'px';
+}
+document.addEventListener('mousemove',e=>{if(tip.classList.contains('show'))moveTip(e);});
+function hideTip(){tip.classList.remove('show');}
+
+loadData();
+</script>
+</body>
+</html>
