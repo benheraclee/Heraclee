@@ -1,0 +1,1351 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Heraclee — Gestion des Réservations</title>
+<link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,400;0,500;0,600;1,400&family=DM+Sans:wght@300;400;500&display=swap" rel="stylesheet">
+<style>
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+:root{
+  --gold:#C4A96B;--gold-l:#E8D9B5;--gold-d:#8A7245;
+  --ink:#1A1612;--ink2:#2C2720;--ink3:#3D3528;
+  --ink-s:#7A6E5F;--ink-xs:#9A8E82;
+  --parch:#FAF7F2;--parch2:#F0EAE0;--parch3:#E8E0D4;
+  --white:#fff;
+  --ok-bg:#EAF2ED;--ok-txt:#2A6B3A;
+  --wait-bg:#FBF4E2;--wait-txt:#8A6B1A;
+  --ko-bg:#F5EAEA;--ko-txt:#8B3A3A;
+  --border:rgba(196,169,107,.2);--border2:rgba(196,169,107,.4);
+  --sh:0 2px 20px rgba(26,22,18,.12);--sh2:0 8px 32px rgba(26,22,18,.2);
+  --r:10px;--rs:7px
+}
+body{font-family:'DM Sans',sans-serif;background:var(--ink);color:var(--parch);min-height:100vh}
+
+/* ── HEADER ── */
+header{background:var(--ink);height:64px;padding:0 1.5rem;display:flex;align-items:center;justify-content:space-between;position:sticky;top:0;z-index:300;border-bottom:1px solid var(--border)}
+.hl{display:flex;align-items:center;gap:20px}
+.brand{font-family:'Cormorant Garamond',serif;font-size:22px;font-weight:600;color:var(--white);letter-spacing:.06em}
+.brand em{font-style:italic;color:var(--gold)}
+.brand-sub{font-size:9px;letter-spacing:.2em;text-transform:uppercase;color:var(--ink-xs);display:block;margin-top:1px}
+.npill{font-size:12px;color:rgba(255,255,255,.35);text-decoration:none;padding:5px 14px;border-radius:20px;border:1px solid rgba(255,255,255,.08);transition:all .15s}
+.npill:hover{color:var(--gold);border-color:var(--border2)}
+.npill.on{color:var(--gold);background:rgba(196,169,107,.1);border-color:var(--border2)}
+.sync{display:flex;align-items:center;gap:7px;font-size:11px;color:var(--ink-xs)}
+.dot{width:7px;height:7px;border-radius:50%;background:#4CAF7A;flex-shrink:0}
+.dot.spin{background:var(--gold);animation:pulse 1s ease-in-out infinite}
+.dot.err{background:#E55}
+@keyframes pulse{0%,100%{opacity:1}50%{opacity:.3}}
+
+/* ── VIEWS ── */
+.view{display:none}.view.active{display:block}
+
+/* ── LIST VIEW ── */
+main{max-width:980px;margin:0 auto;padding:2rem 1.5rem 5rem}
+
+.stats-row{display:grid;grid-template-columns:repeat(auto-fit,minmax(140px,1fr));gap:10px;margin-bottom:2rem}
+.stat{background:var(--ink2);border:1px solid var(--border);border-radius:var(--r);padding:16px 18px}
+.slbl{font-size:9px;text-transform:uppercase;letter-spacing:.14em;color:var(--ink-xs);margin-bottom:6px}
+.sval{font-size:28px;font-weight:500;color:var(--parch);line-height:1}
+.sval.g{color:#5DBF7A}.sval.o{color:var(--gold)}
+.sbar{height:2px;background:rgba(255,255,255,.08);border-radius:2px;margin-top:10px;overflow:hidden}
+.sbar-f{height:100%;background:var(--gold);border-radius:2px;transition:width .6s}
+
+.topbar{display:flex;align-items:center;justify-content:space-between;margin-bottom:1.5rem;flex-wrap:wrap;gap:12px}
+.topbar h1{font-family:'Cormorant Garamond',serif;font-size:28px;font-weight:400;color:var(--parch);letter-spacing:.02em}
+.btn-new{background:var(--gold);color:var(--ink);border:none;border-radius:var(--rs);padding:10px 22px;font-family:'DM Sans',sans-serif;font-size:13px;font-weight:500;cursor:pointer;transition:all .15s;letter-spacing:.02em}
+.btn-new:hover{background:var(--gold-l)}
+
+.filters{display:flex;gap:8px;margin-bottom:1.25rem;flex-wrap:wrap;align-items:center}
+.sbox{position:relative;flex:1;min-width:180px}
+.sbox svg{position:absolute;left:11px;top:50%;transform:translateY(-50%);color:var(--ink-xs);pointer-events:none}
+input[type=text]{width:100%;padding:8px 10px 8px 34px;border:1px solid var(--border);border-radius:var(--rs);background:var(--ink2);font-family:'DM Sans',sans-serif;font-size:13px;color:var(--parch);outline:none}
+input[type=text]:focus{border-color:var(--border2)}
+input[type=text]::placeholder{color:var(--ink-xs)}
+.tabs{display:flex;gap:5px;flex-wrap:wrap}
+.tab{padding:7px 14px;border-radius:20px;border:1px solid var(--border);background:transparent;font-family:'DM Sans',sans-serif;font-size:12px;color:var(--ink-s);cursor:pointer;transition:all .15s}
+.tab:hover{border-color:var(--border2);color:var(--parch)}
+.tab.on{background:rgba(196,169,107,.12);color:var(--gold);border-color:var(--border2)}
+select.sort{padding:8px 10px;border:1px solid var(--border);border-radius:var(--rs);background:var(--ink2);font-family:'DM Sans',sans-serif;font-size:12px;color:var(--ink-s);outline:none;cursor:pointer}
+.btn-ref{padding:8px 14px;border-radius:var(--rs);border:1px solid var(--border);background:transparent;font-family:'DM Sans',sans-serif;font-size:12px;color:var(--ink-s);cursor:pointer;display:flex;align-items:center;gap:5px;transition:all .15s}
+.btn-ref:hover{border-color:var(--border2);color:var(--parch)}
+
+.metaline{font-size:12px;color:var(--ink-xs);margin-bottom:.9rem}
+.metaline strong{color:var(--ink-s)}
+.list{display:flex;flex-direction:column;gap:8px}
+.card{background:var(--ink2);border:1px solid var(--border);border-radius:var(--r);padding:1rem 1.25rem;display:grid;grid-template-columns:44px 1fr auto;align-items:center;gap:14px;cursor:pointer;transition:all .2s;animation:fadeUp .3s ease both}
+.card:hover{background:var(--ink3);border-color:var(--border2);transform:translateY(-1px);box-shadow:var(--sh)}
+@keyframes fadeUp{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:none}}
+.av{width:44px;height:44px;border-radius:9px;display:flex;align-items:center;justify-content:center;font-family:'Cormorant Garamond',serif;font-size:16px;font-weight:600;flex-shrink:0;background:rgba(196,169,107,.1);color:var(--gold)}
+.ci{min-width:0}
+.cvilla{font-family:'Cormorant Garamond',serif;font-size:16px;font-weight:600;letter-spacing:.08em;text-transform:uppercase;margin-bottom:2px;color:var(--gold-l)}
+.cclient{font-size:12px;color:var(--ink-s);margin-bottom:3px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.cdates{font-size:11px;color:var(--ink-xs);display:flex;gap:6px;align-items:center;flex-wrap:wrap}
+.cr{display:flex;flex-direction:column;align-items:flex-end;gap:6px;flex-shrink:0}
+.badge{font-size:10px;font-weight:500;padding:3px 9px;border-radius:10px;white-space:nowrap;letter-spacing:.02em}
+.badge.confirmed{background:rgba(74,188,100,.12);color:#5DBF7A;border:1px solid rgba(74,188,100,.2)}
+.badge.pending{background:rgba(196,169,107,.12);color:var(--gold);border:1px solid var(--border)}
+.badge.cancelled{background:rgba(200,60,60,.1);color:#E07070;border:1px solid rgba(200,60,60,.15)}
+.cloyer{font-size:14px;font-weight:500;color:var(--parch);white-space:nowrap}
+.cnuits{font-size:10px;color:var(--ink-xs)}
+.cprog{font-size:10px;color:var(--ink-xs);white-space:nowrap}
+
+.state-block{text-align:center;padding:4rem 2rem;color:var(--ink-s);font-size:14px}
+.state-block .ico{font-size:40px;margin-bottom:12px;opacity:.5}
+.state-block.err{color:#E07070}
+
+/* ── DETAIL VIEW ── */
+#detailView{background:var(--ink);min-height:100vh}
+.detail-header{background:var(--ink2);padding:16px 1.5rem;display:flex;align-items:center;gap:16px;border-bottom:1px solid var(--border)}
+.btn-back{background:rgba(255,255,255,.06);border:1px solid var(--border);color:var(--parch);padding:7px 14px;border-radius:var(--rs);font-family:'DM Sans',sans-serif;font-size:12px;cursor:pointer;transition:all .15s}
+.btn-back:hover{background:rgba(255,255,255,.1);border-color:var(--border2)}
+.detail-title{font-family:'Cormorant Garamond',serif;font-size:20px;color:var(--parch);font-weight:400;flex:1;letter-spacing:.02em}
+.detail-villa-tag{font-size:11px;color:var(--gold);margin-top:2px;letter-spacing:.1em}
+.detail-sync{display:flex;align-items:center;gap:6px;font-size:11px;color:var(--ink-xs)}
+.prog-bar-wrap{background:rgba(255,255,255,.05);height:3px}
+.prog-bar-fill{height:3px;background:var(--gold);transition:width .4s ease}
+
+.detail-body{max-width:900px;margin:0 auto;padding:1.5rem 1.5rem 5rem}
+
+/* SECTIONS */
+.dsection{margin-bottom:10px;background:var(--ink2);border:1px solid var(--border);border-radius:var(--r);overflow:hidden}
+.dsection-header{padding:14px 18px;display:flex;align-items:center;justify-content:space-between;cursor:pointer;user-select:none;gap:10px}
+.dsection-header:hover{background:rgba(255,255,255,.03)}
+.dsection-title{font-size:13px;font-weight:500;color:var(--parch);display:flex;align-items:center;gap:8px;flex:1}
+.dsection-title .num{font-size:10px;background:rgba(196,169,107,.2);color:var(--gold);width:20px;height:20px;border-radius:50%;display:flex;align-items:center;justify-content:center;flex-shrink:0;font-weight:600}
+.dsection-badge{font-size:10px;padding:2px 9px;border-radius:10px;white-space:nowrap;flex-shrink:0}
+.dsection-badge.full{background:rgba(74,188,100,.12);color:#5DBF7A}
+.dsection-badge.partial{background:rgba(196,169,107,.12);color:var(--gold)}
+.dsection-badge.empty{background:rgba(255,255,255,.05);color:var(--ink-xs)}
+.dsection-arrow{font-size:11px;color:var(--ink-xs);transition:transform .2s;flex-shrink:0}
+.dsection.open .dsection-arrow{transform:rotate(180deg)}
+.dsection-body{display:none;padding:16px 18px;border-top:1px solid var(--border)}
+.dsection.open .dsection-body{display:block}
+
+/* FORM */
+.fgrid{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:12px}
+.fgrid.one{grid-template-columns:1fr}
+.fgrid.three{grid-template-columns:1fr 1fr 1fr}
+.fg{display:flex;flex-direction:column;gap:5px}
+.fg label{font-size:11px;color:var(--ink-xs);font-weight:500;letter-spacing:.04em}
+.fg input,.fg select,.fg textarea{padding:8px 10px;border:1px solid var(--border);border-radius:var(--rs);font-family:'DM Sans',sans-serif;font-size:13px;color:var(--parch);background:rgba(255,255,255,.04);outline:none;transition:border-color .15s}
+.fg input:focus,.fg select:focus,.fg textarea:focus{border-color:var(--border2);background:rgba(255,255,255,.06)}
+.fg select option{background:var(--ink2);color:var(--parch)}
+.fg textarea{resize:vertical;min-height:75px}
+
+/* CHECKLIST */
+.checklist{display:flex;flex-direction:column}
+.ck-section-title{font-size:10px;text-transform:uppercase;letter-spacing:.14em;color:var(--gold-d);padding:10px 0 5px;border-bottom:1px solid var(--border);margin-bottom:2px}
+.ck-item{display:flex;align-items:center;gap:12px;padding:9px 2px;border-bottom:1px solid rgba(255,255,255,.04);cursor:pointer;transition:all .1s;border-radius:5px}
+.ck-item:last-child{border-bottom:none}
+.ck-item:hover{background:rgba(255,255,255,.03);padding-left:8px;padding-right:8px;margin:0 -8px}
+.ck-box{width:20px;height:20px;border-radius:5px;border:1.5px solid rgba(255,255,255,.15);display:flex;align-items:center;justify-content:center;flex-shrink:0;transition:all .15s}
+.ck-item.done .ck-box{background:var(--gold);border-color:var(--gold)}
+.ck-tick{font-size:11px;color:var(--ink);display:none;font-weight:700}
+.ck-item.done .ck-tick{display:block}
+.ck-label{font-size:13px;color:var(--parch);flex:1;transition:color .15s}
+.ck-item.done .ck-label{color:var(--ink-xs);text-decoration:line-through}
+.ck-tag{font-size:10px;padding:2px 7px;border-radius:8px;white-space:nowrap;flex-shrink:0}
+.ck-tag.log{background:rgba(74,188,100,.1);color:#5DBF7A}
+.ck-tag.fin{background:rgba(100,150,230,.1);color:#7AB0E8}
+.ck-tag.doc{background:rgba(196,169,107,.1);color:var(--gold)}
+
+/* EDL */
+.edl-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.edl-piece{background:rgba(255,255,255,.03);border:1px solid var(--border);border-radius:var(--rs);padding:12px}
+.edl-piece-title{font-size:11px;font-weight:500;color:var(--gold-l);margin-bottom:8px;letter-spacing:.04em;text-transform:uppercase}
+.edl-piece select,.edl-piece textarea{width:100%;padding:7px 9px;border:1px solid var(--border);border-radius:6px;font-size:12px;background:rgba(255,255,255,.04);color:var(--parch);font-family:'DM Sans',sans-serif;outline:none;margin-bottom:6px}
+.edl-piece select option{background:var(--ink2)}
+.edl-piece textarea{resize:vertical;min-height:55px;margin-bottom:0}
+.edl-piece select:focus,.edl-piece textarea:focus{border-color:var(--border2)}
+
+/* INVENTAIRE */
+.inv-table{width:100%;border-collapse:collapse;font-size:12px}
+.inv-table th{text-align:left;padding:7px 8px;background:rgba(255,255,255,.04);color:var(--ink-xs);font-size:10px;text-transform:uppercase;letter-spacing:.08em;border-bottom:1px solid var(--border)}
+.inv-table td{padding:5px 4px;border-bottom:1px solid rgba(255,255,255,.04)}
+.inv-table input,.inv-table select{width:100%;padding:5px 7px;border:1px solid var(--border);border-radius:5px;font-size:12px;font-family:'DM Sans',sans-serif;background:rgba(255,255,255,.04);color:var(--parch);outline:none}
+.inv-table select option{background:var(--ink2)}
+.inv-table input:focus,.inv-table select:focus{border-color:var(--border2)}
+.btn-add-row{margin-top:8px;padding:6px 14px;border:1px dashed rgba(255,255,255,.1);border-radius:var(--rs);background:transparent;font-family:'DM Sans',sans-serif;font-size:12px;color:var(--ink-xs);cursor:pointer;transition:all .15s}
+.btn-add-row:hover{border-color:var(--border2);color:var(--gold)}
+
+/* COMPTEURS */
+.cpt-grid{display:grid;grid-template-columns:1fr 1fr 1fr;gap:10px}
+.cpt-card{background:rgba(255,255,255,.03);border:1px solid var(--border);border-radius:var(--rs);padding:14px}
+.cpt-label{font-size:10px;text-transform:uppercase;letter-spacing:.12em;color:var(--ink-xs);margin-bottom:8px}
+.cpt-input{width:100%;padding:9px;border:1px solid var(--border);border-radius:6px;font-size:15px;font-weight:500;text-align:center;font-family:'DM Sans',sans-serif;color:var(--gold-l);background:rgba(255,255,255,.04);outline:none}
+.cpt-input:focus{border-color:var(--border2)}
+
+/* TOAST */
+.save-toast{position:fixed;bottom:24px;right:24px;background:var(--ink2);color:var(--gold);font-size:12px;padding:10px 18px;border-radius:var(--rs);border:1px solid var(--border2);box-shadow:var(--sh2);opacity:0;transform:translateY(8px);transition:all .3s;pointer-events:none;z-index:500}
+.save-toast.show{opacity:1;transform:none}
+
+/* DELETE */
+.btn-delete{background:transparent;border:1px solid rgba(200,60,60,.2);color:#E07070;border-radius:var(--rs);padding:7px 16px;font-family:'DM Sans',sans-serif;font-size:12px;cursor:pointer;transition:all .15s}
+.btn-delete:hover{background:rgba(200,60,60,.08);border-color:rgba(200,60,60,.4)}
+
+/* MODAL */
+.modal-overlay{position:fixed;inset:0;background:rgba(0,0,0,.7);z-index:500;display:flex;align-items:flex-start;justify-content:center;padding:20px;overflow-y:auto;opacity:0;pointer-events:none;transition:opacity .2s}
+.modal-overlay.open{opacity:1;pointer-events:all}
+.modal{background:var(--ink2);border:1px solid var(--border);border-radius:14px;width:100%;max-width:600px;box-shadow:0 24px 60px rgba(0,0,0,.4);transform:translateY(20px);transition:transform .25s;margin:auto}
+.modal-overlay.open .modal{transform:none}
+.modal-head{background:var(--ink3);border-radius:14px 14px 0 0;padding:18px 24px;display:flex;align-items:center;justify-content:space-between;border-bottom:1px solid var(--border)}
+.modal-head-title{font-family:'Cormorant Garamond',serif;font-size:20px;color:var(--parch);font-weight:400;letter-spacing:.04em}
+.modal-close{background:rgba(255,255,255,.06);border:1px solid var(--border);color:var(--parch);width:30px;height:30px;border-radius:50%;font-size:16px;cursor:pointer;display:flex;align-items:center;justify-content:center}
+.modal-close:hover{background:rgba(255,255,255,.1)}
+.modal-body{padding:20px 24px}
+.msect{font-size:10px;text-transform:uppercase;letter-spacing:.15em;color:var(--gold-d);border-bottom:1px solid var(--border);padding-bottom:6px;margin:16px 0 12px}
+.msect:first-child{margin-top:0}
+.modal-foot{padding:14px 24px;border-top:1px solid var(--border);display:flex;gap:10px;justify-content:flex-end}
+.btn-cancel{padding:9px 20px;border:1px solid var(--border);border-radius:var(--rs);background:transparent;font-family:'DM Sans',sans-serif;font-size:13px;color:var(--ink-s);cursor:pointer;transition:all .15s}
+.btn-cancel:hover{border-color:var(--border2);color:var(--parch)}
+.btn-save{padding:9px 24px;border:none;border-radius:var(--rs);background:var(--gold);font-family:'DM Sans',sans-serif;font-size:13px;font-weight:500;color:var(--ink);cursor:pointer;letter-spacing:.02em}
+.btn-save:hover{background:var(--gold-l)}
+
+@media(max-width:600px){
+  .card{grid-template-columns:40px 1fr}.cr{display:none}
+  .fgrid{grid-template-columns:1fr}.fgrid.three{grid-template-columns:1fr 1fr}
+  .edl-grid{grid-template-columns:1fr}.cpt-grid{grid-template-columns:1fr 1fr}
+}
+
+/* ── EDL COMPLET ── */
+.edl-steps-bar{display:flex;background:rgba(255,255,255,0.03);border-bottom:1px solid rgba(196,169,107,0.1);overflow-x:auto;scrollbar-width:none;}
+.edl-steps-bar::-webkit-scrollbar{display:none;}
+.edl-step-pill{flex-shrink:0;padding:8px 12px;font-size:9px;letter-spacing:1px;text-transform:uppercase;color:var(--ink-xs);cursor:pointer;border-bottom:2px solid transparent;white-space:nowrap;font-family:'DM Sans',sans-serif;}
+.edl-step-pill.active{color:var(--gold);border-bottom-color:var(--gold);}
+.edl-step-pill.done{color:#5DBF7A;}
+.edl2-section{display:none;}
+.edl2-section.active{display:block;}
+.edl2-title{font-family:'Cormorant Garamond',serif;font-size:20px;color:var(--gold);margin-bottom:10px;}
+.edl2-fg{margin-bottom:10px;}
+.edl2-fg label{display:block;font-size:9px;letter-spacing:1.5px;text-transform:uppercase;color:var(--gold);margin-bottom:3px;}
+.edl2-fg input,.edl2-fg select{width:100%;background:rgba(255,255,255,0.04);border:1px solid rgba(196,169,107,0.2);border-radius:6px;color:var(--parch);font-family:'DM Sans',sans-serif;font-size:12px;padding:8px 10px;outline:none;-webkit-appearance:none;}
+.edl2-fg input:focus,.edl2-fg select:focus{border-color:var(--gold);}
+.edl2-fg select option{background:var(--ink2);}
+.edl-lang-select2{display:flex;gap:10px;margin-bottom:10px;}
+.edl-lang-btn2{flex:1;padding:12px;border:2px solid rgba(196,169,107,0.2);border-radius:8px;background:transparent;color:var(--parch);font-family:'DM Sans',sans-serif;font-size:12px;cursor:pointer;text-align:center;transition:all 0.2s;}
+.edl-lang-btn2.active{border-color:var(--gold);background:rgba(196,169,107,0.1);}
+.edl2-cpt{background:rgba(255,255,255,0.03);border:1px solid rgba(196,169,107,0.1);border-radius:8px;padding:10px;margin-bottom:8px;}
+.edl2-cpt-title{font-size:10px;letter-spacing:1px;text-transform:uppercase;color:var(--gold);margin-bottom:6px;}
+.edl2-piece-card{background:var(--ink2);border:1px solid rgba(196,169,107,0.15);border-radius:8px;margin-bottom:8px;overflow:hidden;}
+.edl2-piece-header{padding:11px 14px;display:flex;align-items:center;justify-content:space-between;cursor:pointer;}
+.edl2-piece-name{font-family:'Cormorant Garamond',serif;font-size:16px;color:var(--parch);}
+.edl2-piece-body{display:none;padding:0 12px 12px;border-top:1px solid rgba(196,169,107,0.1);}
+.edl2-piece-body.open{display:block;}
+.edl2-etat-row{display:flex;gap:5px;margin:6px 0;}
+.edl2-etat-b{flex:1;padding:7px 3px;border-radius:6px;border:1px solid;font-family:'DM Sans',sans-serif;font-size:9px;font-weight:600;cursor:pointer;text-align:center;background:transparent;}
+.edl2-etat-b.bon{border-color:rgba(74,188,100,0.4);color:#5DBF7A;}
+.edl2-etat-b.bon.active{background:rgba(74,188,100,0.2);border-color:#5DBF7A;}
+.edl2-etat-b.moyen{border-color:rgba(196,169,107,0.4);color:var(--gold);}
+.edl2-etat-b.moyen.active{background:rgba(196,169,107,0.15);border-color:var(--gold);}
+.edl2-etat-b.mauvais{border-color:rgba(200,60,60,0.4);color:#E07070;}
+.edl2-etat-b.mauvais.active{background:rgba(200,60,60,0.15);border-color:#E07070;}
+.edl2-photos-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:5px;margin:6px 0;}
+.edl2-photo-thumb{position:relative;aspect-ratio:1;border-radius:5px;overflow:hidden;}
+.edl2-photo-thumb img{width:100%;height:100%;object-fit:cover;}
+.edl2-photo-del{position:absolute;top:2px;right:2px;background:rgba(200,60,60,0.85);border:none;border-radius:50%;width:18px;height:18px;color:white;cursor:pointer;font-size:9px;}
+.edl2-sig-box{background:rgba(255,255,255,0.97);border-radius:8px;margin-bottom:10px;overflow:hidden;}
+.edl2-sig-label{background:var(--ink2);padding:7px 12px;font-size:9px;letter-spacing:1.5px;text-transform:uppercase;color:var(--gold);}
+.edl2-sig-canvas{display:block;width:100%;height:130px;cursor:crosshair;touch-action:none;}
+.edl2-sig-clear{width:100%;padding:6px;background:transparent;border:none;border-top:1px solid rgba(0,0,0,0.1);color:#666;font-family:'DM Sans',sans-serif;font-size:10px;cursor:pointer;}
+.edl2-btn-primary{width:100%;padding:12px;background:var(--gold);border:none;border-radius:8px;color:var(--ink);font-family:'DM Sans',sans-serif;font-size:11px;font-weight:600;letter-spacing:1.5px;cursor:pointer;margin-top:10px;}
+.edl2-nav{display:flex;gap:8px;margin-top:12px;}
+.edl2-back{flex:1;padding:10px;background:transparent;border:1px solid rgba(255,255,255,0.1);border-radius:8px;color:var(--ink-s);font-family:'DM Sans',sans-serif;font-size:11px;cursor:pointer;}
+.edl2-next{flex:2;padding:10px;background:var(--gold);border:none;border-radius:8px;color:var(--ink);font-family:'DM Sans',sans-serif;font-size:11px;font-weight:600;cursor:pointer;}
+.edl2-recap-box{background:rgba(255,255,255,0.03);border:1px solid rgba(196,169,107,0.1);border-radius:8px;padding:12px;margin-bottom:10px;}
+.edl2-recap-box h3{font-size:9px;letter-spacing:2px;text-transform:uppercase;color:var(--gold);margin-bottom:8px;}
+.edl2-recap-row{display:flex;justify-content:space-between;padding:4px 0;border-bottom:1px solid rgba(255,255,255,0.04);font-size:11px;}
+.edl2-recap-row:last-child{border-bottom:none;}
+.edl2-recap-row .edl2-lbl{color:var(--ink-xs);}
+</style>
+</head>
+<body>
+
+<header>
+  <div class="hl">
+    <div>
+      <div class="brand">HERACLEE <em>Agency</em></div>
+      <span class="brand-sub">Gestion des réservations</span>
+    </div>
+    <a href="index.html" class="npill on">Dossiers</a>
+    <a href="recap-reservations.html" class="npill">Récapitulatif</a>
+    <a href="#" class="npill" onclick="showGains();return false" id="npill-gains">📊 Gains</a>
+  </div>
+  <div class="sync">
+    <div class="dot spin" id="syncDot"></div>
+    <span id="syncLabel">Connexion…</span>
+  </div>
+</header>
+
+<!-- LIST VIEW -->
+<div id="listView" class="view active">
+  <main>
+    <div class="stats-row" id="statsRow"></div>
+    <div class="topbar">
+      <h1>Dossiers</h1>
+      <button class="btn-new" onclick="openNewModal()">+ Nouveau dossier</button>
+    </div>
+    <div class="filters">
+      <div class="sbox">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/></svg>
+        <input type="text" id="search" placeholder="Rechercher villa, client…" oninput="applyFilters()">
+      </div>
+      <div class="tabs">
+        <button class="tab on" data-st="" onclick="setTab(this)">Tous</button>
+        <button class="tab" data-st="confirmed" onclick="setTab(this)">Confirmés</button>
+        <button class="tab" data-st="pending" onclick="setTab(this)">En attente</button>
+        <button class="tab" data-st="cancelled" onclick="setTab(this)">Annulés</button>
+      </div>
+      <select class="sort" id="sortSel" onchange="applyFilters()">
+        <option value="date_asc">Date ↑</option>
+        <option value="date_desc">Date ↓</option>
+        <option value="villa">Villa A→Z</option>
+      </select>
+      <button class="btn-ref" onclick="loadData()">
+        <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="23 4 23 10 17 10"/><path d="M20.49 15a9 9 0 1 1-2.12-9.36L23 10"/></svg>
+        Actualiser
+      </button>
+    </div>
+    <div class="metaline" id="metaLine"></div>
+    <div id="stateBlock" class="state-block"><div class="ico">⏳</div>Chargement…</div>
+    <div class="list" id="list"></div>
+  </main>
+</div>
+
+<!-- DETAIL VIEW -->
+<div id="detailView" class="view">
+  <div class="detail-header">
+    <button class="btn-back" onclick="showList()">← Dossiers</button>
+    <div style="flex:1;min-width:0">
+      <div class="detail-title" id="detailTitle">Dossier</div>
+      <div class="detail-villa-tag" id="detailTag"></div>
+    </div>
+    <div class="detail-sync">
+      <div class="dot spin" id="detailDot"></div>
+      <span id="detailSyncLabel">…</span>
+    </div>
+  </div>
+  <div class="prog-bar-wrap"><div class="prog-bar-fill" id="progFill" style="width:0%"></div></div>
+  <div class="detail-body" id="detailBody"></div>
+</div>
+
+<div class="save-toast" id="toast">✓ Sauvegardé</div>
+
+<!-- MODAL -->
+<div class="modal-overlay" id="modalOverlay" onclick="closeModalOut(event)">
+  <div class="modal">
+    <div class="modal-head">
+      <div class="modal-head-title">Nouveau dossier</div>
+      <button class="modal-close" onclick="closeModal()">✕</button>
+    </div>
+    <div class="modal-body">
+      <div class="msect">Villa & Statut</div>
+      <div class="fgrid">
+        <div class="fg"><label>Villa</label>
+          <input type="text" id="mVilla" placeholder="Rechercher une villa..." list="mVilla-list" autocomplete="off" style="width:100%;padding:8px 10px;border:1px solid var(--border);border-radius:var(--rs);background:var(--ink2);font-family:'DM Sans',sans-serif;font-size:13px;color:var(--parch);outline:none">
+          <datalist id="mVilla-list"></datalist>
+        </div>
+        <div class="fg"><label>Statut</label>
+          <select id="mStatut">
+            <option value="attente">En attente</option>
+            <option value="confirme">Confirmé</option>
+            <option value="annule">Annulé</option>
+          </select>
+        </div>
+      </div>
+      <div class="msect">Client</div>
+      <div class="fgrid">
+        <div class="fg"><label>Nom complet</label><input type="text" id="mNom" placeholder="Prénom NOM"></div>
+        <div class="fg"><label>Nationalité</label><input type="text" id="mNat" placeholder="Française"></div>
+        <div class="fg"><label>Téléphone</label><input type="text" id="mTel" placeholder="+33 6…"></div>
+        <div class="fg"><label>Email</label><input type="text" id="mEmail" placeholder="email@…"></div>
+      </div>
+      <div class="msect">Séjour</div>
+      <div class="fgrid">
+        <div class="fg"><label>Arrivée</label><input type="date" id="mArrivee"></div>
+        <div class="fg"><label>Départ</label><input type="date" id="mDepart"></div>
+        <div class="fg"><label>Adultes</label><input type="number" id="mAdultes" min="1" placeholder="2"></div>
+        <div class="fg"><label>Enfants</label><input type="number" id="mEnfants" min="0" placeholder="0"></div>
+      </div>
+      <div class="msect">Financier</div>
+      <div class="fgrid">
+        <div class="fg"><label>Loyer total (€)</label><input type="number" id="mLoyer" placeholder="0"></div>
+        <div class="fg"><label>Acompte (€)</label><input type="number" id="mAcompte" placeholder="0"></div>
+      </div>
+    </div>
+    <div class="modal-foot">
+      <button class="btn-cancel" onclick="closeModal()">Annuler</button>
+      <button class="btn-save" onclick="createDossier()">Créer le dossier</button>
+    </div>
+  </div>
+</div>
+
+<!-- GAINS VIEW -->
+<div id="gainsView" class="view">
+<style>
+.gains-wrap{max-width:980px;margin:0 auto;padding:2rem 1.5rem 5rem}
+.gains-topbar{display:flex;align-items:center;justify-content:space-between;margin-bottom:1.5rem;flex-wrap:wrap;gap:12px}
+.gains-topbar h1{font-family:'Cormorant Garamond',serif;font-size:28px;font-weight:400;color:var(--parch);letter-spacing:.02em}
+.gains-filters{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:1.5rem}
+.gains-kpis{display:grid;grid-template-columns:repeat(auto-fit,minmax(180px,1fr));gap:10px;margin-bottom:2rem}
+.gains-kpi{background:var(--ink2);border:1px solid var(--border);border-radius:var(--r);padding:18px 20px}
+.gains-kpi .klbl{font-size:9px;text-transform:uppercase;letter-spacing:.14em;color:var(--ink-xs);margin-bottom:8px}
+.gains-kpi .kval{font-size:26px;font-weight:500;line-height:1}
+.gains-kpi .kval.g{color:#5DBF7A}
+.gains-kpi .kval.o{color:var(--gold)}
+.gains-kpi .kval.b{color:#6ab0ff}
+.gains-table-wrap{background:var(--ink2);border:1px solid var(--border);border-radius:var(--r);overflow:hidden;margin-bottom:2rem}
+.gains-table{width:100%;border-collapse:collapse}
+.gains-table thead tr{background:rgba(196,169,107,0.08)}
+.gains-table th{padding:10px 14px;font-size:9px;text-transform:uppercase;letter-spacing:.12em;color:var(--gold);text-align:left;font-weight:500;border-bottom:1px solid var(--border)}
+.gains-table td{padding:11px 14px;font-size:12px;border-bottom:1px solid rgba(196,169,107,0.06);color:var(--parch)}
+.gains-table tr:last-child td{border-bottom:none}
+.gains-table tr:hover td{background:rgba(255,255,255,0.02)}
+.gains-table .villa-name{font-family:'Cormorant Garamond',serif;font-size:15px;font-weight:600;color:var(--gold-l);letter-spacing:.06em}
+.gains-table .num{font-weight:500;white-space:nowrap}
+.gains-table .num.g{color:#5DBF7A}
+.gains-table .num.o{color:var(--gold)}
+.gains-table tfoot tr{background:rgba(196,169,107,0.06)}
+.gains-table tfoot td{font-weight:600;color:var(--parch);border-top:1px solid var(--border2);border-bottom:none;padding:12px 14px}
+.gains-bar{height:4px;border-radius:2px;background:rgba(255,255,255,0.06);margin-top:6px;overflow:hidden}
+.gains-bar-fill{height:100%;border-radius:2px;background:var(--gold);transition:width .6s}
+@media(max-width:600px){
+  .gains-table th:nth-child(3),.gains-table td:nth-child(3),
+  .gains-table th:nth-child(4),.gains-table td:nth-child(4){display:none}
+}
+</style>
+<div class="gains-wrap">
+  <div class="gains-topbar">
+    <h1>Gains & Commissions</h1>
+    <button class="btn-ref" onclick="renderGains()">
+      <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="23 4 23 10 17 10"/><path d="M20.49 15a9 9 0 1 1-2.12-9.36L23 10"/></svg>
+      Actualiser
+    </button>
+  </div>
+  <div class="gains-filters">
+    <button class="tab on" data-gst="" onclick="setGainsTab(this)">Tous</button>
+    <button class="tab" data-gst="confirmed" onclick="setGainsTab(this)">Confirmés</button>
+    <button class="tab" data-gst="pending" onclick="setGainsTab(this)">En attente</button>
+  </div>
+  <div class="gains-kpis" id="gains-kpis"></div>
+  <div class="gains-table-wrap">
+    <table class="gains-table">
+      <thead><tr>
+        <th>Villa</th>
+        <th>Dossiers</th>
+        <th>Loyer total</th>
+        <th>Reversé proprio</th>
+        <th>Commission Heraclee</th>
+        <th>%</th>
+      </tr></thead>
+      <tbody id="gains-tbody"></tbody>
+      <tfoot id="gains-tfoot"></tfoot>
+    </table>
+  </div>
+</div>
+</div>
+
+
+<script>
+const SB='https://fgocsdozvgkpkjbzuyyp.supabase.co';
+const KEY='eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImZnb2NzZG96dmdrcGtqYnp1eXlwIiwicm9sZSI6ImFub24iLCJpYXQiOjE3Nzg4NDc0ODAsImV4cCI6MjA5NDQyMzQ4MH0.bM0tlZmRLVDooKPlxJ6AwVhKCUyOqcYn7C7hJ42BaUE';
+const H={'apikey':KEY,'Authorization':'Bearer '+KEY,'Content-Type':'application/json','Prefer':'return=representation'};
+let allData=[],activeSt='',currentId=null,saveTimer=null,allVillaNames=[];
+
+function villaOptions(selected=''){
+  let opts=allVillaNames.map(n=>`<option value="${n}">`).join('');
+  return `<input type="text" id="f-villa" value="${selected||''}" list="villa-datalist" placeholder="Rechercher une villa..." oninput="debounceSave()" autocomplete="off" style="width:100%;background:rgba(255,255,255,0.04);border:1px solid var(--border);border-radius:var(--rs);color:var(--parch);font-family:'DM Sans',sans-serif;font-size:13px;padding:8px 10px;outline:none"><datalist id="villa-datalist">${opts}</datalist>`;
+}
+
+async function loadVillaNames(){
+  try{
+    const r=await fetch(`${SB}/rest/v1/villas_saisie?select=nom&order=nom.asc&limit=500`,{headers:H});
+    if(!r.ok)return;
+    const data=await r.json();
+    allVillaNames=[...new Set(data.map(v=>(v.nom||'').toUpperCase().trim()).filter(Boolean))].sort();
+    const dl=document.getElementById('mVilla-list');
+    if(dl){dl.innerHTML=allVillaNames.map(n=>`<option value="${n}">`).join('');}
+  }catch(e){console.log('Villa names error:',e);}
+}
+
+const CK=[
+  {s:'📋 Contractualisation'},
+  {k:'mandat',l:'Mandat de gestion signé',t:'doc'},
+  {k:'contrat',l:'Contrat de location rédigé et signé',t:'doc'},
+  {k:'acompte_recu',l:'Acompte reçu et encaissé',t:'fin'},
+  {k:'solde_recu',l:'Solde reçu et encaissé',t:'fin'},
+  {k:'depot_recu',l:'Dépôt de garantie reçu',t:'fin'},
+  {k:'infos_envoyees',l:'Infos pratiques envoyées au client',t:'log'},
+  {s:'🧹 Ménage & Préparation'},
+  {k:'menage_fait',l:'Ménage fait et validé',t:'log'},
+  {k:'linge_propre',l:'Linge de maison propre et en place',t:'log'},
+  {k:'equipements',l:'Équipements vérifiés (électros, clim, WiFi, TV)',t:'log'},
+  {k:'pq',l:'Papier toilette rechargé',t:'log'},
+  {k:'eau_frigo',l:'Frigos remplis d\'eau',t:'log'},
+  {k:'nuxe',l:'Produits Nuxe en place (salle de bain)',t:'log'},
+  {k:'sel_poivre',l:'Sel et poivre en cuisine',t:'log'},
+  {k:'piscine',l:'Piscine vérifiée et propre',t:'log'},
+  {k:'exterieur',l:'Extérieur rangé et propre',t:'log'},
+  {s:'🧺 Panier garni'},
+  {k:'tropez',l:'Bouteille de Tropez',t:'log'},
+  {k:'sac_heraclee',l:'Sac Heraclee',t:'log'},
+  {k:'gressins',l:'Gressins',t:'log'},
+  {k:'tapenade',l:'Tapenade',t:'log'},
+  {k:'fruits',l:'Panier de fruits (réservations +10 000€)',t:'log'},
+  {k:'fleurs',l:'Fleurs fraîches disposées',t:'log'},
+  {s:'🔑 Accueil & Remise des clés'},
+  {k:'cles_remises',l:'Clés remises au client',t:'log'},
+  {k:'visite_faite',l:'Visite de la villa effectuée',t:'log'},
+  {k:'reglement_signe',l:'Règlement intérieur signé',t:'doc'},
+  {s:'📸 État des lieux'},
+  {k:'edl_entree',l:"État des lieux d'entrée réalisé",t:'doc'},
+  {k:'compteurs_releves',l:'Compteurs relevés (entrée)',t:'log'},
+  {k:'inventaire_fait',l:'Inventaire vérifié et signé',t:'doc'},
+  {k:'edl_sortie',l:'État des lieux de sortie réalisé',t:'doc'},
+  {k:'depot_rendu',l:'Dépôt de garantie restitué',t:'fin'},
+];
+const TOTAL=CK.filter(i=>i.k).length;
+
+function stKey(r){const s=(r.statut||'').toLowerCase();if(s.includes('confirm'))return'confirmed';if(s.includes('annul')||s.includes('cancel'))return'cancelled';return'pending';}
+function stLabel(k){return{confirmed:'Confirmé',pending:'En attente',cancelled:'Annulé'}[k]||k;}
+function fd(d){if(!d)return null;const dt=new Date(d);return isNaN(dt)?d:dt.toLocaleDateString('fr-FR',{day:'numeric',month:'short',year:'numeric'});}
+function nights(a,b){if(!a||!b)return null;const n=Math.round((new Date(b)-new Date(a))/86400000);return isNaN(n)?null:n+' nuit'+(n>1?'s':'');}
+function initials(v){return(v||'?').replace(/[^A-Za-zÀ-ÿ ]/g,'').trim().split(/\s+/).slice(0,2).map(w=>w[0]||'').join('').toUpperCase()||'?';}
+function countDone(r){const cl=r.checklist||{};return CK.filter(i=>i.k&&cl[i.k]).length;}
+
+function setSt(s,l){
+  ['syncDot','detailDot'].forEach(id=>{const d=document.getElementById(id);if(d)d.className='dot '+(s==='loading'?'spin':s==='error'?'err':'');});
+  ['syncLabel','detailSyncLabel'].forEach(id=>{const el=document.getElementById(id);if(el)el.textContent=l;});
+}
+function showToast(){const t=document.getElementById('toast');t.classList.add('show');setTimeout(()=>t.classList.remove('show'),2000);}
+
+async function loadData(){
+  setSt('loading','Chargement…');
+  document.getElementById('stateBlock').style.display='block';
+  document.getElementById('stateBlock').className='state-block';
+  document.getElementById('stateBlock').innerHTML='<div class="ico">⏳</div>Chargement des dossiers…';
+  document.getElementById('list').innerHTML='';
+  try{
+    const r=await fetch(`${SB}/rest/v1/reservations?select=*&order=date_arrivee.asc`,{headers:H});
+    if(!r.ok)throw new Error('HTTP '+r.status);
+    allData=await r.json();
+    setSt('ok','Synchronisé');
+    applyFilters();
+  }catch(e){
+    setSt('error','Erreur');
+    document.getElementById('stateBlock').className='state-block err';
+    document.getElementById('stateBlock').innerHTML=`<div class="ico">⚠️</div>Erreur de connexion<br><small style="opacity:.6">${e.message}</small>`;
+  }
+}
+
+function setTab(btn){document.querySelectorAll('.tab').forEach(b=>b.classList.remove('on'));btn.classList.add('on');activeSt=btn.dataset.st;applyFilters();}
+function applyFilters(){
+  const q=(document.getElementById('search').value||'').toLowerCase();
+  const sort=document.getElementById('sortSel').value;
+  let data=allData.filter(r=>{
+    const v=(r.villa||'').toLowerCase(),c=(r.client_nom||'').toLowerCase();
+    return(!q||v.includes(q)||c.includes(q))&&(!activeSt||stKey(r)===activeSt);
+  });
+  data=[...data].sort((a,b)=>{
+    if(sort==='villa')return(a.villa||'').localeCompare(b.villa||'');
+    const da=new Date(a.date_arrivee||0),db=new Date(b.date_arrivee||0);
+    return sort==='date_desc'?db-da:da-db;
+  });
+  renderStats(data);renderList(data);
+  document.getElementById('metaLine').innerHTML=data.length?`<strong>${data.length}</strong> dossier${data.length>1?'s':''} affiché${data.length>1?'s':''}` : '';
+}
+
+function renderStats(data){
+  const tot=allData.length,conf=allData.filter(r=>stKey(r)==='confirmed').length,pend=allData.filter(r=>stKey(r)==='pending').length;
+  const villas=[...new Set(allData.map(r=>r.villa||'?'))].length;
+  const pct=tot?Math.round(conf/tot*100):0;
+  document.getElementById('statsRow').innerHTML=`
+    <div class="stat"><div class="slbl">Total dossiers</div><div class="sval">${tot}</div></div>
+    <div class="stat"><div class="slbl">Confirmés</div><div class="sval g">${conf}</div><div class="sbar"><div class="sbar-f" style="width:${pct}%"></div></div></div>
+    <div class="stat"><div class="slbl">En attente</div><div class="sval o">${pend}</div></div>
+    <div class="stat"><div class="slbl">Villas actives</div><div class="sval">${villas}</div></div>`;
+}
+
+function renderList(data){
+  const sb=document.getElementById('stateBlock'),li=document.getElementById('list');
+  if(!data.length){sb.style.display='block';sb.className='state-block';sb.innerHTML='<div class="ico">🔍</div>Aucun dossier trouvé.';li.innerHTML='';return;}
+  sb.style.display='none';
+  li.innerHTML=data.map((r,i)=>{
+    const st=stKey(r),nts=nights(r.date_arrivee,r.date_depart),done=countDone(r);
+    return`<div class="card" style="animation-delay:${Math.min(i*.04,.5)}s" onclick="openDetail('${r.id}')">
+      <div class="av">${initials(r.villa)}</div>
+      <div class="ci">
+        <div class="cvilla">${(r.villa||'?').toUpperCase()}</div>
+        <div class="cclient">${r.client_nom||'–'}</div>
+        <div class="cdates">
+          ${r.date_arrivee?`<span>${fd(r.date_arrivee)}</span><span>→</span><span>${fd(r.date_depart)||'?'}</span>`:''}
+          ${nts?`<span>·</span><span>${nts}</span>`:''}
+          <span>·</span><span class="cprog">${done}/${TOTAL} étapes</span>
+        </div>
+      </div>
+      <div class="cr">
+        <span class="badge ${st}">${stLabel(st)}</span>
+        ${r.loyer_total?`<div class="cloyer">${Number(r.loyer_total).toLocaleString('fr-FR')} €</div>`:''}
+        ${nts?`<div class="cnuits">${nts}</div>`:''}
+      </div>
+    </div>`;
+  }).join('');
+}
+
+function showList(){
+  document.querySelectorAll('.view').forEach(v=>v.classList.remove('active'));
+  document.getElementById('listView').classList.add('active');
+  document.querySelectorAll('.npill').forEach(p=>p.classList.remove('on'));
+  document.querySelector('.npill[href="index.html"]').classList.add('on');
+  currentId=null;loadData();
+}
+
+function openDetail(id){
+  currentId=id;
+  const r=allData.find(x=>x.id===id);
+  if(!r)return;
+  document.getElementById('listView').classList.remove('active');
+  document.getElementById('detailView').classList.add('active');
+  renderDetail(r);
+}
+
+function renderDetail(r){
+  const done=countDone(r),pct=Math.round(done/TOTAL*100);
+  document.getElementById('detailTitle').textContent=r.client_nom?`${(r.villa||'').toUpperCase()} — ${r.client_nom}`:(r.villa||'Dossier');
+  document.getElementById('detailTag').textContent=(r.villa||'').toUpperCase()+' · '+done+'/'+TOTAL+' étapes complétées';
+  document.getElementById('progFill').style.width=pct+'%';
+  const cl=r.checklist||{},edl=r.edl_pieces||{},inv=r.inventaire||[],cpt=r.compteurs||{};
+
+  // Checklist
+  let ckHtml='';
+  CK.forEach(item=>{
+    if(item.s){ckHtml+=`<div class="ck-section-title">${item.s}</div>`;return;}
+    const done=cl[item.k]?'done':'';
+    ckHtml+=`<div class="ck-item ${done}" onclick="toggleCk('${item.k}',this)">
+      <div class="ck-box"><span class="ck-tick">✓</span></div>
+      <div class="ck-label">${item.l}</div>
+      <span class="ck-tag ${item.t}">${{log:'Log.',fin:'Fin.',doc:'Doc.'}[item.t]}</span>
+    </div>`;
+  });
+
+  // EDL
+  const pieces=['Salon','Cuisine','Chambre 1','Chambre 2','Chambre 3','Chambre 4','Chambre 5','Chambre 6','Salle de bain 1','Salle de bain 2','Salle de bain 3','Terrasse','Piscine'];
+  let edlHtml='<div class="edl-grid">';
+  pieces.forEach(p=>{
+    const d=edl[p]||{};
+    edlHtml+=`<div class="edl-piece"><div class="edl-piece-title">${p}</div>
+      <select onchange="saveEdlField('${p}','etat',this.value)">
+        <option value="" ${!d.etat?'selected':''}>État…</option>
+        ${['Bon état','Usure normale','À signaler','Dommage'].map(v=>`<option value="${v}" ${d.etat===v?'selected':''}>${v}</option>`).join('')}
+      </select>
+      <textarea placeholder="Observations…" onblur="saveEdlField('${p}','obs',this.value)">${d.obs||''}</textarea>
+    </div>`;
+  });
+  edlHtml+='</div>';
+
+  // Inventaire
+  const baseInv=inv.length?inv:[
+    {nom:'Serviettes de bain',qte:'',etat:'',remarque:''},{nom:'Draps',qte:'',etat:'',remarque:''},
+    {nom:'Vaisselle (assiettes)',qte:'',etat:'',remarque:''},{nom:'Verres',qte:'',etat:'',remarque:''},
+    {nom:'Couverts',qte:'',etat:'',remarque:''},{nom:'Casseroles / poêles',qte:'',etat:'',remarque:''},
+    {nom:'Télécommandes',qte:'',etat:'',remarque:''},{nom:'Clés',qte:'',etat:'',remarque:''},
+  ];
+  let invHtml=`<table class="inv-table"><thead><tr><th>Article</th><th>Qté</th><th>État</th><th>Remarque</th></tr></thead><tbody id="invBody">`;
+  const etats=['','Bon état','Usure','Manquant','Cassé'];
+  baseInv.forEach((item,i)=>{
+    invHtml+=`<tr>
+      <td><input type="text" value="${item.nom||''}" onblur="saveInv()" data-nom="${i}"></td>
+      <td><input type="text" value="${item.qte||''}" style="width:50px" onblur="saveInv()" data-qte="${i}"></td>
+      <td><select onchange="saveInv()" data-etat="${i}">${etats.map(v=>`<option value="${v}" ${item.etat===v?'selected':''}>${v||'–'}</option>`).join('')}</select></td>
+      <td><input type="text" value="${item.remarque||''}" onblur="saveInv()" data-rem="${i}"></td>
+    </tr>`;
+  });
+  invHtml+='</tbody></table><button class="btn-add-row" onclick="addInvRow()">+ Ajouter une ligne</button>';
+
+  const sel=(field,val,opts)=>`<select id="${field}" onchange="debounceSave()">${opts.map(([v,l])=>`<option value="${v}" ${val===v?'selected':''}>${l}</option>`).join('')}</select>`;
+  const inp=(field,val,ph='',type='text')=>`<input type="${type}" id="${field}" value="${val||''}" placeholder="${ph}" oninput="debounceSave()">`;
+  const dat=(field,val)=>`<input type="date" id="${field}" value="${val||''}" onchange="debounceSave()">`;
+  const ta=(field,val,ph='')=>`<textarea id="${field}" placeholder="${ph}" oninput="debounceSave()">${val||''}</textarea>`;
+
+  document.getElementById('detailBody').innerHTML=`
+  <div class="dsection open" id="s1">
+    <div class="dsection-header" onclick="toggleSec('s1')">
+      <div class="dsection-title"><span class="num">1</span>Informations générales</div>
+      <span class="dsection-arrow">▾</span>
+    </div>
+    <div class="dsection-body">
+      <div class="fgrid">
+        <div class="fg"><label>Villa</label>${villaOptions(r.villa)}</div>
+        <div class="fg"><label>Statut</label>${sel('f-statut',r.statut,[['attente','En attente'],['confirme','Confirmé'],['annule','Annulé']])}</div>
+      </div>
+      <div class="fgrid">
+        <div class="fg"><label>Nom client</label>${inp('f-nom',r.client_nom,'Prénom NOM')}</div>
+        <div class="fg"><label>Nationalité</label>${inp('f-nat',r.client_nationalite,'Française')}</div>
+        <div class="fg"><label>Téléphone</label>${inp('f-tel',r.client_tel,'+33 6…')}</div>
+        <div class="fg"><label>Email</label>${inp('f-email',r.client_email,'email@…')}</div>
+      </div>
+      <div class="fgrid">
+        <div class="fg"><label>Adresse</label>${inp('f-adresse',r.client_adresse)}</div>
+        <div class="fg"><label>Animaux</label>${inp('f-animaux',r.animaux,'Non / détails…')}</div>
+      </div>
+      <div class="fgrid">
+        <div class="fg"><label>Arrivée</label>${dat('f-arrivee',r.date_arrivee)}</div>
+        <div class="fg"><label>Départ</label>${dat('f-depart',r.date_depart)}</div>
+        <div class="fg"><label>Adultes</label>${inp('f-adultes',r.nb_adultes,'2','number')}</div>
+        <div class="fg"><label>Enfants</label>${inp('f-enfants',r.nb_enfants,'0','number')}</div>
+      </div>
+      <div class="fgrid">
+        <div class="fg"><label>Heure arrivée prévue</label>${inp('f-hprev',r.heure_prevue,'15h00')}</div>
+        <div class="fg"><label>Heure arrivée réelle</label>${inp('f-hreel',r.heure_reelle,'15h30')}</div>
+      </div>
+    </div>
+  </div>
+
+  <div class="dsection" id="s2">
+    <div class="dsection-header" onclick="toggleSec('s2')">
+      <div class="dsection-title"><span class="num">2</span>Financier</div>
+      <span class="dsection-arrow">▾</span>
+    </div>
+    <div class="dsection-body">
+
+
+      <div style="display:flex;flex-direction:column;gap:14px;margin-bottom:14px">
+
+        <!-- CÔTÉ LOCATAIRE -->
+        <div style="background:rgba(196,169,107,0.06);border:1px solid rgba(196,169,107,0.2);border-radius:8px;padding:14px;min-width:0">
+          <div style="font-size:10px;text-transform:uppercase;letter-spacing:.12em;color:var(--gold);margin-bottom:12px;font-weight:500">Encaissements locataire</div>
+          <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px">
+            <div class="fg"><label>Loyer total (€)</label>${inp('f-loyer',r.loyer_total,'0','number')}</div>
+            <div class="fg"><label>Type acompte</label>${sel('f-type-acompte',r.type_acompte,[['','–'],['acompte','Acompte'],['arrhes','Arrhes']])}</div>
+            <div class="fg"><label>Acompte reçu (€)</label>${inp('f-acompte',r.acompte,'0','number')}</div>
+            <div class="fg"><label>Solde reçu (€)</label>${inp('f-solde',r.solde,'0','number')}</div>
+            <div class="fg"><label>Dépôt garantie reçu (€)</label>${inp('f-depot',r.depot_garantie,'0','number')}</div>
+            <div class="fg"><label>Date encaissement solde</label>${dat('f-dsolde',r.date_encaissement_solde)}</div>
+          </div>
+        </div>
+
+        <!-- CÔTÉ PROPRIÉTAIRE -->
+        <div style="background:rgba(93,191,122,0.06);border:1px solid rgba(93,191,122,0.2);border-radius:8px;padding:14px;min-width:0">
+          <div style="font-size:10px;text-transform:uppercase;letter-spacing:.12em;color:#5DBF7A;margin-bottom:12px;font-weight:500">Reversements propriétaire</div>
+          <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px">
+            <div class="fg"><label>Montant à reverser (€)</label>${inp('f-proprio-total',r.proprio_total,'0','number')}</div>
+            <div class="fg"><label>Type acompte proprio</label>${sel('f-type-acompte-proprio',r.type_acompte_proprio,[['','–'],['acompte','Acompte'],['arrhes','Arrhes']])}</div>
+            <div class="fg"><label>Acompte versé proprio (€)</label>${inp('f-proprio-acompte',r.proprio_acompte,'0','number')}</div>
+            <div class="fg"><label>Solde versé proprio (€)</label>${inp('f-proprio-solde',r.proprio_solde,'0','number')}</div>
+            <div class="fg"><label>Dépôt garantie reversé (€)</label>${inp('f-proprio-depot',r.proprio_depot,'0','number')}</div>
+            <div class="fg"><label>Date versement solde proprio</label>${dat('f-dsolde-proprio',r.date_versement_proprio)}</div>
+          </div>
+        </div>
+
+      </div>
+
+      <!-- COMMISSION + INFOS -->
+      <div class="fgrid">
+        <div class="fg"><label>Commission Heraclee (€)</label>${inp('f-commission',r.commission,'0','number')}</div>
+        <div class="fg"><label>Statut reversement</label>${sel('f-statut-reversement',r.statut_reversement,[['','–'],['attente','En attente'],['partiel','Partiel'],['verse','Versé ✓']])}</div>
+        <div class="fg"><label>Réf. contrat</label>${inp('f-ref',r.ref_contrat)}</div>
+      </div>
+      <div class="fgrid one">
+        <div class="fg"><label>Notes contrat / paiement</label>${ta('f-notes-contrat',r.notes_contrat)}</div>
+      </div>
+    </div>
+  </div>
+
+  <div class="dsection" id="s3">
+    <div class="dsection-header" onclick="toggleSec('s3')">
+      <div class="dsection-title"><span class="num">3</span>Checklist des étapes</div>
+      <div class="dsection-badge ${done===TOTAL?'full':done>0?'partial':'empty'}" id="ckBadge">${done}/${TOTAL}</div>
+      <span class="dsection-arrow">▾</span>
+    </div>
+    <div class="dsection-body">
+      <div class="checklist" id="checklist">${ckHtml}</div>
+    </div>
+  </div>
+
+  <div class="dsection" id="s4">
+    <div class="dsection-header" onclick="toggleSec('s4')">
+      <div class="dsection-title"><span class="num">4</span>Infos & Accueil client</div>
+      <span class="dsection-arrow">▾</span>
+    </div>
+    <div class="dsection-body">
+      <div class="fgrid">
+        <div class="fg"><label>Date d'envoi des infos</label>${dat('f-dinfos',r.date_envoi_infos)}</div>
+      </div>
+      <div class="fgrid one">
+        <div class="fg"><label>Notes panier garni / accueil</label>${ta('f-notes-panier',r.notes_panier,'Spécificités du panier, demandes particulières…')}</div>
+      </div>
+    </div>
+  </div>
+
+  <div class="dsection" id="s5">
+    <div class="dsection-header" onclick="toggleSec('s5')">
+      <div class="dsection-title"><span class="num">5</span>État des lieux</div>
+      <span class="dsection-arrow">▾</span>
+    </div>
+    <div class="dsection-body" style="padding:0">
+      <div id="edl-container-${r.id}" style="padding:0">
+        <div class="edl-steps-bar">
+          <div class="edl-step-pill active" onclick="edlGoStep2('${r.id}',0)">1. Langue</div>
+          <div class="edl-step-pill" onclick="edlGoStep2('${r.id}',1)">2. Infos</div>
+          <div class="edl-step-pill" onclick="edlGoStep2('${r.id}',2)">3. Compteurs</div>
+          <div class="edl-step-pill" onclick="edlGoStep2('${r.id}',3)">4. Pièces</div>
+          <div class="edl-step-pill" onclick="edlGoStep2('${r.id}',4)">5. Signatures</div>
+          <div class="edl-step-pill" onclick="edlGoStep2('${r.id}',5)">6. PDF</div>
+        </div>
+        <!-- STEP 0 -->
+        <div class="edl2-section active" id="edl2-step-0-${r.id}" style="padding:14px">
+          <div class="edl2-title">Langue / Language</div>
+          <div class="edl-lang-select2">
+            <button class="edl-lang-btn2 active" onclick="edlSetLang2('${r.id}','fr',this)"><span style="font-size:22px;display:block;margin-bottom:3px">🇫🇷</span>Français</button>
+            <button class="edl-lang-btn2" onclick="edlSetLang2('${r.id}','en',this)"><span style="font-size:22px;display:block;margin-bottom:3px">🇬🇧</span>English</button>
+          </div>
+          <div class="edl2-title" style="margin-top:14px">Type</div>
+          <div class="edl-lang-select2">
+            <button class="edl-lang-btn2 active" onclick="edlSetType2('${r.id}','entree',this)"><span style="font-size:20px;display:block;margin-bottom:3px">🔑</span>Entrée</button>
+            <button class="edl-lang-btn2" onclick="edlSetType2('${r.id}','sortie',this)"><span style="font-size:20px;display:block;margin-bottom:3px">🚪</span>Sortie</button>
+          </div>
+          <button class="edl2-btn-primary" onclick="edlGoStep2('${r.id}',1)">Suivant →</button>
+        </div>
+        <!-- STEP 1 -->
+        <div class="edl2-section" id="edl2-step-1-${r.id}" style="padding:14px">
+          <div class="edl2-title">Informations</div>
+          <div class="edl2-fg"><label>Villa</label><input type="text" id="edl2-villa-${r.id}" value="${(r.villa||'').toUpperCase()}" placeholder="ex: BLANCA"></div>
+          <div class="edl2-fg"><label>Adresse</label><input type="text" id="edl2-adresse-${r.id}" value="${r.client_adresse||''}" placeholder="ex: Chemin des Salins, Ramatuelle"></div>
+          <div class="edl2-fg"><label>Date</label><input type="date" id="edl2-date-${r.id}" value="${new Date().toISOString().split('T')[0]}"></div>
+          <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px">
+            <div class="edl2-fg"><label>Nom locataire</label><input type="text" id="edl2-loc-nom-${r.id}" value="${(r.client_nom||'').split(' ').slice(-1)[0]||''}" placeholder="Nom"></div>
+            <div class="edl2-fg"><label>Prénom</label><input type="text" id="edl2-loc-prenom-${r.id}" value="${(r.client_nom||'').split(' ').slice(0,-1).join(' ')||''}" placeholder="Prénom"></div>
+          </div>
+          <div class="edl2-fg"><label>Propriétaire</label><input type="text" id="edl2-proprio-${r.id}" placeholder="Nom propriétaire"></div>
+          <div class="edl2-fg"><label>Commercial Heraclee</label>
+            <select id="edl2-commercial-${r.id}">
+              <option value="">— Sélectionner —</option>
+              <option ${r.commercial==='Ben'?'selected':''}>Ben</option>
+              <option ${r.commercial==='Lola'?'selected':''}>Lola</option>
+              <option ${r.commercial==='Olivier'?'selected':''}>Olivier</option>
+              <option ${r.commercial==='Edouard'?'selected':''}>Edouard</option>
+            </select>
+          </div>
+          <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px">
+            <div class="edl2-fg"><label>Nombre de clés</label><input type="number" id="edl2-cles-${r.id}" placeholder="2" min="0"></div>
+            <div class="edl2-fg"><label>Télécommandes</label><input type="number" id="edl2-tel-${r.id}" placeholder="2" min="0"></div>
+          </div>
+          <div class="edl2-nav">
+            <button class="edl2-back" onclick="edlGoStep2('${r.id}',0)">← Retour</button>
+            <button class="edl2-next" onclick="edlGoStep2('${r.id}',2)">Suivant →</button>
+          </div>
+        </div>
+        <!-- STEP 2 -->
+        <div class="edl2-section" id="edl2-step-2-${r.id}" style="padding:14px">
+          <div class="edl2-title">Compteurs</div>
+          <div class="edl2-cpt"><div class="edl2-cpt-title">💧 Eau</div>
+            <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px">
+              <div class="edl2-fg"><label>Entrée (m³)</label><input type="text" id="edl2-eau-e-${r.id}" placeholder="0.000"></div>
+              <div class="edl2-fg"><label>Sortie (m³)</label><input type="text" id="edl2-eau-s-${r.id}" placeholder="0.000"></div>
+            </div>
+          </div>
+          <div class="edl2-cpt"><div class="edl2-cpt-title">⚡ Électricité</div>
+            <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px">
+              <div class="edl2-fg"><label>Entrée (kWh)</label><input type="text" id="edl2-elec-e-${r.id}" placeholder="0"></div>
+              <div class="edl2-fg"><label>Sortie (kWh)</label><input type="text" id="edl2-elec-s-${r.id}" placeholder="0"></div>
+            </div>
+          </div>
+          <div class="edl2-cpt"><div class="edl2-cpt-title">🔥 Gaz</div>
+            <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px">
+              <div class="edl2-fg"><label>Entrée (m³)</label><input type="text" id="edl2-gaz-e-${r.id}" placeholder="0.000"></div>
+              <div class="edl2-fg"><label>Sortie (m³)</label><input type="text" id="edl2-gaz-s-${r.id}" placeholder="0.000"></div>
+            </div>
+          </div>
+          <div class="edl2-fg"><label>Piscine (pH / Chlore)</label><input type="text" id="edl2-piscine-${r.id}" placeholder="ex: pH 7.2 / Cl 1.5"></div>
+          <div class="edl2-nav">
+            <button class="edl2-back" onclick="edlGoStep2('${r.id}',1)">← Retour</button>
+            <button class="edl2-next" onclick="edlGoStep2('${r.id}',3)">Suivant →</button>
+          </div>
+        </div>
+        <!-- STEP 3 -->
+        <div class="edl2-section" id="edl2-step-3-${r.id}" style="padding:14px">
+          <div class="edl2-title">État des pièces</div>
+          <div id="edl2-pieces-${r.id}"></div>
+          <button onclick="edlAddPiece2('${r.id}')" style="width:100%;padding:10px;background:transparent;border:1px dashed rgba(196,169,107,0.3);border-radius:8px;color:var(--gold);font-family:'DM Sans',sans-serif;font-size:11px;cursor:pointer;margin-top:8px">+ Ajouter une pièce</button>
+          <div class="edl2-fg" style="margin-top:12px"><label>Observations générales</label><textarea id="edl2-obs-${r.id}" placeholder="Remarques générales..." style="width:100%;background:rgba(255,255,255,0.04);border:1px solid rgba(196,169,107,0.2);border-radius:6px;color:var(--parch);font-family:'DM Sans',sans-serif;font-size:12px;padding:9px 11px;outline:none;resize:vertical;min-height:60px"></textarea></div>
+          <div class="edl2-nav">
+            <button class="edl2-back" onclick="edlGoStep2('${r.id}',2)">← Retour</button>
+            <button class="edl2-next" onclick="edlGoStep2('${r.id}',4)">Suivant →</button>
+          </div>
+        </div>
+        <!-- STEP 4 -->
+        <div class="edl2-section" id="edl2-step-4-${r.id}" style="padding:14px">
+          <div class="edl2-title">Signatures</div>
+          <div class="edl2-sig-box"><div class="edl2-sig-label">Signature locataire</div><canvas class="edl2-sig-canvas" id="edl2-sig-loc-${r.id}"></canvas><button class="edl2-sig-clear" onclick="edlClearSig2('edl2-sig-loc-${r.id}')">✕ Effacer</button></div>
+          <div class="edl2-sig-box"><div class="edl2-sig-label">Signature propriétaire</div><canvas class="edl2-sig-canvas" id="edl2-sig-prop-${r.id}"></canvas><button class="edl2-sig-clear" onclick="edlClearSig2('edl2-sig-prop-${r.id}')">✕ Effacer</button></div>
+          <div class="edl2-sig-box"><div class="edl2-sig-label">Signature Heraclee</div><canvas class="edl2-sig-canvas" id="edl2-sig-her-${r.id}"></canvas><button class="edl2-sig-clear" onclick="edlClearSig2('edl2-sig-her-${r.id}')">✕ Effacer</button></div>
+          <div class="edl2-nav">
+            <button class="edl2-back" onclick="edlGoStep2('${r.id}',3)">← Retour</button>
+            <button class="edl2-next" onclick="edlGoStep2('${r.id}',5)">Suivant →</button>
+          </div>
+        </div>
+        <!-- STEP 5 -->
+        <div class="edl2-section" id="edl2-step-5-${r.id}" style="padding:14px">
+          <div class="edl2-title">Récapitulatif</div>
+          <div id="edl2-recap-${r.id}"></div>
+          <button class="edl2-btn-primary" onclick="edlSavePDF2('${r.id}')">📄 Générer & Sauvegarder le PDF</button>
+          <button style="width:100%;padding:10px;background:transparent;border:1px solid rgba(196,169,107,0.3);border-radius:8px;color:var(--gold);font-family:'DM Sans',sans-serif;font-size:11px;cursor:pointer;margin-top:6px" onclick="edlGoStep2('${r.id}',3)">✎ Modifier les pièces</button>
+          <div class="edl2-nav" style="margin-top:8px"><button class="edl2-back" onclick="edlGoStep2('${r.id}',4)">← Retour</button></div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="dsection" id="s6">
+    <div class="dsection-header" onclick="toggleSec('s6')">
+      <div class="dsection-title"><span class="num">6</span>Compteurs</div>
+      <span class="dsection-arrow">▾</span>
+    </div>
+    <div class="dsection-body">
+      <div class="cpt-grid">
+        <div class="cpt-card"><div class="cpt-label">⚡ Électricité</div><input class="cpt-input" type="text" id="f-elec" value="${cpt.elec||''}" placeholder="kWh" onblur="debounceSave()"></div>
+        <div class="cpt-card"><div class="cpt-label">💧 Eau</div><input class="cpt-input" type="text" id="f-eau" value="${cpt.eau||''}" placeholder="m³" onblur="debounceSave()"></div>
+        <div class="cpt-card"><div class="cpt-label">🔥 Gaz</div><input class="cpt-input" type="text" id="f-gaz" value="${cpt.gaz||''}" placeholder="m³" onblur="debounceSave()"></div>
+      </div>
+    </div>
+  </div>
+
+  <div class="dsection" id="s7">
+    <div class="dsection-header" onclick="toggleSec('s7')">
+      <div class="dsection-title"><span class="num">7</span>Inventaire</div>
+      <span class="dsection-arrow">▾</span>
+    </div>
+    <div class="dsection-body">${invHtml}</div>
+  </div>
+
+  <div class="dsection" id="s8">
+    <div class="dsection-header" onclick="toggleSec('s8')">
+      <div class="dsection-title"><span class="num">8</span>Notes générales</div>
+      <span class="dsection-arrow">▾</span>
+    </div>
+    <div class="dsection-body">
+      <div class="fgrid one">
+        <div class="fg"><label>Notes générales</label>${ta('f-notes',r.notes_generales)}</div>
+        <div class="fg"><label>Observations fin de séjour</label>${ta('f-obs',r.observations_generales)}</div>
+      </div>
+      <div style="display:flex;justify-content:flex-end;margin-top:16px">
+        <button class="btn-delete" onclick="deleteDossier()">🗑 Supprimer ce dossier</button>
+      </div>
+    </div>
+  </div>`;
+}
+
+function toggleSec(id){document.getElementById(id).classList.toggle('open');}
+
+async function toggleCk(key,el){
+  el.classList.toggle('done');
+  const r=allData.find(x=>x.id===currentId);if(!r)return;
+  const cl={...(r.checklist||{})};cl[key]=el.classList.contains('done');r.checklist=cl;
+  const done=countDone(r);
+  const badge=document.getElementById('ckBadge');
+  if(badge){badge.textContent=done+'/'+TOTAL;badge.className='dsection-badge '+(done===TOTAL?'full':done>0?'partial':'empty');}
+  document.getElementById('progFill').style.width=Math.round(done/TOTAL*100)+'%';
+  document.getElementById('detailTag').textContent=(r.villa||'').toUpperCase()+' · '+done+'/'+TOTAL+' étapes complétées';
+  setSt('loading','Sauvegarde…');
+  try{
+    await fetch(`${SB}/rest/v1/reservations?id=eq.${currentId}`,{method:'PATCH',headers:H,body:JSON.stringify({checklist:cl})});
+    setSt('ok','Sauvegardé');showToast();
+  }catch(e){setSt('error','Erreur');}
+}
+
+function saveEdlField(piece,field,val){
+  const r=allData.find(x=>x.id===currentId);if(!r)return;
+  const edl={...(r.edl_pieces||{})};if(!edl[piece])edl[piece]={};edl[piece][field]=val;r.edl_pieces=edl;
+  debounceSave();
+}
+
+function saveInv(){
+  const r=allData.find(x=>x.id===currentId);if(!r)return;
+  const rows=document.querySelectorAll('#invBody tr'),inv=[];
+  rows.forEach((tr,i)=>{inv.push({nom:tr.querySelector(`[data-nom="${i}"]`)?.value||'',qte:tr.querySelector(`[data-qte="${i}"]`)?.value||'',etat:tr.querySelector(`[data-etat="${i}"]`)?.value||'',remarque:tr.querySelector(`[data-rem="${i}"]`)?.value||''});});
+  r.inventaire=inv;debounceSave();
+}
+
+function addInvRow(){
+  const tbody=document.getElementById('invBody'),i=tbody.rows.length;
+  const tr=document.createElement('tr');
+  tr.innerHTML=`<td><input type="text" value="" onblur="saveInv()" data-nom="${i}"></td>
+    <td><input type="text" value="" style="width:50px" onblur="saveInv()" data-qte="${i}"></td>
+    <td><select onchange="saveInv()" data-etat="${i}"><option>–</option><option>Bon état</option><option>Usure</option><option>Manquant</option><option>Cassé</option></select></td>
+    <td><input type="text" value="" onblur="saveInv()" data-rem="${i}"></td>`;
+  tbody.appendChild(tr);
+}
+
+function debounceSave(){clearTimeout(saveTimer);saveTimer=setTimeout(autoSave,1200);}
+async function autoSave(){
+  if(!currentId)return;
+  setSt('loading','Sauvegarde…');
+  const r=allData.find(x=>x.id===currentId);
+  const g=id=>{const el=document.getElementById(id);return el?el.value:null;};
+  const gn=id=>{const v=parseFloat(g(id));return isNaN(v)?null:v;};
+  const gi=id=>{const v=parseInt(g(id));return isNaN(v)?null:v;};
+  const rows=document.querySelectorAll('#invBody tr'),inv=[];
+  rows.forEach((tr,i)=>{inv.push({nom:tr.querySelector(`[data-nom="${i}"]`)?.value||'',qte:tr.querySelector(`[data-qte="${i}"]`)?.value||'',etat:tr.querySelector(`[data-etat="${i}"]`)?.value||'',remarque:tr.querySelector(`[data-rem="${i}"]`)?.value||''});});
+  const payload={
+    villa:g('f-villa')||null,statut:g('f-statut'),
+    client_nom:g('f-nom'),client_nationalite:g('f-nat'),client_tel:g('f-tel'),client_email:g('f-email'),client_adresse:g('f-adresse'),
+    date_arrivee:g('f-arrivee')||null,date_depart:g('f-depart')||null,
+    nb_adultes:gi('f-adultes'),nb_enfants:gi('f-enfants'),animaux:g('f-animaux'),
+    loyer_total:gn('f-loyer'),acompte:gn('f-acompte'),solde:gn('f-solde'),
+    type_acompte:g('f-type-acompte'),depot_garantie:gn('f-depot'),commission:gn('f-commission'),
+    proprio_total:gn('f-proprio-total'),type_acompte_proprio:g('f-type-acompte-proprio'),
+    proprio_acompte:gn('f-proprio-acompte'),proprio_solde:gn('f-proprio-solde'),
+    proprio_depot:gn('f-proprio-depot'),date_versement_proprio:g('f-dsolde-proprio')||null,
+    statut_reversement:g('f-statut-reversement'),
+    ref_contrat:g('f-ref'),notes_generales:g('f-notes'),notes_contrat:g('f-notes-contrat'),
+    notes_panier:g('f-notes-panier'),date_envoi_infos:g('f-dinfos')||null,
+    date_encaissement_solde:g('f-dsolde')||null,heure_prevue:g('f-hprev'),heure_reelle:g('f-hreel'),
+    observations_generales:g('f-obs'),date_signature:g('f-dsig')||null,lieu_signature:g('f-lsig'),
+    compteurs:{elec:g('f-elec'),eau:g('f-eau'),gaz:g('f-gaz')},
+    checklist:r?r.checklist:{},edl_pieces:r?r.edl_pieces:{},inventaire:inv,
+  };
+  try{
+    const res=await fetch(`${SB}/rest/v1/reservations?id=eq.${currentId}`,{method:'PATCH',headers:H,body:JSON.stringify(payload)});
+    if(!res.ok){const err=await res.text();throw new Error('HTTP '+res.status+': '+err);}
+    if(r)Object.assign(r,payload);
+    setSt('ok','Sauvegardé');showToast();
+    document.getElementById('detailTitle').textContent=payload.client_nom?`${(payload.villa||'').toUpperCase()} — ${payload.client_nom}`:(payload.villa||'Dossier');
+  }catch(e){setSt('error','Erreur sauvegarde');console.error('AutoSave error:',e.message);}
+}
+
+function openNewModal(){document.getElementById('modalOverlay').classList.add('open');document.body.style.overflow='hidden';}
+function closeModal(){document.getElementById('modalOverlay').classList.remove('open');document.body.style.overflow='';}
+function closeModalOut(e){if(e.target===document.getElementById('modalOverlay'))closeModal();}
+
+async function createDossier(){
+  const payload={
+    villa:document.getElementById('mVilla').value||null,statut:document.getElementById('mStatut').value,
+    client_nom:document.getElementById('mNom').value||null,client_nationalite:document.getElementById('mNat').value||null,
+    client_tel:document.getElementById('mTel').value||null,client_email:document.getElementById('mEmail').value||null,
+    date_arrivee:document.getElementById('mArrivee').value||null,date_depart:document.getElementById('mDepart').value||null,
+    nb_adultes:parseInt(document.getElementById('mAdultes').value)||null,nb_enfants:parseInt(document.getElementById('mEnfants').value)||0,
+    loyer_total:parseFloat(document.getElementById('mLoyer').value)||null,acompte:parseFloat(document.getElementById('mAcompte').value)||null,
+    checklist:{},edl_pieces:{},inventaire:[],compteurs:{}
+  };
+  try{
+    const res=await fetch(`${SB}/rest/v1/reservations`,{method:'POST',headers:H,body:JSON.stringify(payload)});
+    if(!res.ok)throw new Error('HTTP '+res.status);
+    const created=await res.json();
+    closeModal();await loadData();
+    if(created&&created[0])openDetail(created[0].id);
+  }catch(e){alert('Erreur : '+e.message);}
+}
+
+async function deleteDossier(){
+  if(!confirm('Supprimer ce dossier définitivement ?'))return;
+  try{
+    await fetch(`${SB}/rest/v1/reservations?id=eq.${currentId}`,{method:'DELETE',headers:H});
+    showList();
+  }catch(e){alert('Erreur : '+e.message);}
+}
+
+loadData();
+loadVillaNames();
+
+// ========== GAINS ==========
+let activeGainsSt = '';
+
+function showGains(){
+  document.querySelectorAll('.view').forEach(v=>v.classList.remove('active'));
+  document.getElementById('gainsView').classList.add('active');
+  document.querySelectorAll('.npill').forEach(p=>p.classList.remove('on'));
+  document.getElementById('npill-gains').classList.add('on');
+  renderGains();
+}
+
+function setGainsTab(btn){
+  document.querySelectorAll('#gainsView .tab').forEach(b=>b.classList.remove('on'));
+  btn.classList.add('on');
+  activeGainsSt = btn.dataset.gst;
+  renderGains();
+}
+
+function renderGains(){
+  const data = activeGainsSt ? allData.filter(r=>stKey(r)===activeGainsSt) : allData;
+
+  // KPIs globaux
+  const totalLoyer = data.reduce((s,r)=>s+(parseFloat(r.loyer_total)||0),0);
+  const totalCommission = data.reduce((s,r)=>s+(parseFloat(r.commission)||0),0);
+  const totalProprio = data.reduce((s,r)=>s+(parseFloat(r.proprio_total)||0),0);
+  const nbDossiers = data.length;
+  const pctCommission = totalLoyer > 0 ? Math.round(totalCommission/totalLoyer*100) : 0;
+
+  document.getElementById('gains-kpis').innerHTML = `
+    <div class="gains-kpi"><div class="klbl">Dossiers</div><div class="kval">${nbDossiers}</div></div>
+    <div class="gains-kpi"><div class="klbl">Loyer total encaissé</div><div class="kval o">${fmt(totalLoyer)} €</div></div>
+    <div class="gains-kpi"><div class="klbl">Commission Heraclee</div><div class="kval g">${fmt(totalCommission)} €<div class="gains-bar"><div class="gains-bar-fill" style="width:${pctCommission}%"></div></div></div></div>
+    <div class="gains-kpi"><div class="klbl">Reversé propriétaires</div><div class="kval b">${fmt(totalProprio)} €</div></div>`;
+
+  // Grouper par villa
+  const byVilla = {};
+  data.forEach(r=>{
+    const villa = (r.villa||'Non défini').toUpperCase();
+    if(!byVilla[villa]) byVilla[villa]={count:0,loyer:0,commission:0,proprio:0};
+    byVilla[villa].count++;
+    byVilla[villa].loyer += parseFloat(r.loyer_total)||0;
+    byVilla[villa].commission += parseFloat(r.commission)||0;
+    byVilla[villa].proprio += parseFloat(r.proprio_total)||0;
+  });
+
+  const villas = Object.entries(byVilla).sort((a,b)=>b[1].loyer-a[1].loyer);
+  const maxLoyer = villas.length ? villas[0][1].loyer : 1;
+
+  document.getElementById('gains-tbody').innerHTML = villas.map(([nom,v])=>{
+    const pct = v.loyer > 0 ? Math.round(v.commission/v.loyer*100) : 0;
+    const barW = Math.round(v.loyer/maxLoyer*100);
+    return `<tr>
+      <td><div class="villa-name">${nom}</div><div class="gains-bar"><div class="gains-bar-fill" style="width:${barW}%"></div></div></td>
+      <td>${v.count}</td>
+      <td class="num o">${fmt(v.loyer)} €</td>
+      <td class="num b">${fmt(v.proprio)} €</td>
+      <td class="num g">${fmt(v.commission)} €</td>
+      <td style="color:var(--ink-xs)">${pct}%</td>
+    </tr>`;
+  }).join('') || '<tr><td colspan="6" style="text-align:center;padding:2rem;color:var(--ink-xs)">Aucun dossier</td></tr>';
+
+  document.getElementById('gains-tfoot').innerHTML = `<tr>
+    <td>TOTAL</td>
+    <td>${nbDossiers}</td>
+    <td class="num o">${fmt(totalLoyer)} €</td>
+    <td class="num b">${fmt(totalProprio)} €</td>
+    <td class="num g">${fmt(totalCommission)} €</td>
+    <td style="color:var(--ink-xs)">${pctCommission}%</td>
+  </tr>`;
+}
+
+function fmt(n){return Math.round(n).toLocaleString('fr-FR');}
+
+
+// ========== ÉTAT DES LIEUX COMPLET ==========
+const edl2State = {}; // état par dossier id
+
+const edl2PiecesDefaut = ['Entrée / Hall','Salon','Cuisine','Salle à manger',
+  'Chambre 1','Chambre 2','Chambre 3','Chambre 4','Chambre 5','Chambre 6',
+  'Salle de bain 1','Salle de bain 2','WC','Terrasse','Piscine'];
+
+function edlGetState(id) {
+  if (!edl2State[id]) edl2State[id] = {lang:'fr',type:'entree',step:0,pieces:[],sigCtx:{},initDone:false};
+  return edl2State[id];
+}
+
+function edlGoStep2(id, n) {
+  const st = edlGetState(id);
+  document.querySelectorAll(`#edl-container-${id} .edl2-section`).forEach((s,i)=>s.classList.toggle('active',i===n));
+  document.querySelectorAll(`#edl-container-${id} .edl-step-pill`).forEach((s,i)=>{
+    s.classList.remove('active','done');
+    if(i===n)s.classList.add('active');
+    else if(i<n)s.classList.add('done');
+  });
+  st.step = n;
+  if(n===3 && st.pieces.length===0) edlInitPieces2(id);
+  if(n===4) edlInitSigs2(id);
+  if(n===5) edlBuildRecap2(id);
+  document.getElementById(`edl2-step-${n}-${id}`).scrollIntoView({behavior:'smooth', block:'start'});
+}
+
+function edlSetLang2(id, l, btn) {
+  edlGetState(id).lang = l;
+  btn.closest('.edl-lang-select2').querySelectorAll('.edl-lang-btn2').forEach(b=>b.classList.remove('active'));
+  btn.classList.add('active');
+}
+
+function edlSetType2(id, tp, btn) {
+  edlGetState(id).type = tp;
+  btn.closest('.edl-lang-select2').querySelectorAll('.edl-lang-btn2').forEach(b=>b.classList.remove('active'));
+  btn.classList.add('active');
+}
+
+function edlInitPieces2(id) {
+  const st = edlGetState(id);
+  edl2PiecesDefaut.slice(0,10).forEach(nom => {
+    st.pieces.push({id:Date.now()+Math.random(),nom,etat:'',proprete:'',commentaire:'',photos:[]});
+  });
+  edlRenderPieces2(id);
+}
+
+function edlAddPiece2(id, nom) {
+  const st = edlGetState(id);
+  st.pieces.push({id:Date.now()+Math.random(),nom:nom||'',etat:'',proprete:'',commentaire:'',photos:[]});
+  edlRenderPieces2(id);
+}
+
+function edlRenderPieces2(id) {
+  const st = edlGetState(id);
+  document.getElementById(`edl2-pieces-${id}`).innerHTML = st.pieces.map((p,i)=>edlBuildPiece2(id,p,i)).join('');
+}
+
+function edlBuildPiece2(id, p, i) {
+  const bc = {bon:'#5DBF7A', moyen:'var(--gold)', mauvais:'#E07070'};
+  const badgeStyle = p.etat ? `background:${bc[p.etat]}20;color:${bc[p.etat]};border:1px solid ${bc[p.etat]}40` : 'background:rgba(255,255,255,0.05);color:var(--ink-xs);border:1px solid rgba(255,255,255,0.1)';
+  const photos = p.photos.map((ph,pi)=>`<div class="edl2-photo-thumb"><img src="${ph}"><button class="edl2-photo-del" onclick="edlDelPhoto2('${id}',${i},${pi})">✕</button></div>`).join('');
+  return `<div class="edl2-piece-card">
+    <div class="edl2-piece-header" onclick="edlTogglePiece2('${id}',${i})">
+      <div class="edl2-piece-name">${p.nom||'Pièce'}</div>
+      <span style="font-size:9px;padding:2px 8px;border-radius:10px;${badgeStyle}">${p.etat?p.etat.toUpperCase():'—'}</span>
+    </div>
+    <div class="edl2-piece-body" id="edl2-body-${id}-${i}">
+      <div style="margin-top:10px">
+        <div style="font-size:9px;letter-spacing:1px;text-transform:uppercase;color:var(--gold);margin-bottom:5px">État général</div>
+        <div class="edl2-etat-row">
+          ${['bon','moyen','mauvais'].map(e=>`<button class="edl2-etat-b ${e}${p.etat===e?' active':''}" onclick="edlSetEtat2('${id}',${i},'etat','${e}')">${e.toUpperCase()}</button>`).join('')}
+        </div>
+        <div style="font-size:9px;letter-spacing:1px;text-transform:uppercase;color:var(--gold);margin-bottom:5px;margin-top:8px">Propreté</div>
+        <div class="edl2-etat-row">
+          ${['bon','moyen','mauvais'].map(e=>`<button class="edl2-etat-b ${e}${p.proprete===e?' active':''}" onclick="edlSetEtat2('${id}',${i},'proprete','${e}')">${e.toUpperCase()}</button>`).join('')}
+        </div>
+        <div style="margin-top:8px">
+          <textarea style="width:100%;background:rgba(255,255,255,0.04);border:1px solid rgba(196,169,107,0.2);border-radius:5px;color:var(--parch);font-family:'DM Sans',sans-serif;font-size:12px;padding:8px;outline:none;resize:vertical;min-height:55px" placeholder="Commentaire..." onchange="edl2State['${id}'].pieces[${i}].commentaire=this.value">${p.commentaire}</textarea>
+        </div>
+        <div style="margin-top:8px">
+          <div style="font-size:9px;letter-spacing:1px;text-transform:uppercase;color:var(--gold);margin-bottom:4px">Photos (${p.photos.length}/5)</div>
+          <div class="edl2-photos-grid">${photos}</div>
+          ${p.photos.length<5?`<label><input type="file" style="display:none" accept="image/*" capture="environment" onchange="edlAddPhoto2('${id}',${i},this)"><div style="width:100%;padding:8px;background:transparent;border:1px dashed rgba(196,169,107,0.3);border-radius:5px;color:var(--ink-xs);font-family:'DM Sans',sans-serif;font-size:10px;cursor:pointer;margin-top:4px;text-align:center">📷 Ajouter une photo</div></label>`:''}
+        </div>
+        <button onclick="edl2State['${id}'].pieces.splice(${i},1);edlRenderPieces2('${id}')" style="width:100%;padding:7px;background:transparent;border:1px solid rgba(200,60,60,0.3);border-radius:5px;color:#E07070;font-family:'DM Sans',sans-serif;font-size:10px;cursor:pointer;margin-top:8px">🗑 Supprimer</button>
+      </div>
+    </div>
+  </div>`;
+}
+
+function edlTogglePiece2(id,i){document.getElementById(`edl2-body-${id}-${i}`).classList.toggle('open');}
+function edlSetEtat2(id,i,field,val){edl2State[id].pieces[i][field]=val;edlRenderPieces2(id);document.getElementById(`edl2-body-${id}-${i}`).classList.add('open');}
+function edlAddPhoto2(id,i,input){
+  const file=input.files[0];if(!file)return;
+  const reader=new FileReader();
+  reader.onload=e=>{edl2State[id].pieces[i].photos.push(e.target.result);edlRenderPieces2(id);document.getElementById(`edl2-body-${id}-${i}`).classList.add('open');};
+  reader.readAsDataURL(file);
+}
+function edlDelPhoto2(id,i,pi){edl2State[id].pieces[i].photos.splice(pi,1);edlRenderPieces2(id);document.getElementById(`edl2-body-${id}-${i}`).classList.add('open');}
+
+function edlInitSigs2(id) {
+  ['loc','prop','her'].forEach(who=>{
+    const canvasId=`edl2-sig-${who}-${id}`;
+    const canvas=document.getElementById(canvasId);
+    if(!canvas||edl2State[id]?.sigCtx?.[canvasId])return;
+    canvas.width=canvas.offsetWidth||300;canvas.height=130;
+    const ctx=canvas.getContext('2d');
+    ctx.fillStyle='#fff';ctx.fillRect(0,0,canvas.width,canvas.height);
+    ctx.strokeStyle='#000';ctx.lineWidth=2;ctx.lineCap='round';
+    let drawing=false,lx=0,ly=0;
+    const pos=e=>{const r=canvas.getBoundingClientRect();const t=e.touches?e.touches[0]:e;return{x:(t.clientX-r.left)*(canvas.width/r.width),y:(t.clientY-r.top)*(canvas.height/r.height)};};
+    canvas.addEventListener('mousedown',e=>{const p=pos(e);drawing=true;lx=p.x;ly=p.y;});
+    canvas.addEventListener('mousemove',e=>{if(!drawing)return;const p=pos(e);ctx.beginPath();ctx.moveTo(lx,ly);ctx.lineTo(p.x,p.y);ctx.stroke();lx=p.x;ly=p.y;});
+    canvas.addEventListener('mouseup',()=>drawing=false);
+    canvas.addEventListener('touchstart',e=>{e.preventDefault();const p=pos(e);drawing=true;lx=p.x;ly=p.y;},{passive:false});
+    canvas.addEventListener('touchmove',e=>{e.preventDefault();if(!drawing)return;const p=pos(e);ctx.beginPath();ctx.moveTo(lx,ly);ctx.lineTo(p.x,p.y);ctx.stroke();lx=p.x;ly=p.y;},{passive:false});
+    canvas.addEventListener('touchend',()=>drawing=false);
+    if(!edl2State[id].sigCtx)edl2State[id].sigCtx={};
+    edl2State[id].sigCtx[canvasId]=ctx;
+  });
+}
+
+function edlClearSig2(canvasId){
+  const canvas=document.getElementById(canvasId);
+  if(!canvas)return;
+  const ctx=canvas.getContext('2d');
+  ctx.fillStyle='#fff';ctx.fillRect(0,0,canvas.width,canvas.height);
+}
+
+function edlBuildRecap2(id) {
+  const st = edl2State[id]||{};
+  const villa = (document.getElementById(`edl2-villa-${id}`)?.value)||'—';
+  const date = (document.getElementById(`edl2-date-${id}`)?.value)||'—';
+  const nom = (document.getElementById(`edl2-loc-nom-${id}`)?.value)||'';
+  const prenom = (document.getElementById(`edl2-loc-prenom-${id}`)?.value)||'';
+  const loc = [prenom,nom].filter(Boolean).join(' ')||'—';
+  const pieces = st.pieces||[];
+  const bc={bon:'#5DBF7A',moyen:'var(--gold)',mauvais:'#E07070'};
+  const piecesHtml = pieces.map(p=>`<div class="edl2-recap-row"><span class="edl2-lbl">${p.nom}</span><span style="color:${bc[p.etat]||'var(--ink-xs)'}">${p.etat?p.etat.toUpperCase():'—'} ${p.photos.length>0?'📷'+p.photos.length:''}</span></div>`).join('');
+  document.getElementById(`edl2-recap-${id}`).innerHTML=`
+    <div class="edl2-recap-box"><h3>Informations</h3>
+      <div class="edl2-recap-row"><span class="edl2-lbl">Villa</span><span>${villa}</span></div>
+      <div class="edl2-recap-row"><span class="edl2-lbl">Date</span><span>${date}</span></div>
+      <div class="edl2-recap-row"><span class="edl2-lbl">Type</span><span>${(st.type==='entree')?'Entrée':'Sortie'}</span></div>
+      <div class="edl2-recap-row"><span class="edl2-lbl">Locataire</span><span>${loc}</span></div>
+    </div>
+    <div class="edl2-recap-box"><h3>Pièces (${pieces.length})</h3>${piecesHtml||'<div class="edl2-recap-row"><span class="edl2-lbl">Aucune pièce</span></div>'}</div>`;
+}
+
+async function edlSavePDF2(id) {
+  const st = edl2State[id]||{};
+  showToast('⏳ Génération…');
+  const g = eid => document.getElementById(eid)?.value||'';
+  const data = {
+    type: st.type||'entree', langue: st.lang||'fr',
+    villa_nom: g(`edl2-villa-${id}`),
+    villa_adresse: g(`edl2-adresse-${id}`),
+    date_etat: g(`edl2-date-${id}`)||new Date().toISOString().split('T')[0],
+    nom_locataire: g(`edl2-loc-nom-${id}`),
+    prenom_locataire: g(`edl2-loc-prenom-${id}`),
+    nom_proprietaire: g(`edl2-proprio-${id}`),
+    commercial: g(`edl2-commercial-${id}`),
+    compteur_eau_entree: g(`edl2-eau-e-${id}`), compteur_eau_sortie: g(`edl2-eau-s-${id}`),
+    compteur_elec_entree: g(`edl2-elec-e-${id}`), compteur_elec_sortie: g(`edl2-elec-s-${id}`),
+    compteur_gaz_entree: g(`edl2-gaz-e-${id}`), compteur_gaz_sortie: g(`edl2-gaz-s-${id}`),
+    nb_cles: parseInt(g(`edl2-cles-${id}`))||0,
+    nb_telecommandes: parseInt(g(`edl2-tel-${id}`))||0,
+    observations_generales: g(`edl2-obs-${id}`),
+  };
+  let etatId=null;
+  try{
+    const res=await fetch(`${SB}/rest/v1/etats_lieux`,{method:'POST',headers:H,body:JSON.stringify(data)});
+    if(res.ok){const d=await res.json();etatId=d[0]?.id;}
+  }catch(e){console.log('Save EDL error:',e);}
+  edlGeneratePDF2(id, data, etatId, st.pieces||[]);
+  showToast('✅ PDF généré !');
+}
+
+function edlGeneratePDF2(id, data, etatId, pieces) {
+  const villa = data.villa_nom||'Villa';
+  const bc = {bon:'#5DBF7A', moyen:'#C4A96B', mauvais:'#E07070'};
+  const badge = e => e ? `<span style="background:${bc[e]}20;color:${bc[e]};padding:2px 8px;border-radius:10px;font-size:11px;font-weight:600">${e.toUpperCase()}</span>` : '<span style="color:#999">—</span>';
+  const sigImg = canvasId => { const c=document.getElementById(canvasId); return c?`<img src="${c.toDataURL()}" style="width:100%;height:90px;object-fit:contain">`:''; };
+  const loc = [data.prenom_locataire,data.nom_locataire].filter(Boolean).join(' ');
+  const piecesRows = pieces.map(p=>`<tr>
+    <td style="padding:8px 12px;border-bottom:1px solid #eee;font-weight:500">${p.nom}</td>
+    <td style="padding:8px 12px;border-bottom:1px solid #eee;text-align:center">${badge(p.etat)}</td>
+    <td style="padding:8px 12px;border-bottom:1px solid #eee;text-align:center">${badge(p.proprete)}</td>
+    <td style="padding:8px 12px;border-bottom:1px solid #eee;font-size:12px;color:#666">${p.commentaire||''}</td>
+    <td style="padding:8px 12px;border-bottom:1px solid #eee;text-align:center">${p.photos.length>0?'📷 '+p.photos.length:'—'}</td>
+  </tr>`).join('');
+  const photos = pieces.filter(p=>p.photos.length>0).map(p=>`<div style="margin-bottom:16px"><h4 style="font-size:13px;color:#0a1628;margin-bottom:8px;border-bottom:1px solid #eee;padding-bottom:4px">${p.nom}</h4><div style="display:grid;grid-template-columns:repeat(3,1fr);gap:8px">${p.photos.map(ph=>`<img src="${ph}" style="width:100%;height:110px;object-fit:cover;border-radius:5px;border:1px solid #eee">`).join('')}</div></div>`).join('');
+  const html=`<!DOCTYPE html><html><head><meta charset="UTF-8"><style>body{font-family:'Helvetica Neue',Arial,sans-serif;color:#333;margin:0;padding:0;}@media print{body{margin:0;}}table{width:100%;border-collapse:collapse;}th{background:#1A1612;color:white;padding:8px 12px;text-align:left;font-size:11px;text-transform:uppercase;letter-spacing:1px;}</style></head><body><div style="max-width:800px;margin:0 auto;padding:28px">
+  <div style="display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:20px;padding-bottom:14px;border-bottom:3px solid #C4A96B">
+    <div><div style="font-size:26px;font-weight:300;letter-spacing:6px;color:#C4A96B;font-family:Georgia,serif">HERACLEE</div><div style="font-size:10px;letter-spacing:3px;color:#666;text-transform:uppercase">Saint-Tropez · Villas</div></div>
+    <div style="text-align:right"><div style="font-size:16px;font-weight:600;color:#1A1612;text-transform:uppercase">${data.langue==='fr'?'ÉTAT DES LIEUX':'PROPERTY INSPECTION'}</div><div style="font-size:13px;color:#C4A96B;font-weight:500">${data.type==='entree'?'Entrée':'Sortie'}</div>${etatId?`<div style="font-size:10px;color:#999">Réf. #${etatId}</div>`:''}</div>
+  </div>
+  <div style="display:grid;grid-template-columns:1fr 1fr;gap:14px;margin-bottom:18px">
+    <div style="background:#f8f8f8;border-radius:8px;padding:12px"><div style="font-size:10px;text-transform:uppercase;letter-spacing:1px;color:#666;margin-bottom:6px">Bien immobilier</div><div style="font-size:15px;font-weight:600;color:#1A1612">${villa}</div><div style="font-size:12px;color:#666;margin-top:2px">${data.villa_adresse||''}</div><div style="font-size:12px;color:#666;margin-top:5px">📅 ${data.date_etat}</div></div>
+    <div style="background:#f8f8f8;border-radius:8px;padding:12px"><div style="font-size:10px;text-transform:uppercase;letter-spacing:1px;color:#666;margin-bottom:6px">Parties</div><div style="font-size:12px;margin-bottom:3px"><strong>Locataire:</strong> ${loc||'—'}</div><div style="font-size:12px;margin-bottom:3px"><strong>Propriétaire:</strong> ${data.nom_proprietaire||'—'}</div><div style="font-size:12px"><strong>Heraclee:</strong> ${data.commercial||'—'}</div></div>
+  </div>
+  <h3 style="font-size:12px;text-transform:uppercase;letter-spacing:2px;color:#1A1612;margin-bottom:8px;border-bottom:1px solid #eee;padding-bottom:5px">Compteurs</h3>
+  <table style="margin-bottom:16px"><thead><tr><th>Compteur</th><th>Entrée</th><th>Sortie</th></tr></thead><tbody>
+    <tr><td style="padding:7px 12px;border-bottom:1px solid #eee">💧 Eau (m³)</td><td style="padding:7px 12px;border-bottom:1px solid #eee">${data.compteur_eau_entree||'—'}</td><td style="padding:7px 12px;border-bottom:1px solid #eee">${data.compteur_eau_sortie||'—'}</td></tr>
+    <tr><td style="padding:7px 12px;border-bottom:1px solid #eee">⚡ Électricité (kWh)</td><td style="padding:7px 12px;border-bottom:1px solid #eee">${data.compteur_elec_entree||'—'}</td><td style="padding:7px 12px;border-bottom:1px solid #eee">${data.compteur_elec_sortie||'—'}</td></tr>
+    <tr><td style="padding:7px 12px">🔥 Gaz (m³)</td><td style="padding:7px 12px">${data.compteur_gaz_entree||'—'}</td><td style="padding:7px 12px">${data.compteur_gaz_sortie||'—'}</td></tr>
+  </tbody></table>
+  <div style="font-size:12px;margin-bottom:14px"><strong>Clés:</strong> ${data.nb_cles} &nbsp;&nbsp; <strong>Télécommandes:</strong> ${data.nb_telecommandes}</div>
+  <h3 style="font-size:12px;text-transform:uppercase;letter-spacing:2px;color:#1A1612;margin-bottom:8px;border-bottom:1px solid #eee;padding-bottom:5px">État des pièces</h3>
+  <table style="margin-bottom:16px"><thead><tr><th>Pièce</th><th style="text-align:center">État</th><th style="text-align:center">Propreté</th><th>Commentaires</th><th style="text-align:center">Photos</th></tr></thead><tbody>${piecesRows}</tbody></table>
+  ${data.observations_generales?`<div style="margin-bottom:16px;background:#fff8e8;border:1px solid #C4A96B;border-radius:6px;padding:10px"><div style="font-size:10px;text-transform:uppercase;letter-spacing:1px;color:#C4A96B;margin-bottom:3px">Observations générales</div><div style="font-size:12px">${data.observations_generales}</div></div>`:''}
+  ${photos?`<h3 style="font-size:12px;text-transform:uppercase;letter-spacing:2px;color:#1A1612;margin-bottom:8px;border-bottom:1px solid #eee;padding-bottom:5px">Photos</h3>${photos}`:''}
+  <h3 style="font-size:12px;text-transform:uppercase;letter-spacing:2px;color:#1A1612;margin-bottom:12px;border-bottom:1px solid #eee;padding-bottom:5px">Signatures</h3>
+  <div style="display:flex;gap:14px;margin-bottom:16px">
+    <div style="flex:1;text-align:center"><div style="font-size:10px;text-transform:uppercase;letter-spacing:1px;color:#666;margin-bottom:5px">Locataire</div><div style="border:1px solid #ddd;border-radius:6px;overflow:hidden;height:90px">${sigImg(`edl2-sig-loc-${id}`)}</div></div>
+    <div style="flex:1;text-align:center"><div style="font-size:10px;text-transform:uppercase;letter-spacing:1px;color:#666;margin-bottom:5px">Propriétaire</div><div style="border:1px solid #ddd;border-radius:6px;overflow:hidden;height:90px">${sigImg(`edl2-sig-prop-${id}`)}</div></div>
+    <div style="flex:1;text-align:center"><div style="font-size:10px;text-transform:uppercase;letter-spacing:1px;color:#666;margin-bottom:5px">Heraclee</div><div style="border:1px solid #ddd;border-radius:6px;overflow:hidden;height:90px">${sigImg(`edl2-sig-her-${id}`)}</div></div>
+  </div>
+  <div style="font-size:11px;color:#999;text-align:center;margin-bottom:14px">Les parties reconnaissent avoir pris connaissance de cet état des lieux et en certifient l'exactitude.</div>
+  <div style="border-top:1px solid #eee;padding-top:10px;display:flex;justify-content:space-between;font-size:10px;color:#999"><span>Heraclee Agency — Saint-Tropez</span><span>${data.date_etat} — ${villa}</span><span>${etatId?'Réf. #'+etatId:''}</span></div>
+</div></body></html>`;
+  const w=window.open('','_blank');
+  if(w){w.document.write(html);w.document.close();setTimeout(()=>w.print(),600);}
+}
+</script>
+</body>
+</html>
