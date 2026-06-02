@@ -1,0 +1,268 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
+<title>Le Domaine les Paréos · Disponibilités · Heraclee</title>
+<script src="https://unpkg.com/@supabase/supabase-js@2/dist/umd/supabase.js"></script>
+<link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;0,500;1,300;1,400&family=DM+Sans:wght@300;400;500&display=swap" rel="stylesheet">
+<style>
+*{margin:0;padding:0;box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+:root{
+  --bg:#F7F7F5;
+  --bg2:#FFFFFF;
+  --fg:#0D0D0D;
+  --acc:#00B8B8;
+  --acc2:#007A7A;
+  --res:#1A1A2E;
+  --av:#00B8B8;
+  --own:#7A3B7A;
+  --muted:#888;
+  --border:rgba(0,184,184,0.18);
+}
+body{font-family:"DM Sans",sans-serif;background:var(--bg);color:var(--fg);min-height:100vh;}
+.hdr{background:#0D0D0D;border-bottom:2px solid var(--acc);padding:14px 20px;position:sticky;top:0;z-index:50;}
+.hdr-row{display:flex;justify-content:space-between;align-items:center;}
+.hdr-logo{font-family:"Cormorant Garamond",serif;font-size:10px;letter-spacing:0.5em;color:var(--acc);text-transform:uppercase;}
+.hdr-title{font-family:"Cormorant Garamond",serif;font-size:21px;font-weight:300;color:#fff;letter-spacing:0.06em;margin-top:2px;}
+.hdr-sub{font-size:11px;color:var(--muted);margin-top:1px;}
+.admin-btn{font-size:11px;padding:5px 12px;border-radius:20px;border:1px solid rgba(0,184,184,0.35);background:transparent;color:var(--acc);cursor:pointer;font-family:"DM Sans",sans-serif;}
+.admin-btn.active{background:var(--acc);color:#0D0D0D;}
+.nav-mois{display:flex;gap:6px;overflow-x:auto;padding:10px 20px;background:#0D0D0D;border-bottom:1px solid rgba(0,184,184,0.12);scrollbar-width:none;}
+.nav-mois::-webkit-scrollbar{display:none;}
+.nav-btn{font-size:11px;font-family:"DM Sans",sans-serif;padding:5px 14px;border-radius:20px;border:1px solid rgba(0,184,184,0.2);background:transparent;color:var(--muted);cursor:pointer;white-space:nowrap;transition:all 0.15s;}
+.nav-btn.active,.nav-btn:hover{background:var(--acc);color:#0D0D0D;border-color:var(--acc);font-weight:500;}
+.content{padding:16px 16px 60px;max-width:500px;margin:0 auto;}
+.hero{background:#0D0D0D;border-radius:12px;padding:20px;margin-bottom:14px;border:1px solid rgba(0,184,184,0.15);}
+.hero-title{font-family:"Cormorant Garamond",serif;font-size:20px;font-weight:300;color:#fff;letter-spacing:0.04em;margin-bottom:6px;}
+.hero-desc{font-size:11px;color:var(--muted);line-height:1.75;}
+.hero-tags{display:flex;gap:6px;flex-wrap:wrap;margin-top:10px;}
+.hero-tag{font-size:10px;padding:3px 10px;border-radius:20px;background:rgba(0,184,184,0.1);color:var(--acc);border:1px solid rgba(0,184,184,0.18);}
+.sync-bar{display:flex;align-items:center;gap:6px;font-size:11px;color:var(--muted);margin-bottom:10px;}
+.sync-dot{width:7px;height:7px;border-radius:50%;background:var(--acc);}
+.sync-dot.loading{animation:pulse 1s infinite;}
+.sync-dot.error{background:#e53;}
+@keyframes pulse{0%,100%{opacity:1}50%{opacity:0.3}}
+.mc{background:#fff;border:1px solid var(--border);border-radius:12px;padding:14px;margin-bottom:14px;box-shadow:0 2px 10px rgba(0,0,0,0.04);}
+.mn{font-family:"Cormorant Garamond",serif;font-size:17px;font-weight:300;color:var(--fg);margin-bottom:10px;text-align:center;letter-spacing:0.04em;}
+.dh,.dg{display:grid;grid-template-columns:repeat(7,1fr);gap:3px;}
+.dh div{font-size:10px;color:var(--muted);text-align:center;padding:2px 0;font-weight:500;text-transform:uppercase;letter-spacing:0.05em;}
+.dg div{aspect-ratio:1;display:flex;align-items:center;justify-content:center;font-size:13px;border-radius:6px;transition:transform 0.1s;}
+.dg div.av{background:var(--av);color:#fff;font-weight:500;}
+.dg div.res{background:var(--res);color:#fff;font-weight:500;}
+.dg div.own{background:var(--own);color:#fff;font-weight:500;}
+.dg div.past{color:#ccc;background:transparent;}
+.admin-mode .dg div:not(.past):not(.empty){cursor:pointer;}
+.admin-mode .dg div:not(.past):not(.empty):hover{transform:scale(1.1);}
+.legend{display:flex;gap:12px;flex-wrap:wrap;margin-bottom:14px;padding:12px 14px;background:#fff;border:1px solid var(--border);border-radius:10px;}
+.leg-item{display:flex;align-items:center;gap:6px;font-size:11px;color:var(--muted);}
+.leg-dot{width:10px;height:10px;border-radius:3px;}
+.leg-dot.av{background:var(--av);}
+.leg-dot.res{background:var(--res);}
+.leg-dot.own{background:var(--own);}
+.admin-panel{background:#fff;border:1px solid var(--border);border-radius:10px;padding:14px;margin-bottom:14px;display:none;}
+.admin-panel.open{display:block;}
+.admin-title{font-size:11px;font-weight:500;color:var(--acc);margin-bottom:10px;letter-spacing:0.1em;text-transform:uppercase;}
+.admin-hint{font-size:11px;color:var(--muted);line-height:1.5;margin-bottom:10px;}
+.admin-login{display:flex;gap:8px;}
+.admin-input{flex:1;border:1px solid var(--border);border-radius:7px;padding:8px 10px;font-family:"DM Sans",sans-serif;font-size:13px;background:var(--bg);color:var(--fg);}
+.admin-input:focus{outline:none;border-color:var(--acc);}
+.admin-ok{background:var(--acc);color:#0D0D0D;border:none;border-radius:7px;padding:8px 14px;font-family:"DM Sans",sans-serif;font-size:13px;cursor:pointer;font-weight:500;}
+.admin-err{font-size:11px;color:#e53;margin-top:6px;display:none;}
+.quit-btn{width:100%;margin-bottom:10px;background:rgba(0,0,0,0.06);color:var(--muted);border:none;border-radius:7px;padding:8px;font-family:"DM Sans",sans-serif;font-size:12px;cursor:pointer;}
+.status-selector{display:flex;gap:6px;}
+.stat-btn{flex:1;padding:7px;border-radius:7px;border:1px solid var(--border);font-family:"DM Sans",sans-serif;font-size:11px;cursor:pointer;background:var(--bg);color:var(--fg);transition:all 0.15s;}
+.stat-btn.sel-av{background:var(--av);color:#fff;border-color:var(--av);font-weight:500;}
+.stat-btn.sel-res{background:var(--res);color:#fff;border-color:var(--res);font-weight:500;}
+.stat-btn.sel-own{background:var(--own);color:#fff;border-color:var(--own);font-weight:500;}
+.desc-card{background:#fff;border:1px solid var(--border);border-radius:12px;padding:16px;margin-bottom:14px;}
+.desc-title{font-family:"Cormorant Garamond",serif;font-size:16px;color:var(--fg);margin-bottom:8px;}
+.desc-text{font-size:12px;color:var(--muted);line-height:1.8;}
+.contact-btn{display:block;width:100%;background:var(--acc);color:#0D0D0D;border:none;border-radius:10px;padding:14px;font-family:"DM Sans",sans-serif;font-size:14px;font-weight:500;text-align:center;cursor:pointer;text-decoration:none;letter-spacing:0.04em;}
+</style>
+</head>
+<body>
+<div class="hdr">
+  <div class="hdr-row">
+    <div class="hdr-logo">Heraclee Agency</div>
+    <button class="admin-btn" id="adminToggle" onclick="toggleAdminPanel()">⚙ Admin</button>
+  </div>
+  <div class="hdr-title">Le Domaine les Paréos</div>
+  <div class="hdr-sub">Saint-Tropez · Ramatuelle · 8 suites · 2 villas · 2 piscines</div>
+</div>
+<div class="nav-mois">
+  <button class="nav-btn" onclick="showMonth(5,this)">Mai</button>
+  <button class="nav-btn" onclick="showMonth(6,this)">Juin</button>
+  <button class="nav-btn" onclick="showMonth(7,this)">Juillet</button>
+  <button class="nav-btn" onclick="showMonth(8,this)">Août</button>
+  <button class="nav-btn" onclick="showMonth(9,this)">Septembre</button>
+  <button class="nav-btn" onclick="showMonth(10,this)">Octobre</button>
+</div>
+<div class="content">
+  <div class="sync-bar"><div class="sync-dot loading" id="syncDot"></div><span id="syncLabel">Chargement…</span></div>
+  <div class="admin-panel" id="adminPanel">
+    <div class="admin-title">Accès propriétaire</div>
+    <div id="adminLoginWrap">
+      <div class="admin-hint">Entrez votre code pour modifier les disponibilités.</div>
+      <div class="admin-login">
+        <input class="admin-input" type="password" id="adminPw" placeholder="Code propriétaire" onkeydown="if(event.key==='Enter')checkAdmin()">
+        <button class="admin-ok" onclick="checkAdmin()">OK</button>
+      </div>
+      <div class="admin-err" id="adminErr">Code incorrect</div>
+    </div>
+    <div id="adminActiveWrap" style="display:none">
+      <button class="quit-btn" onclick="logoutAdmin()">✕ Quitter le mode admin</button>
+      <div class="admin-hint">Cliquez sur une date pour changer son statut.</div>
+      <div class="status-selector">
+        <button class="stat-btn sel-av" id="btn-av" onclick="setMode('av')">✅ Dispo</button>
+        <button class="stat-btn" id="btn-res" onclick="setMode('res')">🔴 Réservé</button>
+        <button class="stat-btn" id="btn-own" onclick="setMode('own')">🟣 Proprio</button>
+      </div>
+    </div>
+  </div>
+  <div class="hero">
+    <div class="hero-title">Le Domaine les Paréos</div>
+    <div class="hero-desc">Propriété d'exception sur 11 000 m² protégés, au calme absolu. Deux villas indépendantes avec chacune sa piscine privée — style moderne, palettes blanc et noir accentuées de turquoise et prune. 8 suites avec salle de bain attenante. L'art est présent dans chaque pièce et dans les jardins.</div>
+    <div class="hero-tags">
+      <span class="hero-tag">500 m² + 300 m²</span>
+      <span class="hero-tag">8 suites</span>
+      <span class="hero-tag">2 piscines</span>
+      <span class="hero-tag">2 min Pampelonne</span>
+      <span class="hero-tag">5 min Place des Lices</span>
+    </div>
+  </div>
+  <div class="legend">
+    <div class="leg-item"><div class="leg-dot av"></div><span>Disponible</span></div>
+    <div class="leg-item"><div class="leg-dot res"></div><span>Réservé</span></div>
+    <div class="leg-item"><div class="leg-dot own"></div><span>Propriétaire</span></div>
+  </div>
+  <div id="cal"></div>
+  <div class="desc-card">
+    <div class="desc-title">À propos</div>
+    <div class="desc-text">Région Tahiti de Saint-Tropez. Cuisine gastronomique équipée, grand salon, espaces de détente intérieurs et extérieurs, domotique intégrée. Coin repas au bord de chaque piscine. Situé à 5 minutes de la Place des Lices.</div>
+  </div>
+  <a class="contact-btn" href="mailto:contact@heraclee.com">Contacter Heraclee</a>
+</div>
+<script>
+var SUPA_URL='https://fgocsdozvgkpkjbzuyyp.supabase.co';
+var SUPA_KEY='sb_publishable_wXSjTHbfXYYXcU2-Af8w1g_pnkRuYA6';
+var db=supabase.createClient(SUPA_URL,SUPA_KEY);
+var VILLA='domaine-arts';
+var CODE='domainearts2026';
+var MOIS=['Mai','Juin','Juillet','Août','Septembre','Octobre'];
+var JOURS=['L','M','M','J','V','S','D'];
+var TODAY=new Date();
+var avail={};
+var isAdmin=false;
+var mode='av';
+
+function buildCal(){
+  var html='';
+  for(var m=5;m<=10;m++){
+    var days=new Date(2026,m,0).getDate();
+    var fd=new Date(2026,m-1,1).getDay();
+    var off=fd===0?6:fd-1;
+    html+='<div class="mc" id="m-'+m+'" style="display:none">';
+    html+='<div class="mn">'+MOIS[m-5]+' 2026</div>';
+    html+='<div class="dh">';
+    for(var j=0;j<7;j++) html+='<div>'+JOURS[j]+'</div>';
+    html+='</div><div class="dg">';
+    for(var i=0;i<off;i++) html+='<div class="empty"></div>';
+    for(var d=1;d<=days;d++){
+      var key='2026-'+(m<10?'0':'')+m+'-'+(d<10?'0':'')+d;
+      var dt=new Date(2026,m-1,d);
+      var st=dt<new Date(TODAY.getFullYear(),TODAY.getMonth(),TODAY.getDate())?'past':'av';
+      html+='<div class="'+st+'" data-key="'+key+'" onclick="click(this,\''+key+'\')">'+d+'</div>';
+    }
+    html+='</div></div>';
+  }
+  document.getElementById('cal').innerHTML=html;
+}
+
+function showMonth(m,btn){
+  document.querySelectorAll('.mc').forEach(function(el){el.style.display='none';});
+  var el=document.getElementById('m-'+m);
+  if(el) el.style.display='block';
+  document.querySelectorAll('.nav-btn').forEach(function(b){b.classList.remove('active');});
+  if(btn) btn.classList.add('active');
+}
+
+function showCurrent(){
+  var m=new Date().getMonth()+1;
+  var cur=(m>=5&&m<=10)?m:5;
+  var btns=document.querySelectorAll('.nav-btn');
+  showMonth(cur,btns[cur-5]);
+}
+
+function setSync(s,msg){
+  var dot=document.getElementById('syncDot');
+  dot.className='sync-dot'+(s==='loading'?' loading':s==='error'?' error':'');
+  document.getElementById('syncLabel').textContent=msg;
+}
+
+function loadData(){
+  setSync('loading','Chargement…');
+  db.from('availability').select('date_key,status').eq('villa',VILLA).then(function(res){
+    if(!res.error&&res.data){
+      res.data.forEach(function(r){
+        var el=document.querySelector('[data-key="'+r.date_key+'"]');
+        if(el&&!el.classList.contains('past')){
+          el.className=r.status;
+          avail[r.date_key]=r.status;
+        }
+      });
+    }
+    setSync('ok','Synchronisé ✓');
+  });
+}
+
+function click(el,key){
+  if(!isAdmin||el.classList.contains('past')) return;
+  el.className=mode;
+  avail[key]=mode;
+  setSync('loading','Sauvegarde…');
+  db.from('availability').upsert({villa:VILLA,date_key:key,status:mode},{onConflict:'villa,date_key'}).then(function(res){
+    setSync(res.error?'error':'ok',res.error?'Erreur':'Sauvegardé ✓');
+    if(!res.error) setTimeout(function(){setSync('ok','Synchronisé');},2000);
+  });
+}
+
+function toggleAdminPanel(){document.getElementById('adminPanel').classList.toggle('open');}
+
+function checkAdmin(){
+  if(document.getElementById('adminPw').value===CODE){
+    isAdmin=true;
+    document.getElementById('adminLoginWrap').style.display='none';
+    document.getElementById('adminActiveWrap').style.display='block';
+    document.getElementById('adminToggle').classList.add('active');
+    document.getElementById('adminToggle').textContent='✓ Admin';
+    document.body.classList.add('admin-mode');
+  } else {
+    document.getElementById('adminErr').style.display='block';
+  }
+}
+
+function logoutAdmin(){
+  isAdmin=false;
+  document.body.classList.remove('admin-mode');
+  document.getElementById('adminToggle').classList.remove('active');
+  document.getElementById('adminToggle').textContent='⚙ Admin';
+  document.getElementById('adminPanel').classList.remove('open');
+  document.getElementById('adminLoginWrap').style.display='block';
+  document.getElementById('adminActiveWrap').style.display='none';
+  document.getElementById('adminPw').value='';
+}
+
+function setMode(m){
+  mode=m;
+  ['av','res','own'].forEach(function(x){
+    document.getElementById('btn-'+x).className='stat-btn'+(x===m?' sel-'+m:'');
+  });
+}
+
+buildCal();
+showCurrent();
+loadData();
+</script>
+</body>
+</html>
