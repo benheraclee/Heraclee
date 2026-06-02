@@ -720,7 +720,7 @@ function matchesCriteres(v, pMin, pMax, ch, com, lieu, qrt, vue, fetes, heli, ty
   if(vue && (v.vue_mer||'').toLowerCase() !== vue) return false;
   if(fetes && (v.fetes||'').toLowerCase() !== fetes) return false;
   if(heli && (v.helipad||'').toLowerCase() !== heli) return false;
-  if(typo && !(v.typologie||'').toLowerCase().includes(typo)) return false;
+ if(typo && (v.typologie||'').toLowerCase() !== typo) return false;
   if(sport && !(v.sport||'').toLowerCase().includes(sport)) return false;
   return true;
 }
