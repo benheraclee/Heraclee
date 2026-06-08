@@ -1,0 +1,1702 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<title>État des Lieux — Heraclee</title>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;0,600;1,300;1,400&family=Jost:wght@300;400;500;600&display=swap');
+
+  :root {
+    --gold: #B8955A;
+    --gold-light: #D4AF78;
+    --gold-pale: #F5EDD8;
+    --ink: #1A1A2E;
+    --ink-soft: #2C2C44;
+    --cream: #FAF7F2;
+    --cream-dark: #F0EBE0;
+    --muted: #8A8499;
+    --white: #FFFFFF;
+    --red: #C0392B;
+    --green: #27AE60;
+    --orange: #E67E22;
+    --border: rgba(184,149,90,0.25);
+    --shadow: 0 2px 20px rgba(26,26,46,0.08);
+  }
+
+  * { box-sizing: border-box; margin: 0; padding: 0; -webkit-tap-highlight-color: transparent; }
+
+  body {
+    font-family: 'Jost', sans-serif;
+    background: var(--cream);
+    color: var(--ink);
+    min-height: 100vh;
+    font-size: 14px;
+  }
+
+  /* ── HEADER ── */
+  .app-header {
+    background: var(--ink);
+    padding: 16px 20px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    position: sticky;
+    top: 0;
+    z-index: 100;
+    border-bottom: 2px solid var(--gold);
+  }
+  .app-header .logo {
+    font-family: 'Cormorant Garamond', serif;
+    font-size: 22px;
+    color: var(--gold);
+    letter-spacing: 3px;
+    font-weight: 300;
+  }
+  .app-header .subtitle {
+    font-size: 10px;
+    color: var(--muted);
+    letter-spacing: 2px;
+    text-transform: uppercase;
+    margin-top: 2px;
+  }
+  .btn-new {
+    background: var(--gold);
+    color: var(--ink);
+    border: none;
+    padding: 8px 16px;
+    font-family: 'Jost', sans-serif;
+    font-size: 12px;
+    font-weight: 600;
+    letter-spacing: 1px;
+    text-transform: uppercase;
+    cursor: pointer;
+    border-radius: 2px;
+  }
+
+  /* ── SCREENS ── */
+  .screen { display: none; padding: 20px; max-width: 700px; margin: 0 auto; }
+  .screen.active { display: block; }
+
+  /* ── HOME ── */
+  .home-title {
+    font-family: 'Cormorant Garamond', serif;
+    font-size: 28px;
+    color: var(--ink);
+    font-weight: 300;
+    margin: 24px 0 6px;
+  }
+  .home-sub {
+    color: var(--muted);
+    font-size: 12px;
+    letter-spacing: 1px;
+    text-transform: uppercase;
+    margin-bottom: 24px;
+  }
+  .edl-cards { display: flex; flex-direction: column; gap: 12px; margin-bottom: 28px; }
+  .edl-card {
+    background: var(--white);
+    border: 1px solid var(--border);
+    border-radius: 4px;
+    padding: 16px;
+    cursor: pointer;
+    transition: all 0.2s;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+  }
+  .edl-card:active { transform: scale(0.98); }
+  .edl-card .card-left .villa-name { font-weight: 600; font-size: 15px; }
+  .edl-card .card-left .card-meta { font-size: 11px; color: var(--muted); margin-top: 3px; }
+  .tag {
+    font-size: 10px;
+    padding: 3px 8px;
+    border-radius: 20px;
+    font-weight: 600;
+    letter-spacing: 0.5px;
+    text-transform: uppercase;
+  }
+  .tag.entree { background: #E8F5E9; color: var(--green); }
+  .tag.sortie { background: #FFF3E0; color: var(--orange); }
+  .tag.termine { background: var(--cream-dark); color: var(--muted); }
+  .empty-state { text-align: center; padding: 40px 20px; color: var(--muted); }
+  .empty-state .icon { font-size: 40px; margin-bottom: 12px; }
+
+  /* ── FORM WIZARD ── */
+  .wizard-progress {
+    display: flex;
+    gap: 6px;
+    margin-bottom: 24px;
+  }
+  .progress-step {
+    flex: 1;
+    height: 3px;
+    background: var(--cream-dark);
+    border-radius: 2px;
+    transition: background 0.3s;
+  }
+  .progress-step.done { background: var(--gold); }
+  .progress-step.active { background: var(--gold-light); }
+
+  .step { display: none; }
+  .step.active { display: block; }
+
+  .step-title {
+    font-family: 'Cormorant Garamond', serif;
+    font-size: 22px;
+    font-weight: 400;
+    margin-bottom: 4px;
+  }
+  .step-num {
+    font-size: 11px;
+    color: var(--gold);
+    letter-spacing: 2px;
+    text-transform: uppercase;
+    margin-bottom: 16px;
+  }
+
+  /* ── FORM ELEMENTS ── */
+  .form-group { margin-bottom: 16px; }
+  .form-label {
+    display: block;
+    font-size: 11px;
+    font-weight: 600;
+    letter-spacing: 1.5px;
+    text-transform: uppercase;
+    color: var(--muted);
+    margin-bottom: 6px;
+  }
+  .form-input, .form-select, .form-textarea {
+    width: 100%;
+    padding: 12px 14px;
+    border: 1px solid var(--border);
+    border-radius: 3px;
+    background: var(--white);
+    font-family: 'Jost', sans-serif;
+    font-size: 14px;
+    color: var(--ink);
+    outline: none;
+    transition: border-color 0.2s;
+  }
+  .form-input:focus, .form-select:focus, .form-textarea:focus {
+    border-color: var(--gold);
+  }
+  .form-textarea { min-height: 80px; resize: vertical; }
+  .form-row { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+
+  .type-selector { display: flex; gap: 10px; margin-bottom: 16px; }
+  .type-btn {
+    flex: 1;
+    padding: 14px;
+    border: 2px solid var(--border);
+    border-radius: 4px;
+    background: var(--white);
+    cursor: pointer;
+    text-align: center;
+    transition: all 0.2s;
+    font-family: 'Jost', sans-serif;
+  }
+  .type-btn .type-icon { font-size: 24px; display: block; margin-bottom: 4px; }
+  .type-btn .type-label { font-size: 12px; font-weight: 600; letter-spacing: 1px; text-transform: uppercase; }
+  .type-btn.selected { border-color: var(--gold); background: var(--gold-pale); }
+  .type-btn.selected .type-label { color: var(--gold); }
+
+  /* ── COMPTEURS ── */
+  .compteur-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+  .compteur-box {
+    background: var(--white);
+    border: 1px solid var(--border);
+    border-radius: 4px;
+    padding: 12px;
+  }
+  .compteur-box .compteur-label { font-size: 11px; font-weight: 600; letter-spacing: 1px; text-transform: uppercase; color: var(--muted); margin-bottom: 8px; }
+  .compteur-box input {
+    width: 100%;
+    padding: 10px 12px;
+    border: 1px solid var(--border);
+    border-radius: 3px;
+    font-family: 'Jost', sans-serif;
+    font-size: 16px;
+    font-weight: 500;
+    text-align: center;
+    outline: none;
+  }
+  .compteur-box input:focus { border-color: var(--gold); }
+
+  /* ── PIECES ── */
+  .piece-card {
+    background: var(--white);
+    border: 1px solid var(--border);
+    border-radius: 4px;
+    margin-bottom: 12px;
+    overflow: hidden;
+  }
+  .piece-header {
+    padding: 14px 16px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    cursor: pointer;
+    background: var(--white);
+    border-bottom: 1px solid transparent;
+    transition: border-color 0.2s;
+  }
+  .piece-header.open { border-bottom-color: var(--border); }
+  .piece-header .piece-name { font-weight: 600; font-size: 15px; }
+  .piece-header .piece-status {
+    font-size: 11px;
+    padding: 3px 8px;
+    border-radius: 20px;
+    font-weight: 600;
+  }
+  .status-bon { background: #E8F5E9; color: var(--green); }
+  .status-correct { background: #FFF9E6; color: #F39C12; }
+  .status-noter { background: #FEECEC; color: var(--red); }
+  .status-nc { background: var(--cream-dark); color: var(--muted); }
+
+  .piece-body { padding: 16px; display: none; }
+  .piece-body.open { display: block; }
+
+  .etat-selector { display: flex; gap: 6px; margin-bottom: 14px; }
+  .etat-btn {
+    flex: 1;
+    padding: 10px 6px;
+    border: 1.5px solid var(--border);
+    border-radius: 3px;
+    background: var(--white);
+    cursor: pointer;
+    text-align: center;
+    font-size: 11px;
+    font-weight: 600;
+    letter-spacing: 0.5px;
+    text-transform: uppercase;
+    font-family: 'Jost', sans-serif;
+    transition: all 0.15s;
+  }
+  .etat-btn.bon.sel { border-color: var(--green); background: #E8F5E9; color: var(--green); }
+  .etat-btn.correct.sel { border-color: #F39C12; background: #FFF9E6; color: #F39C12; }
+  .etat-btn.noter.sel { border-color: var(--red); background: #FEECEC; color: var(--red); }
+
+  .inventaire-list { margin-top: 14px; }
+  .inventaire-item {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 10px 0;
+    border-bottom: 1px solid var(--cream-dark);
+  }
+  .inventaire-item:last-child { border-bottom: none; }
+  .inventaire-item .item-name { font-size: 13px; flex: 1; }
+  .item-etat-btns { display: flex; gap: 4px; }
+  .item-btn {
+    padding: 5px 8px;
+    border: 1px solid var(--border);
+    border-radius: 3px;
+    background: var(--white);
+    cursor: pointer;
+    font-size: 10px;
+    font-weight: 600;
+    font-family: 'Jost', sans-serif;
+    letter-spacing: 0.3px;
+    transition: all 0.15s;
+  }
+  .item-btn.ok.sel { border-color: var(--green); background: #E8F5E9; color: var(--green); }
+  .item-btn.manq.sel { border-color: var(--red); background: #FEECEC; color: var(--red); }
+  .item-btn.end.sel { border-color: var(--orange); background: #FFF3E0; color: var(--orange); }
+
+  /* ── PHOTOS ── */
+  .photos-zone { margin-top: 14px; }
+  .photos-label { font-size: 11px; font-weight: 600; letter-spacing: 1px; text-transform: uppercase; color: var(--muted); margin-bottom: 8px; }
+  .photos-grid { display: flex; flex-wrap: wrap; gap: 8px; margin-bottom: 8px; }
+  .photo-thumb {
+    width: 72px;
+    height: 72px;
+    object-fit: cover;
+    border-radius: 3px;
+    border: 1px solid var(--border);
+    cursor: pointer;
+  }
+  .photo-add-btn {
+    width: 72px;
+    height: 72px;
+    border: 2px dashed var(--border);
+    border-radius: 3px;
+    background: var(--cream);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    font-size: 24px;
+    color: var(--gold);
+    transition: all 0.2s;
+  }
+  .photo-add-btn:active { background: var(--gold-pale); }
+  input[type="file"] { display: none; }
+
+  /* ── SIGNATURES ── */
+  .sig-container { margin-bottom: 20px; }
+  .sig-label { font-size: 11px; font-weight: 600; letter-spacing: 1.5px; text-transform: uppercase; color: var(--muted); margin-bottom: 8px; display: flex; justify-content: space-between; align-items: center; }
+  .sig-clear { font-size: 11px; color: var(--gold); cursor: pointer; font-weight: 400; letter-spacing: 0; text-transform: none; }
+  canvas.sig-pad {
+    width: 100%;
+    height: 140px;
+    border: 1.5px solid var(--border);
+    border-radius: 4px;
+    background: var(--white);
+    touch-action: none;
+    cursor: crosshair;
+  }
+  canvas.sig-pad.signed { border-color: var(--green); }
+
+  /* ── NAVIGATION BUTTONS ── */
+  .nav-btns {
+    display: flex;
+    gap: 10px;
+    margin-top: 28px;
+    padding-bottom: 40px;
+  }
+  .btn-prev {
+    flex: 1;
+    padding: 14px;
+    border: 1.5px solid var(--border);
+    border-radius: 3px;
+    background: var(--white);
+    font-family: 'Jost', sans-serif;
+    font-size: 13px;
+    font-weight: 600;
+    color: var(--muted);
+    cursor: pointer;
+    letter-spacing: 1px;
+    text-transform: uppercase;
+  }
+  .btn-next {
+    flex: 2;
+    padding: 14px;
+    border: none;
+    border-radius: 3px;
+    background: var(--ink);
+    color: var(--gold);
+    font-family: 'Jost', sans-serif;
+    font-size: 13px;
+    font-weight: 600;
+    cursor: pointer;
+    letter-spacing: 1px;
+    text-transform: uppercase;
+  }
+  .btn-pdf {
+    flex: 2;
+    padding: 14px;
+    border: none;
+    border-radius: 3px;
+    background: var(--gold);
+    color: var(--ink);
+    font-family: 'Jost', sans-serif;
+    font-size: 13px;
+    font-weight: 700;
+    cursor: pointer;
+    letter-spacing: 1px;
+    text-transform: uppercase;
+  }
+
+  /* ── SECTION SEPARATOR ── */
+  .section-sep {
+    font-size: 10px;
+    font-weight: 600;
+    letter-spacing: 2px;
+    text-transform: uppercase;
+    color: var(--gold);
+    border-bottom: 1px solid var(--border);
+    padding-bottom: 6px;
+    margin: 20px 0 14px;
+  }
+
+  /* ── HUISSIER TOGGLE ── */
+  .toggle-row {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 12px 14px;
+    background: var(--white);
+    border: 1px solid var(--border);
+    border-radius: 3px;
+    margin-bottom: 10px;
+  }
+  .toggle-label { font-size: 13px; font-weight: 500; }
+  .toggle {
+    width: 44px;
+    height: 24px;
+    background: var(--cream-dark);
+    border-radius: 12px;
+    position: relative;
+    cursor: pointer;
+    transition: background 0.2s;
+  }
+  .toggle.on { background: var(--gold); }
+  .toggle::after {
+    content: '';
+    position: absolute;
+    width: 18px;
+    height: 18px;
+    border-radius: 50%;
+    background: white;
+    top: 3px;
+    left: 3px;
+    transition: left 0.2s;
+    box-shadow: 0 1px 4px rgba(0,0,0,0.2);
+  }
+  .toggle.on::after { left: 23px; }
+  .huissier-fields { display: none; }
+  .huissier-fields.show { display: block; }
+
+  /* ── LOADING ── */
+  .loading-overlay {
+    display: none;
+    position: fixed;
+    inset: 0;
+    background: rgba(26,26,46,0.85);
+    z-index: 999;
+    align-items: center;
+    justify-content: center;
+    flex-direction: column;
+    gap: 16px;
+  }
+  .loading-overlay.show { display: flex; }
+  .loading-text { color: var(--gold); font-family: 'Cormorant Garamond', serif; font-size: 20px; letter-spacing: 2px; }
+  .spinner {
+    width: 40px;
+    height: 40px;
+    border: 3px solid rgba(184,149,90,0.3);
+    border-top-color: var(--gold);
+    border-radius: 50%;
+    animation: spin 0.8s linear infinite;
+  }
+  @keyframes spin { to { transform: rotate(360deg); } }
+
+  /* ── PDF TEMPLATE (hidden) ── */
+  #pdf-template {
+    display: none;
+    width: 794px;
+    background: white;
+    font-family: 'Jost', sans-serif;
+    color: #1A1A2E;
+    padding: 0;
+  }
+  .pdf-header {
+    background: #1A1A2E;
+    padding: 32px 40px;
+    display: flex;
+    align-items: flex-start;
+    justify-content: space-between;
+  }
+  .pdf-logo { font-family: 'Cormorant Garamond', serif; font-size: 32px; color: #B8955A; letter-spacing: 4px; font-weight: 300; }
+  .pdf-header-right { text-align: right; }
+  .pdf-doc-title { color: #B8955A; font-size: 13px; letter-spacing: 3px; text-transform: uppercase; }
+  .pdf-doc-type { color: #FAF7F2; font-size: 18px; font-weight: 600; margin-top: 4px; }
+  .pdf-body { padding: 32px 40px; }
+  .pdf-info-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 0; border: 1px solid #e8e0d0; border-radius: 4px; overflow: hidden; margin-bottom: 28px; }
+  .pdf-info-cell { padding: 12px 16px; border-bottom: 1px solid #e8e0d0; border-right: 1px solid #e8e0d0; }
+  .pdf-info-cell:nth-child(even) { border-right: none; }
+  .pdf-info-cell:nth-last-child(-n+2) { border-bottom: none; }
+  .pdf-info-label { font-size: 9px; font-weight: 600; letter-spacing: 1.5px; text-transform: uppercase; color: #8A8499; margin-bottom: 3px; }
+  .pdf-info-value { font-size: 14px; font-weight: 500; }
+  .pdf-section-title {
+    font-size: 10px;
+    font-weight: 700;
+    letter-spacing: 2px;
+    text-transform: uppercase;
+    color: #B8955A;
+    border-bottom: 1.5px solid #B8955A;
+    padding-bottom: 6px;
+    margin: 24px 0 14px;
+  }
+  .pdf-compteurs { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; margin-bottom: 20px; }
+  .pdf-compteur-box { border: 1px solid #e8e0d0; border-radius: 4px; padding: 12px; text-align: center; }
+  .pdf-compteur-name { font-size: 9px; font-weight: 700; letter-spacing: 1.5px; text-transform: uppercase; color: #8A8499; margin-bottom: 6px; }
+  .pdf-compteur-val { font-size: 20px; font-weight: 600; color: #1A1A2E; }
+  .pdf-piece { margin-bottom: 20px; }
+  .pdf-piece-header { background: #F5EDD8; padding: 10px 14px; display: flex; justify-content: space-between; align-items: center; border-radius: 3px 3px 0 0; }
+  .pdf-piece-name { font-weight: 700; font-size: 13px; text-transform: uppercase; letter-spacing: 1px; }
+  .pdf-etat-badge { font-size: 10px; font-weight: 700; padding: 3px 10px; border-radius: 20px; }
+  .pdf-piece-body { border: 1px solid #e8e0d0; border-top: none; border-radius: 0 0 3px 3px; padding: 12px 14px; }
+  .pdf-piece-comment { font-size: 12px; color: #555; margin-bottom: 10px; font-style: italic; }
+  .pdf-inv-table { width: 100%; border-collapse: collapse; font-size: 11px; }
+  .pdf-inv-table th { text-align: left; padding: 6px 8px; background: #f8f4ee; font-size: 9px; font-weight: 700; letter-spacing: 1px; text-transform: uppercase; color: #8A8499; }
+  .pdf-inv-table td { padding: 7px 8px; border-bottom: 1px solid #f0ebe0; }
+  .pdf-photos-row { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 10px; }
+  .pdf-photo { width: 120px; height: 90px; object-fit: cover; border-radius: 3px; border: 1px solid #e8e0d0; }
+  .pdf-sig-section { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; margin-top: 28px; }
+  .pdf-sig-box { border: 1px solid #e8e0d0; border-radius: 4px; padding: 14px; }
+  .pdf-sig-label { font-size: 9px; font-weight: 700; letter-spacing: 1.5px; text-transform: uppercase; color: #8A8499; margin-bottom: 10px; }
+  .pdf-sig-img { width: 100%; height: 80px; object-fit: contain; }
+  .pdf-sig-name { font-size: 12px; font-weight: 500; margin-top: 8px; border-top: 1px solid #e8e0d0; padding-top: 6px; }
+  .pdf-footer { background: #1A1A2E; padding: 16px 40px; display: flex; justify-content: space-between; align-items: center; margin-top: 32px; }
+  .pdf-footer-text { color: #8A8499; font-size: 10px; letter-spacing: 1px; }
+  .pdf-footer-brand { color: #B8955A; font-family: 'Cormorant Garamond', serif; font-size: 16px; letter-spacing: 3px; }
+
+  .obs-box { background: var(--white); border: 1px solid var(--border); border-radius: 4px; padding: 14px; margin-top: 4px; }
+</style>
+</head>
+<body>
+
+<!-- LOADING -->
+<div class="loading-overlay" id="loading">
+  <div class="spinner"></div>
+  <div class="loading-text" id="loading-text">Génération du PDF…</div>
+</div>
+
+<!-- HEADER -->
+<div class="app-header">
+  <div>
+    <div class="logo">HERACLEE</div>
+    <div class="subtitle">États des Lieux</div>
+  </div>
+  <button class="btn-new" onclick="showHome()">← Accueil</button>
+</div>
+
+<!-- SCREEN: HOME -->
+<div class="screen active" id="screen-home">
+  <div style="padding: 20px; max-width: 700px; margin: 0 auto;">
+    <div class="home-title" id="home-title">États des lieux</div>
+    <div class="home-sub">Saint-Tropez · Ramatuelle · Gassin</div>
+
+    <!-- Langue -->
+    <div class="section-sep" id="label-langue">Langue du document</div>
+    <div class="type-selector" style="margin-bottom:20px;">
+      <div class="type-btn selected" id="lang-fr" onclick="setLang('fr')">
+        <span class="type-icon">🇫🇷</span>
+        <span class="type-label">Français</span>
+      </div>
+      <div class="type-btn" id="lang-en" onclick="setLang('en')">
+        <span class="type-icon">🇬🇧</span>
+        <span class="type-label">English</span>
+      </div>
+    </div>
+
+    <!-- Type EDL -->
+    <div class="section-sep" id="label-type">Type d'état des lieux</div>
+    <div class="type-selector" style="margin-bottom:24px;">
+      <div class="type-btn selected" id="home-type-entree" onclick="setHomeType('entree')">
+        <span class="type-icon">🔑</span>
+        <span class="type-label" id="label-entree">Entrée</span>
+      </div>
+      <div class="type-btn" id="home-type-sortie" onclick="setHomeType('sortie')">
+        <span class="type-icon">🚪</span>
+        <span class="type-label" id="label-sortie">Sortie</span>
+      </div>
+    </div>
+
+    <button class="btn-next" id="btn-nouvel" style="width:100%; padding:16px; margin-bottom:24px; font-size:14px;" onclick="showNew()">
+      + Nouvel état des lieux
+    </button>
+
+    <div class="section-sep" id="label-historique">Historique</div>
+    <div class="edl-cards" id="edl-list">
+      <div class="empty-state">
+        <div class="icon">📋</div>
+        <div id="label-empty">Aucun état des lieux enregistré</div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- SCREEN: NEW EDL WIZARD -->
+<div class="screen" id="screen-wizard">
+
+  <!-- Progress bar -->
+  <div class="wizard-progress" id="progress-bar"></div>
+
+  <!-- STEP 1: Infos générales -->
+  <div class="step active" id="step-1">
+    <div class="step-num" id="step-num-1">Étape 1 / 5</div>
+    <div class="step-title" id="step-title-1">Informations générales</div>
+
+    <div class="form-group">
+      <label class="form-label" id="label-type-edl">Type d'état des lieux</label>
+      <div class="type-selector">
+        <div class="type-btn selected" id="type-entree" onclick="selectType('entree')">
+          <span class="type-icon">🔑</span>
+          <span class="type-label" id="type-label-entree">Entrée</span>
+        </div>
+        <div class="type-btn" id="type-sortie" onclick="selectType('sortie')">
+          <span class="type-icon">🚪</span>
+          <span class="type-label" id="type-label-sortie">Sortie</span>
+        </div>
+      </div>
+    </div>
+
+    <div class="form-group">
+      <label class="form-label" id="label-villa">Villa</label>
+      <div style="position:relative;">
+        <input type="text" class="form-input" id="villa-search" placeholder="Rechercher une villa…" autocomplete="off">
+        <div id="villa-dropdown" style="display:none; position:absolute; top:100%; left:0; right:0; background:white; border:1px solid var(--border); border-top:none; border-radius:0 0 3px 3px; max-height:220px; overflow-y:auto; z-index:200; box-shadow:0 4px 12px rgba(0,0,0,0.1);"></div>
+      </div>
+      <input type="hidden" id="villa-select" value="">
+    </div>
+
+    <div class="form-row">
+      <div class="form-group">
+        <label class="form-label" id="label-date">Date</label>
+        <input type="date" class="form-input" id="edl-date">
+      </div>
+      <div class="form-group">
+        <label class="form-label" id="label-heure">Heure</label>
+        <input type="time" class="form-input" id="edl-heure">
+      </div>
+    </div>
+
+    <div class="form-group">
+      <label class="form-label" id="label-locataire">Locataire</label>
+      <input type="text" class="form-input" id="locataire-nom" placeholder="Nom du locataire">
+    </div>
+
+    <div class="form-group">
+      <label class="form-label" id="label-commercial">Commercial Heraclee</label>
+      <input type="text" class="form-input" id="commercial" placeholder="Votre nom">
+    </div>
+
+    <div class="section-sep" id="sep-huissier">Huissier</div>
+    <div class="toggle-row">
+      <div class="toggle-label" id="label-huissier-toggle">État des lieux par huissier</div>
+      <div class="toggle" id="huissier-toggle" onclick="toggleHuissier()"></div>
+    </div>
+    <div class="huissier-fields" id="huissier-fields">
+      <div class="form-group">
+        <label class="form-label" id="label-huissier-nom">Nom de l'huissier</label>
+        <input type="text" class="form-input" id="huissier-nom" placeholder="Me. Dupont — Cabinet ...">
+      </div>
+      <div class="form-group">
+        <label class="form-label" id="label-huissier-contact">Coordonnées</label>
+        <input type="text" class="form-input" id="huissier-contact" placeholder="Téléphone / email">
+      </div>
+    </div>
+
+    <div class="nav-btns">
+      <button class="btn-next" style="flex:1" onclick="goStep(2)"><span class="btn-next-label">Suivant →</span></button>
+    </div>
+  </div>
+
+  <!-- STEP 2: Compteurs -->
+  <div class="step" id="step-2">
+    <div class="step-num" id="step-num-2">Étape 2 / 5</div>
+    <div class="step-title" id="step-title-2">Relevé des compteurs</div>
+
+    <div class="compteur-grid" id="compteurs-grid">
+      <!-- généré dynamiquement -->
+    </div>
+
+    <div class="nav-btns">
+      <button class="btn-prev" onclick="goStep(1)"><span class="btn-prev-label">← Retour</span></button>
+      <button class="btn-next" onclick="goStep(3)"><span class="btn-next-label">Suivant →</span></button>
+    </div>
+  </div>
+
+  <!-- STEP 3: Pièces & inventaire -->
+  <div class="step" id="step-3">
+    <div class="step-num" id="step-num-3">Étape 3 / 5</div>
+    <div class="step-title" id="step-title-3">État des pièces</div>
+    <div id="pieces-container"></div>
+    <div class="nav-btns">
+      <button class="btn-prev" onclick="goStep(2)"><span class="btn-prev-label">← Retour</span></button>
+      <button class="btn-next" onclick="goStep(4)"><span class="btn-next-label">Suivant →</span></button>
+    </div>
+  </div>
+
+  <!-- STEP 4: Observations générales -->
+  <div class="step" id="step-4">
+    <div class="step-num" id="step-num-4">Étape 4 / 5</div>
+    <div class="step-title" id="step-title-4">Observations générales</div>
+
+    <div class="form-group">
+      <label class="form-label" id="label-obs">Observations & remarques</label>
+      <textarea class="form-textarea" id="obs-generale" style="min-height:140px;" placeholder="Remarques générales, points d'attention, éléments à signaler au propriétaire…"></textarea>
+    </div>
+
+    <div class="form-group">
+      <label class="form-label" id="label-cles">Clés remises</label>
+      <input type="text" class="form-input" id="cles" placeholder="Ex : 2 clés + 1 badge piscine">
+    </div>
+
+    <div class="form-group">
+      <label class="form-label" id="label-nb-personnes">Nombre de personnes</label>
+      <input type="number" class="form-input" id="nb-personnes" placeholder="ex : 8" min="1" max="50">
+    </div>
+
+    <div class="nav-btns">
+      <button class="btn-prev" onclick="goStep(3)"><span class="btn-prev-label">← Retour</span></button>
+      <button class="btn-next" onclick="goStep(5)"><span class="btn-next-label">Suivant →</span></button>
+    </div>
+  </div>
+
+  <!-- STEP 5: Signatures -->
+  <div class="step" id="step-5">
+    <div class="step-num" id="step-num-5">Étape 5 / 5</div>
+    <div class="step-title" id="step-title-5">Signatures</div>
+
+    <div class="sig-container">
+      <div class="sig-label">
+        <span id="label-sig-locataire">Locataire</span>
+        <span class="sig-clear" id="clear-sig-locataire" onclick="clearSig('sig-locataire')">Effacer</span>
+      </div>
+      <canvas id="sig-locataire" class="sig-pad"></canvas>
+    </div>
+
+    <div class="sig-container">
+      <div class="sig-label">
+        <span id="label-sig-heraclee">Heraclee (représentant propriétaire)</span>
+        <span class="sig-clear" id="clear-sig-heraclee" onclick="clearSig('sig-heraclee')">Effacer</span>
+      </div>
+      <canvas id="sig-heraclee" class="sig-pad"></canvas>
+    </div>
+
+    <div class="nav-btns">
+      <button class="btn-prev" onclick="goStep(4)"><span class="btn-prev-label">← Retour</span></button>
+      <button class="btn-pdf" onclick="finaliserEDL()"><span id="btn-pdf-label">Générer le PDF</span></button>
+    </div>
+  </div>
+
+</div>
+
+<!-- PDF TEMPLATE (hidden) -->
+<div id="pdf-template"></div>
+
+<script>
+// ═══════════════════════════════════════════════════
+// SUPABASE CONFIG
+// ═══════════════════════════════════════════════════
+const SUPABASE_URL = 'https://fgocsdozvgkpkjbzuyyp.supabase.co';
+const SUPABASE_KEY = 'sb_publishable_wXSjTHbfXYYXcU2-Af8w1g_pnkRuYA6';
+
+async function saveToSupabase(data) {
+  try {
+    const payload = {
+      type: data.type,
+      villa: data.villa,
+      date: data.date || null,
+      heure: data.heure,
+      locataire: data.locataire,
+      commercial: data.commercial,
+      huissier: data.huissier,
+      huissier_nom: data.huissierNom,
+      huissier_contact: data.huissierContact,
+      compteurs: data.compteurs,
+      pieces: data.pieces.map(p => ({ nom: p.nom, etat: p.etat, comment: p.comment, items: p.items })),
+      obs: data.obs,
+      cles: data.cles,
+      nb_personnes: data.nbPersonnes ? parseInt(data.nbPersonnes) : null,
+      lang: currentLang
+    };
+    const res = await fetch(SUPABASE_URL + '/rest/v1/etats_lieux', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'apikey': SUPABASE_KEY,
+        'Authorization': 'Bearer ' + SUPABASE_KEY,
+        'Prefer': 'return=minimal'
+      },
+      body: JSON.stringify(payload)
+    });
+    return res.ok;
+  } catch(e) {
+    console.error('Supabase save error:', e);
+    return false;
+  }
+}
+
+// ═══════════════════════════════════════════════════
+// LANGUE & TRADUCTIONS
+// ═══════════════════════════════════════════════════
+let currentLang = 'fr';
+
+const T = {
+  fr: {
+    homeTitle: 'États des lieux',
+    labelLangue: 'Langue du document',
+    labelType: "Type d'état des lieux",
+    labelEntree: 'Entrée',
+    labelSortie: 'Sortie',
+    btnNouvel: '+ Nouvel état des lieux',
+    labelHistorique: 'Historique',
+    labelEmpty: 'Aucun état des lieux enregistré',
+    step1: 'Étape 1 / 5',
+    step1title: 'Informations générales',
+    step2: 'Étape 2 / 5',
+    step2title: 'Relevé des compteurs',
+    step3: 'Étape 3 / 5',
+    step3title: 'État des pièces',
+    step4: 'Étape 4 / 5',
+    step4title: 'Observations générales',
+    step5: 'Étape 5 / 5',
+    step5title: 'Signatures',
+    btnSuivant: 'Suivant →',
+    btnRetour: '← Retour',
+    btnPdf: 'Générer le PDF',
+    typeLabel: "Type d'état des lieux",
+    villaLabel: 'Villa',
+    dateLabel: 'Date',
+    heureLabel: 'Heure',
+    locataireLabel: 'Locataire',
+    locatairePh: 'Nom du locataire',
+    commercialLabel: 'Commercial Heraclee',
+    commercialPh: 'Votre nom',
+    huissierSep: 'Huissier',
+    huissierToggle: 'État des lieux par huissier',
+    huissierNomLabel: "Nom de l'huissier",
+    huissierNomPh: 'Me. Dupont — Cabinet ...',
+    huissierContactLabel: 'Coordonnées',
+    huissierContactPh: 'Téléphone / email',
+    obsLabel: 'Observations & remarques',
+    obsPh: "Remarques générales, points d'attention…",
+    clesLabel: 'Clés remises',
+    clesPh: 'Ex : 2 clés + 1 badge piscine',
+    nbPersonnesLabel: 'Nombre de personnes',
+    sigLocataire: 'Locataire',
+    sigHeraclee: 'Heraclee (représentant propriétaire)',
+    effacer: 'Effacer',
+    loading: 'Génération du PDF…',
+    bonEtat: 'Bon état', correct: 'Correct', aNot: 'À noter',
+    ok: 'OK', manq: 'Manq.', end: 'Endom.',
+    photos: 'Photos',
+    observations: 'Observations pour cette pièce…',
+    nonRenseigne: 'Non renseigné',
+    pdfDocTitle: 'Document officiel',
+    pdfAgence: 'AGENCE IMMOBILIÈRE · SAINT-TROPEZ',
+    pdfVilla: 'Villa', pdfAdresse: 'Adresse',
+    pdfLocataire: 'Locataire', pdfCommercial: 'Commercial Heraclee',
+    pdfCles: 'Clés remises', pdfNbP: 'Nombre de personnes',
+    pdfHuissier: 'Huissier', pdfContact: 'Contact',
+    pdfCompteurs: 'Relevé des compteurs',
+    pdfPieces: 'État détaillé des pièces',
+    pdfObs: 'Observations générales',
+    pdfSig: 'Signatures',
+    pdfSigLoc: 'Locataire',
+    pdfSigHer: 'Heraclee — Représentant propriétaire',
+    pdfElement: 'Élément', pdfEtat: 'État',
+    tagEntree: 'Entrée', tagSortie: 'Sortie',
+  },
+  en: {
+    homeTitle: 'Property Inspections',
+    labelLangue: 'Document language',
+    labelType: 'Inspection type',
+    labelEntree: 'Check-in',
+    labelSortie: 'Check-out',
+    btnNouvel: '+ New inspection',
+    labelHistorique: 'History',
+    labelEmpty: 'No inspection recorded',
+    step1: 'Step 1 / 5',
+    step1title: 'General information',
+    step2: 'Step 2 / 5',
+    step2title: 'Meter readings',
+    step3: 'Step 3 / 5',
+    step3title: 'Room condition',
+    step4: 'Step 4 / 5',
+    step4title: 'General observations',
+    step5: 'Step 5 / 5',
+    step5title: 'Signatures',
+    btnSuivant: 'Next →',
+    btnRetour: '← Back',
+    btnPdf: 'Generate PDF',
+    typeLabel: 'Inspection type',
+    villaLabel: 'Villa',
+    dateLabel: 'Date',
+    heureLabel: 'Time',
+    locataireLabel: 'Tenant',
+    locatairePh: 'Tenant name',
+    commercialLabel: 'Heraclee representative',
+    commercialPh: 'Your name',
+    huissierSep: 'Bailiff',
+    huissierToggle: 'Inspection by bailiff',
+    huissierNomLabel: 'Bailiff name',
+    huissierNomPh: 'Name — Firm ...',
+    huissierContactLabel: 'Contact',
+    huissierContactPh: 'Phone / email',
+    obsLabel: 'Observations & remarks',
+    obsPh: 'General remarks, points of attention…',
+    clesLabel: 'Keys handed over',
+    clesPh: 'e.g. 2 keys + 1 pool badge',
+    nbPersonnesLabel: 'Number of guests',
+    sigLocataire: 'Tenant',
+    sigHeraclee: 'Heraclee (owner representative)',
+    effacer: 'Clear',
+    loading: 'Generating PDF…',
+    bonEtat: 'Good', correct: 'Fair', aNot: 'To note',
+    ok: 'OK', manq: 'Missing', end: 'Damaged',
+    photos: 'Photos',
+    observations: 'Observations for this room…',
+    nonRenseigne: 'Not filled',
+    pdfDocTitle: 'Official document',
+    pdfAgence: 'REAL ESTATE AGENCY · SAINT-TROPEZ',
+    pdfVilla: 'Villa', pdfAdresse: 'Address',
+    pdfLocataire: 'Tenant', pdfCommercial: 'Heraclee representative',
+    pdfCles: 'Keys handed over', pdfNbP: 'Number of guests',
+    pdfHuissier: 'Bailiff', pdfContact: 'Contact',
+    pdfCompteurs: 'Meter readings',
+    pdfPieces: 'Detailed room condition',
+    pdfObs: 'General observations',
+    pdfSig: 'Signatures',
+    pdfSigLoc: 'Tenant',
+    pdfSigHer: 'Heraclee — Owner representative',
+    pdfElement: 'Item', pdfEtat: 'Condition',
+    tagEntree: 'Check-in', tagSortie: 'Check-out',
+  }
+};
+
+function t(key) { return T[currentLang][key] || T['fr'][key] || key; }
+
+function setLang(lang) {
+  currentLang = lang;
+  document.getElementById('lang-fr').classList.toggle('selected', lang === 'fr');
+  document.getElementById('lang-en').classList.toggle('selected', lang === 'en');
+  applyLangToHome();
+}
+
+function applyLangToHome() {
+  const l = T[currentLang];
+  document.getElementById('home-title').textContent = l.homeTitle;
+  document.getElementById('label-langue').textContent = l.labelLangue;
+  document.getElementById('label-type').textContent = l.labelType;
+  document.getElementById('label-entree').textContent = l.labelEntree;
+  document.getElementById('label-sortie').textContent = l.labelSortie;
+  document.getElementById('btn-nouvel').textContent = '+ ' + l.btnNouvel.replace('+ ','');
+  document.getElementById('label-historique').textContent = l.labelHistorique;
+  document.getElementById('label-empty').textContent = l.labelEmpty;
+}
+
+function setHomeType(type) {
+  edlType = type;
+  document.getElementById('home-type-entree').classList.toggle('selected', type === 'entree');
+  document.getElementById('home-type-sortie').classList.toggle('selected', type === 'sortie');
+  // sync step 1 buttons too
+  document.getElementById('type-entree').classList.toggle('selected', type === 'entree');
+  document.getElementById('type-sortie').classList.toggle('selected', type === 'sortie');
+}
+
+// ═══════════════════════════════════════════════════
+// VILLA LIST & CONFIG
+// ═══════════════════════════════════════════════════
+const VILLA_LIST = ["ACCACIAS *","AIR ET MER","AKWABA / BELIZE","ALBEREL","ALKEMENE","ALLO 1","ALLO 2","ALLO 3","AMA","ANAVIM","ANTHEMIS","AP CITADELLE","ARCADE","ARCADE / BEFORE BEACH","AZURE","AZURÉA","BAGATELLE","BALDINA","BALI","BARRY","BASTIDE DE OLIVIERS","BASTIDE DE RAMATUELLE","BASTIDE DES CARLES","BASTIDE DES MARRES","BATTERIE DU CAPON 1","BEAULAC","BELAZARD","BELIER","BELLA","BERGERIE","BLANCA","BLANCA BIS","BLANCHE","BLISS","BLU","BOUILLABAISSE","BYBLOS / RINGRAVE","CALANQUE","CAMPAGNE","CAPON","CASA A","CASA EL PATIO","CASA VICTOR","CASABIANCA","CELINE","CEZANNE 2","CHACHA","CHIARA","CHRISTINE","CIGALON","COCO","COLETTA","CORSAIRE","COTE MER","CROISETTE","CYCAS","DARYA","DESEO","DOLCE VITAE","DOMAINE DES ARTS","EDEN","EPIZIA","ESCANDIHADE","ESTAGNE","FAVORITA","FELICITE","FELIXITE","FLEUR DE LYS","GEMEAUX","GIRELLES","GRANDE VIGNE","GRANDE VUE","HAPPY","HAROMA","HIGH BEAUVALLON","HIRONDELLE","HOMIS","HORIZON","HUPPE","IRIS 1","IRIS 2","JETSET","JOHANNA","JUNO","KAM","KAMAREOPS","KAYSER","KAYZEN","KOVA","LA BOHEME","LA COLLINE","LA FERME","LA RAMADE","LA SOURCE","LA TORTUE","LDM","LE FAUNE","LEE LOON","LENA","LES 3 PINS","LES MURIERS","LES OLIVETTES","LES ROSES","LES TOUCANS","LOLA","LOU AMBRE","LOU CASOU","LOU RODE","LYS DES MER","MACAQUE","MADELAINE","MADON","MALKO","MAORA","MARGUERITE","MARINA","MARRES","MAS DE GALASSA","MAS DES OLIVIERS","MIRANDE","MONA","MOUGRA","NASERINA","NESSA","NIKKI","OCEANE","OCTOPUSSY","ORO","OXYGEN","PALMIERS","PASSADE","PEACH ON THE BEACH","PEARL","PIERRE PLANTE","PINS","PLEIN SUD","PRES DES SALINS","PRES LONG","QUADRAD","RAMSES","REGINA","REYVAL","RIVA","ROSALIE / ISNA","ROSEMARY","ROYAL","SAGITTAIRE","SALINA 1","SALINA 2","SALINA 3","SANTA ANA","SARAH / REDDING","SARIETTE","SATHYNE","SEAVIEW","SIAN BEN","SIGNAC 1","SOUS LE SOLEIL","SUVETTE","SYMPHONIE","TAHAA","TARASQUE","TERENGA","THALASSA","TILWIL","TOUMIETTE","TOURMENTIN","TREMOLIERE","TROIKA","UMA MIMPY","VAGABONDE","VANADES","VENUS","VERTIGO","VIGNA","VIGNE","VILLA 23","VILLA 55","WATER'S EDGE","WHITE MOUTTE","WILTIL","ZINO"];
+
+function buildDefaultPieces(n) {
+  var p = [
+    {nom:'Entrée / Hall', items:['Mobilier','Éclairage','Sol']},
+    {nom:'Salon / Séjour', items:['Canapés','Table basse','TV','Éclairage','Climatisation','Volets']},
+    {nom:'Cuisine', items:['Réfrigérateur','Lave-vaisselle','Four','Plaques','Cafetière','Vaisselle','Plans de travail']}
+  ];
+  for (var i=1;i<=n;i++) p.push({nom:'Chambre '+i+(i===1?' (master)':''), items:['Lit','Literie','Armoire','Climatisation','Volets']});
+  p.push(
+    {nom:'Salle de bain 1', items:['Douche / Baignoire','Lavabo','WC','Robinetterie','Serviettes']},
+    {nom:'Salle de bain 2', items:['Douche','Lavabo','WC','Robinetterie','Serviettes']},
+    {nom:'Terrasse', items:['Salon de jardin','Table extérieure','Chaises','Parasols','Éclairage ext.']},
+    {nom:'Piscine', items:['État eau','Robot / Matériel','Plage piscine','Local technique']}
+  );
+  return p;
+}
+
+const VILLAS_CONFIG = {
+  'TREMOLIERE': {nom:'La Trémolière', adresse:'Ramatuelle, Saint-Tropez', compteurs:['Électricité','Eau','Piscine (pH)','Piscine (chlore)'], pieces:[
+    {nom:'Entrée / Hall', items:['Miroir','Mobilier','Éclairage','Sol']},
+    {nom:'Salon principal', items:['Canapés','Table basse','TV / Home cinéma','Éclairage','Climatisation','Volets','Sol']},
+    {nom:'Salle à manger', items:['Table','Chaises (12)','Buffet','Éclairage']},
+    {nom:'Cuisine', items:['Réfrigérateur','Congélateur','Lave-vaisselle','Four','Plaques','Hotte','Micro-ondes','Cafetière','Plans de travail','Vaisselle complète','Ustensiles']},
+    {nom:'Chambre 1 (master)', items:['Lit king-size','Literie','Armoire / Dressing','TV','Climatisation','Volets','Sol']},
+    {nom:'Chambre 2', items:['Lit','Literie','Armoire','TV','Climatisation','Volets']},
+    {nom:'Chambre 3', items:['Lit','Literie','Armoire','Climatisation','Volets']},
+    {nom:'Chambre 4', items:['Lit','Literie','Armoire','Climatisation','Volets']},
+    {nom:'Chambre 5', items:['Lit','Literie','Armoire','Climatisation','Volets']},
+    {nom:'Chambre 6', items:['Lit','Literie','Armoire','Climatisation','Volets']},
+    {nom:'Chambre 7', items:['Lit','Literie','Armoire','Climatisation','Volets']},
+    {nom:'Salle de bain principale', items:['Douche / Baignoire','Lavabo','WC','Robinetterie','Miroir','Serviettes']},
+    {nom:'Salle de bain 2', items:['Douche','Lavabo','WC','Robinetterie','Serviettes']},
+    {nom:'Salle de bain 3', items:['Douche','Lavabo','WC','Robinetterie','Serviettes']},
+    {nom:'Terrasse principale', items:['Salon de jardin','Chaises longues','Table extérieure','Parasols','Éclairage ext.','Barbecue']},
+    {nom:'Piscine', items:['État eau','Robot nettoyeur','Matériel piscine','Local technique']},
+    {nom:'Garage / Parking', items:['Portail','Badges (comptage)','Sol','Éclairage']}
+  ]},
+  'VENUS': {nom:'Vénus', adresse:'Saint-Tropez', compteurs:['Électricité','Eau','Piscine (pH)'], pieces: buildDefaultPieces(4)},
+  'CASCADEL': {nom:'Cascadel', adresse:'Saint-Tropez', compteurs:['Électricité','Eau'], pieces:[
+    {nom:'Séjour / Salon', items:['Canapé','Table basse','TV','Éclairage','Climatisation','Volets']},
+    {nom:'Cuisine', items:['Réfrigérateur','Lave-vaisselle','Four','Plaques','Cafetière','Vaisselle']},
+    {nom:'Chambre', items:['Lit','Literie','Armoire','TV','Climatisation','Volets']},
+    {nom:'Salle de bain', items:['Douche','Lavabo','WC','Robinetterie','Serviettes']},
+    {nom:'Terrasse / Balcon', items:['Salon extérieur','Table','Éclairage ext.']}
+  ]}
+};
+
+function getVillaConfig(name) {
+  if (!name) return {nom:'', adresse:'Saint-Tropez', compteurs:['Électricité','Eau'], pieces: buildDefaultPieces(3)};
+  var key = name.toUpperCase().replace(/[^A-Z0-9]/g,'');
+  for (var k in VILLAS_CONFIG) {
+    if (k.replace(/[^A-Z0-9]/g,'') === key) return VILLAS_CONFIG[k];
+  }
+  return {nom:name, adresse:'Saint-Tropez', compteurs:['Électricité','Eau'], pieces: buildDefaultPieces(3)};
+}
+
+function filterVillas(q) {
+  var dd = document.getElementById('villa-dropdown');
+  if (!dd) return;
+  var list = (q && q.length >= 1)
+    ? VILLA_LIST.filter(function(v){ return v.toLowerCase().indexOf(q.toLowerCase()) !== -1; }).slice(0,12)
+    : VILLA_LIST.slice(0,8);
+  if (!list.length) { dd.style.display='none'; return; }
+  dd.innerHTML = list.map(function(v){
+    var safe = v.replace(/\\/g,'\\\\').replace(/'/g,"\\'");
+    return '<div onmousedown="selectVilla(\''+safe+'\')" style="padding:10px 14px;cursor:pointer;font-size:13px;border-bottom:1px solid #f5ede0;" onmouseover="this.style.background=\'#f5edd8\'" onmouseout="this.style.background=\'\'">'+v+'</div>';
+  }).join('');
+  dd.style.display = 'block';
+}
+
+function selectVilla(name) {
+  var s = document.getElementById('villa-search');
+  var h = document.getElementById('villa-select');
+  if (s) s.value = name;
+  if (h) h.value = name;
+  selectedVilla = name;
+  hideVillaDropdown();
+}
+
+function hideVillaDropdown() {
+  var dd = document.getElementById('villa-dropdown');
+  if (dd) dd.style.display = 'none';
+}
+
+document.addEventListener('click', function(e) {
+  var s = document.getElementById('villa-search');
+  var dd = document.getElementById('villa-dropdown');
+  if (s && dd && e.target !== s && !dd.contains(e.target)) hideVillaDropdown();
+});
+
+// ═══════════════════════════════════════════════════
+// STATE
+// ═══════════════════════════════════════════════════
+let currentStep = 1;
+let totalSteps = 5;
+let edlType = 'entree';
+let selectedVilla = null;
+let pieceData = {}; // { pieceName: { etat, comment, items: {}, photos: [] } }
+let edlHistory = JSON.parse(localStorage.getItem('heraclee_edl') || '[]');
+
+// ═══════════════════════════════════════════════════
+// NAVIGATION
+// ═══════════════════════════════════════════════════
+function showHome() {
+  document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
+  document.getElementById('screen-home').classList.add('active');
+  renderHistory();
+}
+
+function showNew() {
+  document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
+  document.getElementById('screen-wizard').classList.add('active');
+  currentStep = 1;
+  pieceData = {};
+  // Set today's date
+  const today = new Date();
+  document.getElementById('edl-date').value = today.toISOString().split('T')[0];
+  const hh = String(today.getHours()).padStart(2,'0');
+  const mm = String(today.getMinutes()).padStart(2,'0');
+  document.getElementById('edl-heure').value = `${hh}:${mm}`;
+  // Apply translations to wizard labels
+  applyLangToWizard();
+  setTimeout(attachVillaSearch, 50);
+  updateProgress();
+  showStep(1);
+}
+
+function applyLangToWizard() {
+  const l = T[currentLang];
+  // Step labels
+  safeSet('step-num-1', l.step1); safeSet('step-title-1', l.step1title);
+  safeSet('step-num-2', l.step2); safeSet('step-title-2', l.step2title);
+  safeSet('step-num-3', l.step3); safeSet('step-title-3', l.step3title);
+  safeSet('step-num-4', l.step4); safeSet('step-title-4', l.step4title);
+  safeSet('step-num-5', l.step5); safeSet('step-title-5', l.step5title);
+  // Buttons
+  document.querySelectorAll('.btn-next-label').forEach(el => el.textContent = l.btnSuivant);
+  document.querySelectorAll('.btn-prev-label').forEach(el => el.textContent = l.btnRetour);
+  safeSet('btn-pdf-label', l.btnPdf);
+  // Form labels
+  safeSet('label-villa', l.villaLabel);
+  safeSet('label-date', l.dateLabel);
+  safeSet('label-heure', l.heureLabel);
+  safeSet('label-locataire', l.locataireLabel);
+  safeAttr('locataire-nom', 'placeholder', l.locatairePh);
+  safeSet('label-commercial', l.commercialLabel);
+  safeAttr('commercial', 'placeholder', l.commercialPh);
+  safeSet('sep-huissier', l.huissierSep);
+  safeSet('label-huissier-toggle', l.huissierToggle);
+  safeSet('label-huissier-nom', l.huissierNomLabel);
+  safeAttr('huissier-nom', 'placeholder', l.huissierNomPh);
+  safeSet('label-huissier-contact', l.huissierContactLabel);
+  safeAttr('huissier-contact', 'placeholder', l.huissierContactPh);
+  safeSet('label-obs', l.obsLabel);
+  safeAttr('obs-generale', 'placeholder', l.obsPh);
+  safeSet('label-cles', l.clesLabel);
+  safeAttr('cles', 'placeholder', l.clesPh);
+  safeSet('label-nb-personnes', l.nbPersonnesLabel);
+  safeSet('label-sig-locataire', l.sigLocataire);
+  safeSet('label-sig-heraclee', l.sigHeraclee);
+  safeSet('clear-sig-locataire', l.effacer);
+  safeSet('clear-sig-heraclee', l.effacer);
+  document.getElementById('loading-text').textContent = l.loading;
+  // Type buttons in step 1
+  safeSet('type-label-entree', l.labelEntree);
+  safeSet('type-label-sortie', l.labelSortie);
+}
+
+function safeSet(id, val) { const el = document.getElementById(id); if (el) el.textContent = val; }
+function safeAttr(id, attr, val) { const el = document.getElementById(id); if (el) el.setAttribute(attr, val); }
+
+function goStep(n) {
+  if (n === 2 && !validateStep1()) return;
+  currentStep = n;
+  if (n === 2) buildCompteurs();
+  if (n === 3) buildPieces();
+  if (n === 5) setTimeout(initSigPads, 80);
+  showStep(n);
+  updateProgress();
+  window.scrollTo(0, 0);
+}
+
+function showStep(n) {
+  document.querySelectorAll('.step').forEach(s => s.classList.remove('active'));
+  document.getElementById(`step-${n}`).classList.add('active');
+}
+
+function updateProgress() {
+  const bar = document.getElementById('progress-bar');
+  bar.innerHTML = '';
+  for (let i = 1; i <= totalSteps; i++) {
+    const d = document.createElement('div');
+    d.className = 'progress-step' + (i < currentStep ? ' done' : (i === currentStep ? ' active' : ''));
+    bar.appendChild(d);
+  }
+}
+
+// ═══════════════════════════════════════════════════
+// STEP 1 LOGIC
+// ═══════════════════════════════════════════════════
+function selectType(t) {
+  edlType = t;
+  document.getElementById('type-entree').classList.toggle('selected', t === 'entree');
+  document.getElementById('type-sortie').classList.toggle('selected', t === 'sortie');
+}
+
+function onVillaChange() {
+  selectedVilla = document.getElementById('villa-select').value;
+}
+
+function toggleHuissier() {
+  const tog = document.getElementById('huissier-toggle');
+  const fields = document.getElementById('huissier-fields');
+  tog.classList.toggle('on');
+  fields.classList.toggle('show', tog.classList.contains('on'));
+}
+
+function validateStep1() {
+  const villa = document.getElementById('villa-select').value;
+  const loc = document.getElementById('locataire-nom').value.trim();
+  if (!villa) { alert('Veuillez sélectionner une villa.'); return false; }
+  if (!loc) { alert('Veuillez indiquer le nom du locataire.'); return false; }
+  selectedVilla = villa;
+  return true;
+}
+
+// ═══════════════════════════════════════════════════
+// STEP 2: COMPTEURS
+// ═══════════════════════════════════════════════════
+function buildCompteurs() {
+  const villa = getVillaConfig(selectedVilla);
+  const grid = document.getElementById('compteurs-grid');
+  grid.innerHTML = '';
+  villa.compteurs.forEach(c => {
+    const box = document.createElement('div');
+    box.className = 'compteur-box';
+    box.innerHTML = `<div class="compteur-label">${c}</div><input type="text" id="cpt-${slugify(c)}" placeholder="Relever ici" inputmode="decimal">`;
+    grid.appendChild(box);
+  });
+}
+
+// ═══════════════════════════════════════════════════
+// STEP 3: PIÈCES
+// ═══════════════════════════════════════════════════
+function buildPieces() {
+  const villa = getVillaConfig(selectedVilla);
+  const container = document.getElementById('pieces-container');
+  container.innerHTML = '';
+  villa.pieces.forEach((piece, idx) => {
+    if (!pieceData[piece.nom]) {
+      pieceData[piece.nom] = { etat: '', comment: '', items: {}, photos: [] };
+      piece.items.forEach(item => { pieceData[piece.nom].items[item] = ''; });
+    }
+    const card = document.createElement('div');
+    card.className = 'piece-card';
+    card.innerHTML = `
+      <div class="piece-header" id="ph-${idx}" onclick="togglePiece(${idx})">
+        <div class="piece-name">${piece.nom}</div>
+        <div class="piece-status status-nc" id="ps-${idx}">Non renseigné</div>
+      </div>
+      <div class="piece-body" id="pb-${idx}">
+        <div class="etat-selector">
+          <button class="etat-btn bon" onclick="setEtat('${piece.nom}', 'bon', ${idx})">Bon état</button>
+          <button class="etat-btn correct" onclick="setEtat('${piece.nom}', 'correct', ${idx})">Correct</button>
+          <button class="etat-btn noter" onclick="setEtat('${piece.nom}', 'noter', ${idx})">À noter</button>
+        </div>
+        <textarea class="form-textarea" style="min-height:64px;" placeholder="Observations pour cette pièce…" oninput="pieceData['${piece.nom}'].comment=this.value" id="comment-${idx}">${pieceData[piece.nom].comment}</textarea>
+
+        <div class="inventaire-list">
+          ${piece.items.map(item => `
+            <div class="inventaire-item">
+              <div class="item-name">${item}</div>
+              <div class="item-etat-btns">
+                <button class="item-btn ok" onclick="setItem('${piece.nom}','${item}','ok',this)">OK</button>
+                <button class="item-btn manq" onclick="setItem('${piece.nom}','${item}','manq',this)">Manq.</button>
+                <button class="item-btn end" onclick="setItem('${piece.nom}','${item}','end',this)">Endom.</button>
+              </div>
+            </div>
+          `).join('')}
+        </div>
+
+        <div class="photos-zone">
+          <div class="photos-label">Photos</div>
+          <div class="photos-grid" id="photos-${idx}"></div>
+          <input type="file" accept="image/*" multiple id="file-${idx}" onchange="handlePhotos('${piece.nom}', ${idx}, this)">
+          <div class="photo-add-btn" onclick="document.getElementById('file-${idx}').click()">+</div>
+        </div>
+      </div>
+    `;
+    container.appendChild(card);
+    // Restore etat buttons
+    const etat = pieceData[piece.nom].etat;
+    if (etat) {
+      setTimeout(() => {
+        const btns = card.querySelectorAll('.etat-btn');
+        btns.forEach(b => { if (b.classList.contains(etat)) b.classList.add('sel'); });
+        updatePieceStatus(piece.nom, etat, idx);
+      }, 0);
+    }
+    // Restore item buttons
+    setTimeout(() => {
+      piece.items.forEach(item => {
+        const val = pieceData[piece.nom].items[item];
+        if (val) {
+          const btns = card.querySelectorAll(`.item-btn`);
+          btns.forEach(b => {
+            if (b.classList.contains(val) && b.closest('.inventaire-item')?.querySelector('.item-name')?.textContent === item) {
+              b.classList.add('sel');
+            }
+          });
+        }
+      });
+    }, 0);
+  });
+}
+
+function togglePiece(idx) {
+  const header = document.getElementById(`ph-${idx}`);
+  const body = document.getElementById(`pb-${idx}`);
+  header.classList.toggle('open');
+  body.classList.toggle('open');
+}
+
+function setEtat(pieceName, etat, idx) {
+  pieceData[pieceName].etat = etat;
+  const card = document.getElementById(`pb-${idx}`);
+  card.querySelectorAll('.etat-btn').forEach(b => b.classList.remove('sel'));
+  card.querySelector(`.etat-btn.${etat}`).classList.add('sel');
+  updatePieceStatus(pieceName, etat, idx);
+}
+
+function updatePieceStatus(pieceName, etat, idx) {
+  const badge = document.getElementById(`ps-${idx}`);
+  const labels = { bon: 'Bon état', correct: 'Correct', noter: 'À noter' };
+  const classes = { bon: 'status-bon', correct: 'status-correct', noter: 'status-noter' };
+  badge.className = 'piece-status ' + (classes[etat] || 'status-nc');
+  badge.textContent = labels[etat] || 'Non renseigné';
+}
+
+function setItem(pieceName, item, val, btn) {
+  pieceData[pieceName].items[item] = val;
+  const row = btn.closest('.inventaire-item');
+  row.querySelectorAll('.item-btn').forEach(b => b.classList.remove('sel'));
+  btn.classList.add('sel');
+}
+
+function handlePhotos(pieceName, idx, input) {
+  const files = Array.from(input.files);
+  files.forEach(file => {
+    const reader = new FileReader();
+    reader.onload = e => {
+      pieceData[pieceName].photos.push(e.target.result);
+      const grid = document.getElementById(`photos-${idx}`);
+      const img = document.createElement('img');
+      img.className = 'photo-thumb';
+      img.src = e.target.result;
+      grid.appendChild(img);
+    };
+    reader.readAsDataURL(file);
+  });
+}
+
+// ═══════════════════════════════════════════════════
+// STEP 5: SIGNATURES
+// ═══════════════════════════════════════════════════
+const sigPads = {};
+
+function initSigPads() {
+  ['sig-locataire', 'sig-heraclee'].forEach(id => {
+    const canvas = document.getElementById(id);
+    if (!canvas) return;
+    // Forcer les dimensions CSS d'abord
+    canvas.style.width = '100%';
+    canvas.style.height = '140px';
+    canvas.style.display = 'block';
+    // Lire les dimensions réelles après rendu
+    const dpr = window.devicePixelRatio || 1;
+    const w = canvas.offsetWidth || canvas.parentElement.offsetWidth || 300;
+    const h = 140;
+    canvas.width = w * dpr;
+    canvas.height = h * dpr;
+    const ctx = canvas.getContext('2d');
+    ctx.scale(window.devicePixelRatio, window.devicePixelRatio);
+    ctx.strokeStyle = '#1A1A2E';
+    ctx.lineWidth = 2;
+    ctx.lineCap = 'round';
+    ctx.lineJoin = 'round';
+
+    let drawing = false;
+    let lastX = 0, lastY = 0;
+
+    const getPos = (e) => {
+      const r = canvas.getBoundingClientRect();
+      const t = e.touches ? e.touches[0] : e;
+      return { x: t.clientX - r.left, y: t.clientY - r.top };
+    };
+
+    const start = (e) => { e.preventDefault(); drawing = true; const p = getPos(e); lastX = p.x; lastY = p.y; };
+    const move = (e) => {
+      e.preventDefault();
+      if (!drawing) return;
+      const p = getPos(e);
+      ctx.beginPath();
+      ctx.moveTo(lastX, lastY);
+      ctx.lineTo(p.x, p.y);
+      ctx.stroke();
+      lastX = p.x; lastY = p.y;
+      canvas.classList.add('signed');
+    };
+    const end = () => { drawing = false; };
+
+    canvas.addEventListener('mousedown', start);
+    canvas.addEventListener('mousemove', move);
+    canvas.addEventListener('mouseup', end);
+    canvas.addEventListener('touchstart', start, { passive: false });
+    canvas.addEventListener('touchmove', move, { passive: false });
+    canvas.addEventListener('touchend', end);
+
+    sigPads[id] = ctx;
+  });
+}
+
+function clearSig(id) {
+  const canvas = document.getElementById(id);
+  const ctx = sigPads[id];
+  if (ctx) ctx.clearRect(0, 0, canvas.width, canvas.height);
+  canvas.classList.remove('signed');
+}
+
+// ═══════════════════════════════════════════════════
+// FINALISER & PDF
+// ═══════════════════════════════════════════════════
+function collectData() {
+  const villa = getVillaConfig(selectedVilla);
+  const pieces = villa.pieces.map(p => ({
+    nom: p.nom,
+    etat: pieceData[p.nom]?.etat || '',
+    comment: pieceData[p.nom]?.comment || '',
+    items: pieceData[p.nom]?.items || {},
+    photos: pieceData[p.nom]?.photos || []
+  }));
+
+  const compteurs = {};
+  villa.compteurs.forEach(c => {
+    const val = document.getElementById(`cpt-${slugify(c)}`)?.value || '';
+    compteurs[c] = val;
+  });
+
+  return {
+    id: Date.now(),
+    type: edlType,
+    villa: selectedVilla,
+    villaData: villa,
+    date: document.getElementById('edl-date').value,
+    heure: document.getElementById('edl-heure').value,
+    locataire: document.getElementById('locataire-nom').value,
+    commercial: document.getElementById('commercial').value,
+    huissier: document.getElementById('huissier-toggle').classList.contains('on'),
+    huissierNom: document.getElementById('huissier-nom').value,
+    huissierContact: document.getElementById('huissier-contact').value,
+    compteurs,
+    pieces,
+    obs: document.getElementById('obs-generale').value,
+    cles: document.getElementById('cles').value,
+    nbPersonnes: document.getElementById('nb-personnes').value,
+    sigLocataire: document.getElementById('sig-locataire').toDataURL(),
+    sigHeraclee: document.getElementById('sig-heraclee').toDataURL(),
+  };
+}
+
+async function finaliserEDL() {
+  const data = collectData();
+  document.getElementById('loading').classList.add('show');
+  try {
+    await generatePDF(data);
+    // Sauvegarde Supabase
+    const saved = await saveToSupabase(data);
+    if (!saved) console.warn('EDL non sauvegardé dans Supabase');
+    // Save to history locale (without photos for storage)
+    const histEntry = { ...data, pieces: data.pieces.map(p => ({ ...p, photos: [] })), sigLocataire: '', sigHeraclee: '' };
+    edlHistory.unshift(histEntry);
+    try { localStorage.setItem('heraclee_edl', JSON.stringify(edlHistory.slice(0, 50))); } catch(e) {}
+  } finally {
+    document.getElementById('loading').classList.remove('show');
+  }
+}
+
+async function generatePDF(data) {
+  const villa = data.villaData;
+  const l = T[currentLang];
+  const typeLabel = data.type === 'entree' ? l.tagEntree : l.tagSortie;
+  const dateStr = data.date ? new Date(data.date).toLocaleDateString(currentLang === 'en' ? 'en-GB' : 'fr-FR', { day:'2-digit', month:'long', year:'numeric' }) : '';
+
+  const etatLabels = { bon: l.bonEtat, correct: l.correct, noter: l.aNot, '': l.nonRenseigne };
+  const etatColors = { bon: '#27AE60', correct: '#E67E22', noter: '#C0392B', '': '#8A8499' };
+  const etatBg = { bon: '#E8F5E9', correct: '#FFF3E0', noter: '#FEECEC', '': '#F0EBE0' };
+  const itemLabels = { ok: l.ok, manq: l.manq, end: l.end, '': '—' };
+  const itemColors = { ok: '#27AE60', manq: '#C0392B', end: '#E67E22', '': '#8A8499' };
+
+  let piecesHTML = '';
+  data.pieces.forEach(p => {
+    const items = Object.entries(p.items).map(([name, val]) =>
+      `<tr><td>${name}</td><td style="color:${itemColors[val] || '#8A8499'}; font-weight:600;">${itemLabels[val] || '—'}</td></tr>`
+    ).join('');
+
+    const photos = p.photos.length > 0
+      ? `<div class="pdf-photos-row">${p.photos.map(src => `<img class="pdf-photo" src="${src}">`).join('')}</div>` : '';
+
+    piecesHTML += `
+      <div class="pdf-piece">
+        <div class="pdf-piece-header">
+          <div class="pdf-piece-name">${p.nom}</div>
+          <div class="pdf-etat-badge" style="background:${etatBg[p.etat]||'#F0EBE0'}; color:${etatColors[p.etat]||'#8A8499'}">${etatLabels[p.etat]||'Non renseigné'}</div>
+        </div>
+        <div class="pdf-piece-body">
+          ${p.comment ? `<div class="pdf-piece-comment">"${p.comment}"</div>` : ''}
+          <table class="pdf-inv-table">
+            <thead><tr><th>${l.pdfElement}</th><th>${l.pdfEtat}</th></tr></thead>
+            <tbody>${items}</tbody>
+          </table>
+          ${photos}
+        </div>
+      </div>
+    `;
+  });
+
+  const compteursHTML = Object.entries(data.compteurs).map(([name, val]) => `
+    <div class="pdf-compteur-box">
+      <div class="pdf-compteur-name">${name}</div>
+      <div class="pdf-compteur-val">${val || '—'}</div>
+    </div>
+  `).join('');
+
+  const huissierHTML = data.huissier ? `
+    <div class="pdf-info-grid" style="margin-bottom:12px;">
+      <div class="pdf-info-cell"><div class="pdf-info-label">Huissier</div><div class="pdf-info-value">${data.huissierNom || '—'}</div></div>
+      <div class="pdf-info-cell"><div class="pdf-info-label">Contact</div><div class="pdf-info-value">${data.huissierContact || '—'}</div></div>
+    </div>
+  ` : '';
+
+  const html = `
+    <div class="pdf-header">
+      <div>
+        <div class="pdf-logo">HERACLEE</div>
+        <div style="color:#8A8499; font-size:11px; letter-spacing:2px; margin-top:4px;">${l.pdfAgence}</div>
+      </div>
+      <div class="pdf-header-right">
+        <div class="pdf-doc-title">${l.pdfDocTitle}</div>
+        <div class="pdf-doc-type">${currentLang === 'en' ? 'Property Inspection' : 'État des lieux'} — ${typeLabel}</div>
+        <div style="color:#D4AF78; font-size:12px; margin-top:4px;">${dateStr} · ${data.heure || ''}</div>
+      </div>
+    </div>
+    <div class="pdf-body">
+      <div class="pdf-info-grid">
+        <div class="pdf-info-cell"><div class="pdf-info-label">${l.pdfVilla}</div><div class="pdf-info-value">${villa.nom}</div></div>
+        <div class="pdf-info-cell"><div class="pdf-info-label">${l.pdfAdresse}</div><div class="pdf-info-value">${villa.adresse}</div></div>
+        <div class="pdf-info-cell"><div class="pdf-info-label">${l.pdfLocataire}</div><div class="pdf-info-value">${data.locataire || '—'}</div></div>
+        <div class="pdf-info-cell"><div class="pdf-info-label">${l.pdfCommercial}</div><div class="pdf-info-value">${data.commercial || '—'}</div></div>
+        <div class="pdf-info-cell"><div class="pdf-info-label">${l.pdfCles}</div><div class="pdf-info-value">${data.cles || '—'}</div></div>
+        <div class="pdf-info-cell"><div class="pdf-info-label">${l.pdfNbP}</div><div class="pdf-info-value">${data.nbPersonnes || '—'}</div></div>
+      </div>
+      ${data.huissier ? `
+        <div class="pdf-info-grid" style="margin-bottom:12px;">
+          <div class="pdf-info-cell"><div class="pdf-info-label">${l.pdfHuissier}</div><div class="pdf-info-value">${data.huissierNom || '—'}</div></div>
+          <div class="pdf-info-cell"><div class="pdf-info-label">${l.pdfContact}</div><div class="pdf-info-value">${data.huissierContact || '—'}</div></div>
+        </div>
+      ` : ''}
+
+      <div class="pdf-section-title">${l.pdfCompteurs}</div>
+      <div class="pdf-compteurs">${compteursHTML}</div>
+
+      <div class="pdf-section-title">${l.pdfPieces}</div>
+      ${piecesHTML}
+
+      ${data.obs ? `
+        <div class="pdf-section-title">${l.pdfObs}</div>
+        <div style="background:#FAF7F2; border:1px solid #e8e0d0; border-radius:4px; padding:14px; font-size:13px; line-height:1.7; font-style:italic; margin-bottom:20px;">"${data.obs}"</div>
+      ` : ''}
+
+      <div class="pdf-section-title">${l.pdfSig}</div>
+      <div class="pdf-sig-section">
+        <div class="pdf-sig-box">
+          <div class="pdf-sig-label">${l.pdfSigLoc}</div>
+          <img class="pdf-sig-img" src="${data.sigLocataire}">
+          <div class="pdf-sig-name">${data.locataire || '—'}</div>
+        </div>
+        <div class="pdf-sig-box">
+          <div class="pdf-sig-label">${l.pdfSigHer}</div>
+          <img class="pdf-sig-img" src="${data.sigHeraclee}">
+          <div class="pdf-sig-name">${data.commercial || 'Heraclee Agency'}</div>
+        </div>
+      </div>
+    </div>
+    <div class="pdf-footer">
+      <div class="pdf-footer-text">HERACLEE AGENCY · Saint-Tropez · ${new Date().getFullYear()}</div>
+      <div class="pdf-footer-brand">HERACLEE</div>
+    </div>
+  `;
+
+  const tpl = document.getElementById('pdf-template');
+  tpl.innerHTML = html;
+  tpl.style.display = 'block';
+
+  // Load fonts
+  await document.fonts.ready;
+  await new Promise(r => setTimeout(r, 300));
+
+  try {
+    const canvas = await html2canvas(tpl, {
+      scale: 2,
+      useCORS: true,
+      allowTaint: true,
+      backgroundColor: '#ffffff',
+      width: 794,
+    });
+
+    const { jsPDF } = window.jspdf;
+    const pdf = new jsPDF({ orientation: 'portrait', unit: 'mm', format: 'a4' });
+    const imgData = canvas.toDataURL('image/jpeg', 0.92);
+    const pdfW = pdf.internal.pageSize.getWidth();
+    const pdfH = (canvas.height * pdfW) / canvas.width;
+    const pageH = pdf.internal.pageSize.getHeight();
+    let posY = 0;
+    while (posY < pdfH) {
+      if (posY > 0) pdf.addPage();
+      pdf.addImage(imgData, 'JPEG', 0, -posY, pdfW, pdfH);
+      posY += pageH;
+    }
+
+    const fname = `EDL_${villa.nom.replace(/\s/g,'_')}_${data.type}_${data.date || 'date'}.pdf`;
+    pdf.save(fname);
+  } finally {
+    tpl.style.display = 'none';
+    showHome();
+  }
+}
+
+// ═══════════════════════════════════════════════════
+// HISTORY
+// ═══════════════════════════════════════════════════
+function renderHistory() {
+  const list = document.getElementById('edl-list');
+  if (!edlHistory.length) {
+    list.innerHTML = '<div class="empty-state"><div class="icon">📋</div><div>Aucun état des lieux enregistré</div></div>';
+    return;
+  }
+  list.innerHTML = edlHistory.map((e, i) => {
+    const dateStr = e.date ? new Date(e.date).toLocaleDateString('fr-FR', { day:'2-digit', month:'short', year:'numeric' }) : '—';
+    const villaName = e.villa;
+    const tagLabel = e.type === 'entree' ? (T[currentLang].tagEntree) : (T[currentLang].tagSortie);
+    return `
+      <div class="edl-card">
+        <div class="card-left">
+          <div class="villa-name">${villaName}</div>
+          <div class="card-meta">${e.locataire || '—'} · ${dateStr} · ${e.heure || ''}</div>
+        </div>
+        <span class="tag ${e.type}">${tagLabel}</span>
+      </div>
+    `;
+  }).join('');
+}
+
+// ═══════════════════════════════════════════════════
+// UTILS
+// ═══════════════════════════════════════════════════
+function slugify(s) {
+  return s.toLowerCase().replace(/[^a-z0-9]/g, '-');
+}
+
+// Init
+renderHistory();
+updateProgress();
+
+// Pré-remplissage depuis paramètres URL (lien depuis app réservations)
+(function() {
+  const p = new URLSearchParams(window.location.search);
+  if (p.get('villa') || p.get('locataire')) {
+    // Lancer directement le wizard pré-rempli
+    showNew();
+    setTimeout(function() {
+      // Type entrée/sortie
+      const type = p.get('type') || 'entree';
+      selectType(type);
+      setHomeType(type);
+      // Villa
+      const villa = p.get('villa') || '';
+      if (villa) {
+        var vs = document.getElementById('villa-search');
+        var vh = document.getElementById('villa-select');
+        if (vs) vs.value = villa;
+        if (vh) vh.value = villa;
+        selectedVilla = villa;
+      }
+      // Locataire
+      const loc = p.get('locataire') || '';
+      if (loc) {
+        var el = document.getElementById('locataire-nom');
+        if (el) el.value = loc;
+      }
+      // Date
+      const date = p.get('date') || '';
+      if (date) {
+        var el = document.getElementById('edl-date');
+        if (el) el.value = date;
+      }
+    }, 100);
+  }
+})();
+
+// Villa search — branché ici car le DOM est déjà prêt (script en fin de body)
+// Attachement villa search — appelé aussi depuis showNew()
+function attachVillaSearch() {
+  var vs = document.getElementById('villa-search');
+  if (!vs || vs._attached) return;
+  vs._attached = true;
+  vs.addEventListener('input', function() { filterVillas(this.value); });
+  vs.addEventListener('focus', function() { filterVillas(this.value); });
+}
+attachVillaSearch();
+
+
+</script>
+</body>
+</html>
