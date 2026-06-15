@@ -1,0 +1,2503 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<link rel="manifest" href="manifest.json">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="Heraclee">
+<link rel="apple-touch-icon" href="icon-192.png">
+<meta name="theme-color" content="#1B2A4A">
+<meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
+<meta http-equiv="Pragma" content="no-cache">
+<meta http-equiv="Expires" content="0">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, minimum-scale=0.5, maximum-scale=5.0, user-scalable=yes">
+<title>Heraclee — Recherche Villas</title>
+<link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;0,600;1,300;1,400&family=Montserrat:wght@300;400;500;600&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --navy:#0a1628;--navy-mid:#112240;--navy-light:#1a3260;
+    --gold:#c9a84c;--gold-light:#e8c97a;--white:#fafaf8;--grey:#8a9bb5;
+  }
+  *{box-sizing:border-box;margin:0;padding:0;}
+  body{background:var(--navy);color:var(--white);font-family:'Montserrat',sans-serif;font-size:13px;min-height:100vh;}
+
+  /* TABS */
+  .tabs{display:flex;background:var(--navy-mid);border-bottom:1px solid rgba(201,168,76,0.2);}
+  .tab{flex:1;padding:12px 8px;text-align:center;font-size:10px;letter-spacing:1.5px;text-transform:uppercase;color:var(--grey);cursor:pointer;border-bottom:2px solid transparent;transition:all 0.2s;}
+  .tab.active{color:var(--gold);border-bottom-color:var(--gold);}
+  .tab-content{display:none;}
+  .tab-content.active{display:block;}
+
+  header{background:linear-gradient(135deg,var(--navy),var(--navy-mid));border-bottom:1px solid rgba(201,168,76,0.3);padding:14px 20px;display:flex;align-items:center;justify-content:space-between;position:sticky;top:0;z-index:100;}
+  .logo{font-family:'Cormorant Garamond',serif;font-size:20px;font-weight:300;letter-spacing:4px;color:var(--gold);text-transform:uppercase;}
+  .logo span{color:var(--white);opacity:0.6;font-size:10px;font-family:'Montserrat',sans-serif;letter-spacing:2px;display:block;margin-top:1px;}
+  #villa-count{font-size:10px;color:var(--grey);}
+
+  /* SEARCH PANEL */
+  .search-panel{background:var(--navy-mid);border-bottom:1px solid rgba(201,168,76,0.15);padding:14px 14px 8px;}
+  .search-grid{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:8px;}
+  .search-grid.three{grid-template-columns:1fr 1fr 1fr;}
+  .field-group{display:flex;flex-direction:column;gap:3px;}
+  .field-group label{font-size:9px;letter-spacing:1.5px;text-transform:uppercase;color:var(--gold);font-weight:500;}
+  .field-group input,.field-group select{background:rgba(255,255,255,0.05);border:1px solid rgba(201,168,76,0.2);border-radius:4px;color:var(--white);font-family:'Montserrat',sans-serif;font-size:12px;padding:7px 10px;width:100%;outline:none;transition:border-color 0.2s;-webkit-appearance:none;}
+  .field-group input[type="date"]{color-scheme:dark;}
+  .field-group input:focus,.field-group select:focus{border-color:var(--gold);background:rgba(201,168,76,0.05);}
+  .field-group select option{background:var(--navy-mid);}
+  .field-group input::placeholder{color:var(--grey);}
+  .field-group input.ai-filled,.field-group select.ai-filled{border-color:rgba(150,100,255,0.6);background:rgba(150,100,255,0.05);}
+
+  /* DEMANDE INFO */
+  .demande-info{background:rgba(201,168,76,0.05);border:1px solid rgba(201,168,76,0.15);border-radius:8px;padding:12px;margin-bottom:10px;}
+  .demande-title{font-size:9px;letter-spacing:2px;text-transform:uppercase;color:var(--gold);margin-bottom:8px;}
+  .num-demande-badge{display:inline-block;padding:3px 10px;background:rgba(201,168,76,0.15);border:1px solid rgba(201,168,76,0.3);border-radius:12px;font-size:11px;color:var(--gold);font-weight:600;margin-bottom:8px;}
+
+  .filter-toggle{width:100%;background:transparent;border:none;color:var(--grey);font-family:'Montserrat',sans-serif;font-size:10px;letter-spacing:1.5px;text-transform:uppercase;padding:6px 0;cursor:pointer;display:flex;align-items:center;gap:6px;margin-bottom:6px;}
+  .filter-toggle .arrow{transition:transform 0.2s;}
+  .filter-toggle.open .arrow{transform:rotate(180deg);}
+  .filters-extra{display:none;}
+  .filters-extra.show{display:block;}
+
+  .ai-scan-btn{width:100%;padding:11px;margin-bottom:10px;background:linear-gradient(135deg,#1a1a4e,#2a1a5e);border:1px solid rgba(150,100,255,0.4);border-radius:8px;color:var(--white);font-family:'Montserrat',sans-serif;font-size:10px;font-weight:500;letter-spacing:1.5px;text-transform:uppercase;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:8px;}
+
+  .btn-search{width:100%;padding:12px;background:linear-gradient(135deg,var(--gold),var(--gold-light));border:none;border-radius:6px;color:var(--navy);font-family:'Montserrat',sans-serif;font-size:11px;font-weight:600;letter-spacing:2px;text-transform:uppercase;cursor:pointer;margin-top:8px;margin-bottom:6px;}
+  .btn-reset{width:100%;padding:7px;background:transparent;border:1px solid rgba(255,255,255,0.1);border-radius:6px;color:var(--grey);font-family:'Montserrat',sans-serif;font-size:10px;cursor:pointer;margin-bottom:6px;}
+
+  /* RESULTS */
+  .results-header{padding:10px 14px 6px;display:flex;align-items:center;justify-content:space-between;}
+  .results-count{font-family:'Cormorant Garamond',serif;font-size:18px;color:var(--gold);}
+  .results-count span{font-size:11px;font-family:'Montserrat',sans-serif;color:var(--grey);margin-left:6px;}
+  .sort-select{background:transparent;border:1px solid rgba(201,168,76,0.2);border-radius:4px;color:var(--grey);font-family:'Montserrat',sans-serif;font-size:10px;padding:4px 8px;outline:none;-webkit-appearance:none;}
+  .sort-select option{background:var(--navy-mid);}
+
+  /* SAVE DEMANDE BTN */
+  .save-demande-bar{padding:10px 14px;background:rgba(201,168,76,0.08);border-top:1px solid rgba(201,168,76,0.15);display:none;}
+  .save-demande-bar.show{display:block;}
+  .btn-save-demande{width:100%;padding:11px;background:linear-gradient(135deg,#1a5e2a,#2a7a3a);border:1px solid rgba(46,204,113,0.3);border-radius:6px;color:var(--white);font-family:'Montserrat',sans-serif;font-size:11px;font-weight:600;letter-spacing:1.5px;cursor:pointer;}
+  .selected-count{font-size:10px;color:#2ecc71;text-align:center;margin-bottom:6px;letter-spacing:1px;}
+
+  /* CARDS */
+  .cards-container{padding:0 12px 20px;display:flex;flex-direction:column;gap:8px;}
+  .villa-card{background:linear-gradient(135deg,var(--navy-mid),var(--navy-light));border:1px solid rgba(201,168,76,0.15);border-radius:10px;overflow:hidden;transition:border-color 0.2s;}
+  .villa-card.expanded{border-color:rgba(201,168,76,0.4);}
+  .villa-card.selected-for-send{border-color:rgba(46,204,113,0.5);background:linear-gradient(135deg,#0d2a1a,#0f3020);}
+
+  .card-main{padding:12px 14px;display:flex;align-items:flex-start;justify-content:space-between;gap:8px;}
+  .card-left{flex:1;min-width:0;}
+  .villa-name{font-family:'Cormorant Garamond',serif;font-size:19px;color:var(--white);letter-spacing:1px;margin-bottom:3px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+  .villa-location{font-size:10px;color:var(--grey);letter-spacing:1px;text-transform:uppercase;}
+  .villa-location .commune{color:var(--gold);font-weight:500;}
+  .card-right{text-align:right;flex-shrink:0;}
+  .villa-price{font-family:'Cormorant Garamond',serif;font-size:20px;font-weight:600;color:var(--gold);white-space:nowrap;}
+  .villa-price .chambres{font-size:11px;color:var(--grey);font-family:'Montserrat',sans-serif;display:block;margin-top:1px;}
+  .villa-price-sub{font-size:9px;color:var(--grey);}
+
+  .card-select{display:flex;align-items:center;gap:6px;padding:0 14px 8px;}
+  .card-select label{font-size:10px;color:var(--grey);cursor:pointer;}
+  .card-select input[type=checkbox]{accent-color:#2ecc71;width:14px;height:14px;cursor:pointer;}
+  .card-select.checked label{color:#2ecc71;}
+
+  .card-tags{padding:0 14px 8px;display:flex;flex-wrap:wrap;gap:4px;}
+  .tag{padding:2px 7px;border-radius:12px;font-size:9px;letter-spacing:1px;text-transform:uppercase;font-weight:500;}
+  .tag-dispo{background:rgba(46,204,113,0.15);color:#2ecc71;border:1px solid rgba(46,204,113,0.3);}
+  .tag-booked{background:rgba(231,76,60,0.15);color:#e74c3c;border:1px solid rgba(231,76,60,0.3);}
+  .tag-partial{background:rgba(230,126,34,0.15);color:#e67e22;border:1px solid rgba(230,126,34,0.3);}
+  .tag-travaux{background:rgba(149,165,166,0.15);color:#95a5a6;border:1px solid rgba(149,165,166,0.3);}
+  .tag-info{background:rgba(201,168,76,0.1);color:var(--gold);border:1px solid rgba(201,168,76,0.2);}
+  .tag-sport{background:rgba(52,152,219,0.15);color:#3498db;border:1px solid rgba(52,152,219,0.3);}
+
+  .card-details{display:none;padding:10px 14px 12px;border-top:1px solid rgba(201,168,76,0.1);}
+  .card-details.show{display:block;}
+  .details-grid{display:grid;grid-template-columns:1fr 1fr;gap:8px;}
+  .detail-item label{font-size:9px;letter-spacing:1.5px;text-transform:uppercase;color:var(--gold);display:block;margin-bottom:1px;}
+  .detail-item value{font-size:12px;color:var(--white);display:block;}
+  .detail-item.full{grid-column:1/-1;}
+  .dispo-row{display:grid;grid-template-columns:repeat(4,1fr);gap:5px;margin-top:8px;}
+  .dispo-cell{text-align:center;padding:5px 3px;border-radius:5px;background:rgba(255,255,255,0.03);}
+  .dispo-cell .month{font-size:8px;letter-spacing:1px;color:var(--grey);text-transform:uppercase;margin-bottom:2px;}
+  .dispo-cell .status{font-size:10px;font-weight:600;}
+  .status-dispo{color:#2ecc71}.status-booked{color:#e74c3c}.status-partial{color:#e67e22}.status-travaux{color:#95a5a6}.status-empty{color:rgba(255,255,255,0.2)}
+  .contact-block{margin-top:8px;padding:8px;background:rgba(201,168,76,0.05);border:1px solid rgba(201,168,76,0.1);border-radius:6px;}
+  .contact-block a{color:var(--gold);text-decoration:none;}
+
+  .loading{display:flex;flex-direction:column;align-items:center;justify-content:center;padding:60px 20px;gap:16px;}
+  .loading-dots{display:flex;gap:6px;}
+  .loading-dots div{width:8px;height:8px;border-radius:50%;background:var(--gold);animation:pulse 1.2s ease-in-out infinite;}
+  .loading-dots div:nth-child(2){animation-delay:.2s}.loading-dots div:nth-child(3){animation-delay:.4s}
+  @keyframes pulse{0%,80%,100%{opacity:.2;transform:scale(.8)}40%{opacity:1;transform:scale(1)}}
+  .loading p{font-size:11px;letter-spacing:2px;color:var(--grey);text-transform:uppercase;}
+  .empty-state{text-align:center;padding:60px 20px;color:var(--grey);}
+  .empty-state .icon{font-size:40px;margin-bottom:12px;opacity:0.4;}
+  .empty-state p{font-size:12px;letter-spacing:1px;}
+  .error-banner{background:rgba(231,76,60,0.1);border:1px solid rgba(231,76,60,0.3);border-radius:6px;padding:10px 14px;margin:10px 14px;font-size:11px;color:#e74c3c;display:none;}
+
+  /* HISTORIQUE */
+  .historique-panel{padding:14px;}
+  .hist-toolbar{display:flex;gap:8px;margin-bottom:12px;align-items:center;}
+  .hist-search{flex:1;background:rgba(255,255,255,0.05);border:1px solid rgba(201,168,76,0.2);border-radius:4px;color:var(--white);font-family:'Montserrat',sans-serif;font-size:12px;padding:7px 10px;outline:none;}
+  .hist-search::placeholder{color:var(--grey);}
+  .btn-export{padding:8px 14px;background:rgba(46,204,113,0.1);border:1px solid rgba(46,204,113,0.3);border-radius:4px;color:#2ecc71;font-family:'Montserrat',sans-serif;font-size:10px;font-weight:600;letter-spacing:1px;cursor:pointer;white-space:nowrap;}
+  .hist-count{font-size:10px;color:var(--grey);margin-bottom:10px;letter-spacing:1px;}
+
+  .hist-card{background:var(--navy-mid);border:1px solid rgba(201,168,76,0.1);border-radius:8px;margin-bottom:8px;overflow:hidden;}
+  .hist-card-header{padding:10px 14px;cursor:pointer;display:flex;align-items:center;justify-content:space-between;gap:8px;}
+  .hist-num{font-size:10px;color:var(--gold);font-weight:600;letter-spacing:1px;flex-shrink:0;}
+  .hist-client{font-family:'Cormorant Garamond',serif;font-size:16px;color:var(--white);flex:1;min-width:0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+  .hist-date{font-size:9px;color:var(--grey);flex-shrink:0;}
+  .hist-commercial{font-size:9px;color:var(--gold-light);letter-spacing:1px;}
+  .hist-details{display:none;padding:10px 14px 12px;border-top:1px solid rgba(201,168,76,0.08);}
+  .hist-details.show{display:block;}
+  .hist-grid{display:grid;grid-template-columns:1fr 1fr;gap:6px;margin-bottom:8px;}
+  .hist-item label{font-size:9px;letter-spacing:1px;text-transform:uppercase;color:var(--gold);display:block;}
+  .hist-item value{font-size:11px;color:var(--white);}
+  .hist-item.full{grid-column:1/-1;}
+  .hist-villas{margin-top:8px;padding:8px;background:rgba(46,204,113,0.05);border:1px solid rgba(46,204,113,0.15);border-radius:6px;}
+  .hist-villas-title{font-size:9px;letter-spacing:1.5px;text-transform:uppercase;color:#2ecc71;margin-bottom:4px;}
+  .hist-villas-list{font-size:11px;color:var(--white);}
+
+  /* AI MODAL */
+  .modal-overlay{display:none;position:fixed;inset:0;background:rgba(0,0,0,0.8);z-index:200;align-items:flex-end;justify-content:center;}
+  .modal-overlay.show{display:flex;}
+  .modal{background:var(--navy-mid);border:1px solid rgba(201,168,76,0.2);border-radius:16px 16px 0 0;padding:20px;width:100%;max-width:500px;max-height:85vh;overflow-y:auto;}
+  .modal-title{font-family:'Cormorant Garamond',serif;font-size:20px;color:var(--gold);margin-bottom:4px;}
+  .modal-sub{font-size:10px;color:var(--grey);letter-spacing:1px;margin-bottom:16px;}
+  .upload-zone{border:2px dashed rgba(201,168,76,0.3);border-radius:10px;padding:24px 16px;text-align:center;cursor:pointer;margin-bottom:12px;position:relative;}
+  .upload-zone input[type=file]{position:absolute;inset:0;opacity:0;cursor:pointer;width:100%;height:100%;}
+  .upload-zone .upload-icon{font-size:28px;margin-bottom:8px;}
+  .upload-zone p{font-size:12px;color:var(--grey);}
+  .preview-img{width:100%;border-radius:8px;margin-bottom:10px;display:none;max-height:180px;object-fit:cover;}
+  .analyzing{display:none;align-items:center;gap:10px;padding:10px;background:rgba(150,100,255,0.1);border:1px solid rgba(150,100,255,0.2);border-radius:8px;margin-bottom:10px;}
+  .analyzing.show{display:flex;}
+  .analyzing p{font-size:11px;color:#c09fff;letter-spacing:1px;}
+  .spin{animation:spin 1s linear infinite;display:inline-block;}
+  @keyframes spin{to{transform:rotate(360deg)}}
+  .ai-result{display:none;padding:12px;background:rgba(46,204,113,0.08);border:1px solid rgba(46,204,113,0.2);border-radius:8px;margin-bottom:12px;font-size:11px;color:#a8f0c0;letter-spacing:0.5px;line-height:1.6;}
+  .ai-result.show{display:block;}
+  .ai-result strong{color:#2ecc71;display:block;margin-bottom:4px;font-size:12px;}
+  .btn-apply{width:100%;padding:11px;background:linear-gradient(135deg,var(--gold),var(--gold-light));border:none;border-radius:6px;color:var(--navy);font-family:'Montserrat',sans-serif;font-size:11px;font-weight:600;letter-spacing:2px;cursor:pointer;display:none;margin-bottom:8px;}
+  .btn-apply.show{display:block;}
+  .btn-modal-close{width:100%;padding:9px;background:transparent;border:1px solid rgba(255,255,255,0.1);border-radius:6px;color:var(--grey);font-family:'Montserrat',sans-serif;font-size:10px;cursor:pointer;}
+
+  /* RESULT TABS */
+  .result-tabs-bar{display:flex;background:var(--navy-mid);border-bottom:1px solid rgba(201,168,76,0.15);padding:0 12px;}
+  .result-tab{flex:1;padding:10px 6px;text-align:center;font-size:10px;letter-spacing:1px;text-transform:uppercase;color:var(--grey);cursor:pointer;border:none;background:transparent;border-bottom:2px solid transparent;font-family:'Montserrat',sans-serif;transition:all 0.2s;}
+  .result-tab.active{color:var(--gold);border-bottom-color:var(--gold);}
+  .result-tab-legend{padding:8px 14px 4px;font-size:10px;color:var(--grey);letter-spacing:0.5px;font-style:italic;}
+
+  .toast{position:fixed;bottom:20px;left:50%;transform:translateX(-50%);background:#2ecc71;color:#0a1628;padding:10px 20px;border-radius:20px;font-size:11px;font-weight:600;letter-spacing:1px;z-index:300;display:none;white-space:nowrap;}
+  .toast.show{display:block;}
+</style>
+</head>
+<body>
+
+<header>
+  <div class="logo">Heraclee<span>Saint-Tropez · Villas</span></div>
+  <div style="display:flex;align-items:center;gap:8px">
+    <div id="villa-count"></div>
+    <button onclick="refreshCache()" style="background:transparent;border:1px solid rgba(201,168,76,0.2);border-radius:4px;color:var(--grey);font-size:10px;padding:4px 8px;cursor:pointer;font-family:'Montserrat',sans-serif" title="Actualiser les données">↻</button>
+  </div>
+</header>
+
+<div class="tabs">
+  <div class="tab active" onclick="switchTab('search')">🔍 Recherche</div>
+  <div class="tab" onclick="switchTab('historique')">📋 Historique</div>
+  <div class="tab" onclick="switchTab('biens')">🏠 Biens Loc</div>
+  <div class="tab" onclick="switchTab('agenda')">📅 Agenda</div>
+  <div class="tab" onclick="switchTab('saisie')">✏️ Saisie</div>
+</div>
+
+<!-- AI MODAL -->
+<div class="modal-overlay" id="modal" onclick="closeModalOutside(event)">
+  <div class="modal">
+    <div class="modal-title">✨ Analyser une demande</div>
+    <div class="modal-sub">UPLOADEZ UN SCREEN WHATSAPP, EMAIL OU SMS</div>
+    <img class="preview-img" id="preview-img" src="" alt="">
+    <div class="upload-zone" id="upload-zone">
+      <input type="file" accept="image/*" id="file-input" onchange="handleFile(event)">
+      <div class="upload-icon">📸</div>
+      <p><strong>Appuyez pour choisir une image</strong></p>
+      <p style="margin-top:3px;font-size:10px">WhatsApp · Email · SMS · Screenshot</p>
+    </div>
+    <div class="analyzing" id="analyzing"><span class="spin">⚙️</span><p>Claude analyse la demande...</p></div>
+    <div class="ai-result" id="ai-result"><strong>✅ Critères détectés</strong><div id="ai-result-text"></div></div>
+    <button class="btn-apply" id="btn-apply" onclick="applyFilters()">✓ &nbsp;APPLIQUER ET RECHERCHER</button>
+    <button class="btn-modal-close" onclick="closeModal()">Fermer</button>
+  </div>
+</div>
+
+<!-- TOAST -->
+<div class="toast" id="toast"></div>
+
+<!-- =================== ONGLET RECHERCHE =================== -->
+<div id="tab-search" class="tab-content active">
+
+  <div class="search-panel">
+
+    <!-- INFOS DEMANDE -->
+    <div class="demande-info">
+      <div class="demande-title">Informations demande</div>
+      <div class="num-demande-badge" id="num-badge">N° — </div>
+      <div class="search-grid" style="margin-bottom:8px">
+        <div class="field-group">
+          <label>Nom client *</label>
+          <input type="text" id="f-client" placeholder="ex: Dupont">
+        </div>
+        <div class="field-group">
+          <label>Apporteur</label>
+          <input type="text" id="f-apporteur" placeholder="optionnel">
+        </div>
+      </div>
+      <div class="field-group">
+        <label>Commercial</label>
+        <select id="f-commercial">
+          <option value="">— Sélectionner —</option>
+          <option>Ben</option>
+          <option>Lola</option>
+          <option>Olivier</option>
+          <option>Edouard</option>
+          <option>Dani</option>
+          <option value="autre">Autre...</option>
+        </select>
+      </div>
+      <div class="field-group" id="commercial-autre-group" style="display:none;margin-top:6px">
+        <label>Préciser</label>
+        <input type="text" id="f-commercial-autre" placeholder="Nom du commercial">
+      </div>
+    </div>
+
+    <button class="ai-scan-btn" onclick="openModal()">✨ &nbsp;Analyser une demande client</button>
+
+    <!-- CRITERES -->
+    <div class="search-grid three">
+      <div class="field-group"><label>Budget min €</label><input type="number" id="f-prix-min" placeholder="5000" step="500"></div>
+      <div class="field-group"><label>Budget max €</label><input type="number" id="f-prix-max" placeholder="20000" step="500"></div>
+      <div class="field-group"><label>Chambres min</label><input type="number" id="f-chambres" placeholder="4" min="1" max="15"></div>
+    </div>
+
+    <div class="search-grid" style="margin-bottom:8px">
+      <div class="field-group"><label>Date d'arrivée</label><input type="date" id="f-arrivee"></div>
+      <div class="field-group"><label>Date de départ</label><input type="date" id="f-depart"></div>
+    </div>
+    <div id="f-nuits-display" style="display:none;font-size:11px;color:var(--gold);margin:-4px 0 10px 2px;font-family:'Cormorant Garamond',serif;letter-spacing:1px"></div>
+
+    <div class="search-grid" style="margin-bottom:8px">
+      <div class="field-group">
+        <label>Commune</label>
+        <select id="f-commune">
+          <option value="">Toutes</option>
+          <option>Saint-Tropez</option><option>Ramatuelle</option><option>Gassin</option>
+          <option>Grimaud</option><option>La Croix Valmer</option><option>Les Issambres</option>
+        </select>
+      </div>
+      <div class="field-group"><label>Lieu</label><input type="text" id="f-lieu" placeholder="ex: Pinet, Salins..."></div>
+    </div>
+
+    <div class="field-group" style="margin-bottom:8px">
+      <label>Quartier</label>
+      <input type="text" id="f-quartier" placeholder="ex: Bouillabaisse, Canoubiers...">
+    </div>
+
+    <button class="filter-toggle" id="toggle-advanced" onclick="toggleAdvanced()">
+      <span class="arrow">▾</span> Filtres avancés
+    </button>
+    <div class="filters-extra" id="filters-extra">
+      <div class="search-grid three" style="margin-bottom:8px">
+        <div class="field-group"><label>Vue mer</label><select id="f-vue"><option value="">Indif.</option><option value="oui">Oui</option><option value="non">Non</option></select></div>
+        <div class="field-group"><label>Fêtes OK</label><select id="f-fetes"><option value="">Indif.</option><option value="oui">Oui</option><option value="non">Non</option></select></div>
+        <div class="field-group"><label>Hélipad</label><select id="f-helipad"><option value="">Indif.</option><option value="oui">Oui</option><option value="non">Non</option></select></div>
+      </div>
+      <div class="search-grid" style="margin-bottom:8px">
+        <div class="field-group"><label>Typologie</label><select id="f-typo"><option value="">Toutes</option><option>Provencale</option><option>Moderne</option><option>Provencale-Moderne</option></select></div>
+        <div class="field-group"><label>Sport</label><input type="text" id="f-sport" placeholder="ex: tennis"></div>
+      </div>
+    </div>
+
+    <button class="btn-search" onclick="doSearch()">🔍 &nbsp;RECHERCHER</button>
+    <button class="btn-reset" onclick="resetFilters()">Réinitialiser les filtres</button>
+  </div>
+
+  <div id="error-banner" class="error-banner"></div>
+
+  <!-- RESULT TABS -->
+  <div id="result-tabs" style="display:none">
+    <div class="result-tabs-bar">
+      <button class="result-tab active" id="rtab-exact" onclick="switchResultTab('exact')">
+        ✅ <span id="count-exact">0</span> Confirmé
+      </button>
+      <button class="result-tab" id="rtab-repli" onclick="switchResultTab('repli')">
+        🔄 <span id="count-repli">0</span> Non confirmé
+      </button>
+      <button class="result-tab" id="rtab-dispo" onclick="switchResultTab('dispo')">
+        📋 <span id="count-dispo">0</span> Tous critères
+      </button>
+    </div>
+    <div class="result-tab-legend" id="result-legend"></div>
+    <div style="padding:6px 14px;display:flex;gap:8px;align-items:center">
+      <input type="text" id="result-search" placeholder="🔍 Filtrer par nom..." oninput="filterResultsByName()" style="flex:1;background:var(--navy-mid);border:1px solid rgba(201,168,76,0.3);color:var(--cream);padding:6px 10px;border-radius:4px;font-size:11px;letter-spacing:1px;font-family:'Montserrat',sans-serif;">
+      <select class="sort-select" id="sort-select" onchange="doSort()">
+        <option value="prix-asc">Prix ↑</option><option value="prix-desc">Prix ↓</option>
+        <option value="nom">Nom A-Z</option><option value="chambres">Chambres ↓</option>
+      </select>
+    </div>
+  </div>
+
+  <div id="content">
+    <div class="loading"><div class="loading-dots"><div></div><div></div><div></div></div><p>Connexion à la base...</p></div>
+  </div>
+
+  <div class="save-demande-bar" id="save-bar">
+    <div class="selected-count" id="selected-count"></div>
+    <button class="btn-save-demande" onclick="saveDemande()">💾 &nbsp;ENREGISTRER LA DEMANDE</button>
+  </div>
+
+</div>
+
+<!-- =================== ONGLET HISTORIQUE =================== -->
+<div id="tab-historique" class="tab-content">
+  <div class="historique-panel">
+    <div class="hist-toolbar">
+      <input type="text" class="hist-search" id="hist-search" placeholder="Rechercher client, commercial..." oninput="filterHistorique()">
+      <button class="btn-export" onclick="exportExcel()">⬇ Excel</button>
+    </div>
+    <div class="hist-count" id="hist-count"></div>
+    <div id="hist-list">
+      <div class="loading"><div class="loading-dots"><div></div><div></div><div></div></div><p>Chargement...</p></div>
+    </div>
+  </div>
+</div>
+
+<!-- =================== ONGLET BIENS LOC =================== -->
+<div id="tab-biens" class="tab-content">
+  <div class="historique-panel">
+    <div class="hist-toolbar">
+      <input type="text" class="hist-search" id="biens-search" placeholder="Rechercher par nom, commune, quartier..." oninput="filterBiens()">
+    </div>
+    <div style="display:flex;gap:8px;margin-bottom:10px;flex-wrap:wrap">
+      <select class="sort-select" id="biens-commune" onchange="filterBiens()" style="flex:1;padding:7px 10px;font-size:11px">
+        <option value="">Toutes communes</option>
+        <option>Saint-Tropez</option><option>Ramatuelle</option><option>Gassin</option>
+        <option>Grimaud</option><option>La Croix Valmer</option><option>Les Issambres</option>
+      </select>
+      <select class="sort-select" id="biens-categorie" onchange="filterBiens()" style="flex:1;padding:7px 10px;font-size:11px">
+        <option value="">Toutes catégories</option>
+        <option>MAISON</option><option>APPART</option><option>VILLA</option>
+      </select>
+    </div>
+    <div class="hist-count" id="biens-count"></div>
+    <div id="biens-list">
+      <div class="loading"><div class="loading-dots"><div></div><div></div><div></div></div><p>Chargement...</p></div>
+    </div>
+  </div>
+</div>
+
+<!-- =================== ONGLET ÉTAT DES LIEUX =================== -->
+<div id="tab-edl" class="tab-content">
+<style>
+.edl-steps{display:flex;background:rgba(255,255,255,0.03);border-bottom:1px solid rgba(201,168,76,0.1);overflow-x:auto;scrollbar-width:none;}
+.edl-steps::-webkit-scrollbar{display:none;}
+.edl-step{flex-shrink:0;padding:8px 12px;font-size:9px;letter-spacing:1px;text-transform:uppercase;color:var(--grey);cursor:pointer;border-bottom:2px solid transparent;white-space:nowrap;}
+.edl-step.active{color:var(--gold);border-bottom-color:var(--gold);}
+.edl-step.done{color:#2ecc71;}
+.edl-section{display:none;padding:14px;}
+.edl-section.active{display:block;}
+.edl-title{font-family:'Cormorant Garamond',serif;font-size:22px;color:var(--gold);margin-bottom:4px;}
+.edl-sub{font-size:10px;color:var(--grey);letter-spacing:1px;margin-bottom:14px;}
+.edl-lang-select{display:flex;gap:10px;margin-bottom:16px;}
+.edl-lang-btn{flex:1;padding:14px;border:2px solid rgba(201,168,76,0.2);border-radius:8px;background:transparent;color:var(--white);font-family:'Montserrat',sans-serif;font-size:13px;cursor:pointer;text-align:center;transition:all 0.2s;}
+.edl-lang-btn.active{border-color:var(--gold);background:rgba(201,168,76,0.1);}
+.edl-lang-btn .edl-flag{font-size:26px;display:block;margin-bottom:4px;}
+.edl-type-select{display:flex;gap:10px;margin-bottom:16px;}
+.edl-type-btn{flex:1;padding:12px;border:2px solid rgba(201,168,76,0.2);border-radius:8px;background:transparent;color:var(--white);font-family:'Montserrat',sans-serif;font-size:11px;cursor:pointer;text-align:center;transition:all 0.2s;}
+.edl-type-btn.active{border-color:var(--gold);background:rgba(201,168,76,0.1);color:var(--gold);}
+.edl-type-btn .edl-icon{font-size:22px;display:block;margin-bottom:4px;}
+.edl-fg{margin-bottom:10px;}
+.edl-fg label{display:block;font-size:9px;letter-spacing:1.5px;text-transform:uppercase;color:var(--gold);margin-bottom:3px;}
+.edl-fg input,.edl-fg select,.edl-fg textarea{width:100%;background:rgba(255,255,255,0.05);border:1px solid rgba(201,168,76,0.2);border-radius:6px;color:var(--white);font-family:'Montserrat',sans-serif;font-size:12px;padding:9px 11px;outline:none;-webkit-appearance:none;}
+.edl-fg input:focus,.edl-fg select:focus{border-color:var(--gold);}
+.edl-fg select option{background:var(--navy-mid);}
+.edl-fg input::placeholder,.edl-fg textarea::placeholder{color:var(--grey);}
+.edl-fg textarea{resize:vertical;min-height:60px;}
+.edl-row{display:grid;grid-template-columns:1fr 1fr;gap:8px;}
+.edl-cpt{background:rgba(255,255,255,0.03);border:1px solid rgba(201,168,76,0.1);border-radius:8px;padding:10px;margin-bottom:8px;}
+.edl-cpt-title{font-size:10px;letter-spacing:1px;text-transform:uppercase;color:var(--gold);margin-bottom:6px;}
+.edl-piece-card{background:var(--navy-mid);border:1px solid rgba(201,168,76,0.15);border-radius:8px;margin-bottom:8px;overflow:hidden;}
+.edl-piece-header{padding:12px 14px;display:flex;align-items:center;justify-content:space-between;cursor:pointer;}
+.edl-piece-name{font-family:'Cormorant Garamond',serif;font-size:17px;color:var(--white);}
+.edl-piece-badge{font-size:9px;padding:2px 8px;border-radius:10px;}
+.edl-piece-body{display:none;padding:0 12px 12px;border-top:1px solid rgba(201,168,76,0.1);}
+.edl-piece-body.open{display:block;}
+.edl-etat-row{display:flex;gap:5px;margin:6px 0;}
+.edl-etat-b{flex:1;padding:7px 3px;border-radius:6px;border:1px solid;font-family:'Montserrat',sans-serif;font-size:9px;font-weight:600;letter-spacing:0.5px;cursor:pointer;text-align:center;background:transparent;}
+.edl-etat-b.bon{border-color:rgba(46,204,113,0.4);color:#2ecc71;}
+.edl-etat-b.bon.active{background:rgba(46,204,113,0.2);border-color:#2ecc71;}
+.edl-etat-b.moyen{border-color:rgba(230,126,34,0.4);color:#e67e22;}
+.edl-etat-b.moyen.active{background:rgba(230,126,34,0.2);border-color:#e67e22;}
+.edl-etat-b.mauvais{border-color:rgba(231,76,60,0.4);color:#e74c3c;}
+.edl-etat-b.mauvais.active{background:rgba(231,76,60,0.2);border-color:#e74c3c;}
+.edl-photos-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:5px;margin:6px 0;}
+.edl-photo-thumb{position:relative;aspect-ratio:1;border-radius:5px;overflow:hidden;}
+.edl-photo-thumb img{width:100%;height:100%;object-fit:cover;}
+.edl-photo-del{position:absolute;top:2px;right:2px;background:rgba(231,76,60,0.85);border:none;border-radius:50%;width:18px;height:18px;color:white;cursor:pointer;font-size:9px;}
+.edl-add-photo{width:100%;padding:8px;background:transparent;border:1px dashed rgba(201,168,76,0.3);border-radius:5px;color:var(--grey);font-family:'Montserrat',sans-serif;font-size:10px;cursor:pointer;margin-top:4px;}
+.edl-add-piece{width:100%;padding:10px;background:transparent;border:1px dashed rgba(201,168,76,0.3);border-radius:8px;color:var(--gold);font-family:'Montserrat',sans-serif;font-size:10px;letter-spacing:1px;cursor:pointer;margin-top:8px;}
+.edl-sig-box{background:rgba(255,255,255,0.98);border-radius:8px;margin-bottom:10px;overflow:hidden;}
+.edl-sig-label{background:var(--navy-mid);padding:7px 12px;font-size:9px;letter-spacing:1.5px;text-transform:uppercase;color:var(--gold);}
+.edl-sig-canvas{display:block;width:100%;height:140px;cursor:crosshair;touch-action:none;}
+.edl-sig-clear{width:100%;padding:7px;background:transparent;border:none;border-top:1px solid rgba(0,0,0,0.1);color:#666;font-family:'Montserrat',sans-serif;font-size:10px;cursor:pointer;}
+.edl-btn-primary{width:100%;padding:13px;background:linear-gradient(135deg,var(--gold),var(--gold-light));border:none;border-radius:8px;color:var(--navy);font-family:'Montserrat',sans-serif;font-size:11px;font-weight:600;letter-spacing:2px;text-transform:uppercase;cursor:pointer;margin-top:10px;}
+.edl-btn-secondary{width:100%;padding:10px;background:transparent;border:1px solid rgba(201,168,76,0.3);border-radius:8px;color:var(--gold);font-family:'Montserrat',sans-serif;font-size:10px;letter-spacing:1px;cursor:pointer;margin-top:6px;}
+.edl-nav{display:flex;gap:8px;margin-top:14px;}
+.edl-nav .edl-back{flex:1;padding:11px;background:transparent;border:1px solid rgba(255,255,255,0.1);border-radius:8px;color:var(--grey);font-family:'Montserrat',sans-serif;font-size:11px;cursor:pointer;}
+.edl-nav .edl-next{flex:2;padding:11px;background:linear-gradient(135deg,var(--gold),var(--gold-light));border:none;border-radius:8px;color:var(--navy);font-family:'Montserrat',sans-serif;font-size:11px;font-weight:600;cursor:pointer;}
+.edl-recap-box{background:rgba(255,255,255,0.03);border:1px solid rgba(201,168,76,0.1);border-radius:8px;padding:12px;margin-bottom:10px;}
+.edl-recap-box h3{font-size:9px;letter-spacing:2px;text-transform:uppercase;color:var(--gold);margin-bottom:8px;}
+.edl-recap-row{display:flex;justify-content:space-between;padding:4px 0;border-bottom:1px solid rgba(255,255,255,0.04);font-size:11px;}
+.edl-recap-row:last-child{border-bottom:none;}
+.edl-recap-row .edl-lbl{color:var(--grey);}
+</style>
+
+<div class="edl-steps" id="edl-steps-bar">
+  <div class="edl-step active" onclick="edlGoStep(0)">1. Langue</div>
+  <div class="edl-step" onclick="edlGoStep(1)">2. Infos</div>
+  <div class="edl-step" onclick="edlGoStep(2)">3. Compteurs</div>
+  <div class="edl-step" onclick="edlGoStep(3)">4. Pièces</div>
+  <div class="edl-step" onclick="edlGoStep(4)">5. Signatures</div>
+  <div class="edl-step" onclick="edlGoStep(5)">6. PDF</div>
+</div>
+
+<!-- STEP 0 -->
+<div class="edl-section active" id="edl-step-0">
+  <div class="edl-title">Langue / Language</div>
+  <div class="edl-sub">Choisissez la langue du document</div>
+  <div class="edl-lang-select">
+    <button class="edl-lang-btn active" onclick="edlSetLang('fr',this)"><span class="edl-flag">🇫🇷</span>Français</button>
+    <button class="edl-lang-btn" onclick="edlSetLang('en',this)"><span class="edl-flag">🇬🇧</span>English</button>
+  </div>
+  <div class="edl-title">Type</div>
+  <div class="edl-type-select">
+    <button class="edl-type-btn active" onclick="edlSetType('entree',this)"><span class="edl-icon">🔑</span>Entrée</button>
+    <button class="edl-type-btn" onclick="edlSetType('sortie',this)"><span class="edl-icon">🚪</span>Sortie</button>
+  </div>
+  <button class="edl-btn-primary" onclick="edlGoStep(1)">Suivant →</button>
+</div>
+
+<!-- STEP 1 -->
+<div class="edl-section" id="edl-step-1">
+  <div class="edl-title">Informations</div>
+  <div class="edl-sub">Villa et parties</div>
+  <div class="edl-fg"><label>Villa</label><input type="text" id="edl-villa" placeholder="ex: BLANCA"></div>
+  <div class="edl-fg"><label>Adresse</label><input type="text" id="edl-adresse" placeholder="ex: Chemin des Salins, Ramatuelle"></div>
+  <div class="edl-fg"><label>Date</label><input type="date" id="edl-date"></div>
+  <div class="edl-row">
+    <div class="edl-fg"><label>Nom locataire</label><input type="text" id="edl-loc-nom" placeholder="Nom"></div>
+    <div class="edl-fg"><label>Prénom</label><input type="text" id="edl-loc-prenom" placeholder="Prénom"></div>
+  </div>
+  <div class="edl-fg"><label>Propriétaire</label><input type="text" id="edl-proprio" placeholder="Nom propriétaire"></div>
+  <div class="edl-fg">
+    <label>Commercial Heraclee</label>
+    <select id="edl-commercial">
+      <option value="">— Sélectionner —</option>
+      <option>Ben</option><option>Lola</option><option>Olivier</option><option>Edouard</option><option>Dani</option>
+    </select>
+  </div>
+  <div class="edl-row">
+    <div class="edl-fg"><label>Nombre de clés</label><input type="number" id="edl-cles" placeholder="ex: 2" min="0"></div>
+    <div class="edl-fg"><label>Télécommandes</label><input type="number" id="edl-tel" placeholder="ex: 2" min="0"></div>
+  </div>
+  <div class="edl-nav">
+    <button class="edl-back" onclick="edlGoStep(0)">← Retour</button>
+    <button class="edl-next" onclick="edlGoStep(2)">Suivant →</button>
+  </div>
+</div>
+
+<!-- STEP 2 -->
+<div class="edl-section" id="edl-step-2">
+  <div class="edl-title">Compteurs</div>
+  <div class="edl-sub">Relevés des compteurs</div>
+  <div class="edl-cpt">
+    <div class="edl-cpt-title">💧 Eau</div>
+    <div class="edl-row">
+      <div class="edl-fg"><label>Entrée (m³)</label><input type="text" id="edl-eau-e" placeholder="0.000"></div>
+      <div class="edl-fg"><label>Sortie (m³)</label><input type="text" id="edl-eau-s" placeholder="0.000"></div>
+    </div>
+  </div>
+  <div class="edl-cpt">
+    <div class="edl-cpt-title">⚡ Électricité</div>
+    <div class="edl-row">
+      <div class="edl-fg"><label>Entrée (kWh)</label><input type="text" id="edl-elec-e" placeholder="0"></div>
+      <div class="edl-fg"><label>Sortie (kWh)</label><input type="text" id="edl-elec-s" placeholder="0"></div>
+    </div>
+  </div>
+  <div class="edl-cpt">
+    <div class="edl-cpt-title">🔥 Gaz</div>
+    <div class="edl-row">
+      <div class="edl-fg"><label>Entrée (m³)</label><input type="text" id="edl-gaz-e" placeholder="0.000"></div>
+      <div class="edl-fg"><label>Sortie (m³)</label><input type="text" id="edl-gaz-s" placeholder="0.000"></div>
+    </div>
+  </div>
+  <div class="edl-fg"><label>Piscine (pH / Chlore)</label><input type="text" id="edl-piscine" placeholder="ex: pH 7.2 / Cl 1.5"></div>
+  <div class="edl-nav">
+    <button class="edl-back" onclick="edlGoStep(1)">← Retour</button>
+    <button class="edl-next" onclick="edlGoStep(3)">Suivant →</button>
+  </div>
+</div>
+
+<!-- STEP 3 -->
+<div class="edl-section" id="edl-step-3">
+  <div class="edl-title">État des pièces</div>
+  <div class="edl-sub">Évaluez chaque pièce</div>
+  <div id="edl-pieces-container"></div>
+  <button class="edl-add-piece" onclick="edlAddPiece()">+ Ajouter une pièce</button>
+  <div class="edl-fg" style="margin-top:12px"><label>Observations générales</label><textarea id="edl-obs" placeholder="Remarques générales..."></textarea></div>
+  <div class="edl-nav">
+    <button class="edl-back" onclick="edlGoStep(2)">← Retour</button>
+    <button class="edl-next" onclick="edlGoStep(4)">Suivant →</button>
+  </div>
+</div>
+
+<!-- STEP 4 -->
+<div class="edl-section" id="edl-step-4">
+  <div class="edl-title">Signatures</div>
+  <div class="edl-sub">Signez au doigt directement sur l'écran</div>
+  <div class="edl-sig-box">
+    <div class="edl-sig-label">Signature locataire</div>
+    <canvas class="edl-sig-canvas" id="edl-sig-loc"></canvas>
+    <button class="edl-sig-clear" onclick="edlClearSig('edl-sig-loc')">✕ Effacer</button>
+  </div>
+  <div class="edl-sig-box">
+    <div class="edl-sig-label">Signature propriétaire</div>
+    <canvas class="edl-sig-canvas" id="edl-sig-prop"></canvas>
+    <button class="edl-sig-clear" onclick="edlClearSig('edl-sig-prop')">✕ Effacer</button>
+  </div>
+  <div class="edl-sig-box">
+    <div class="edl-sig-label">Signature Heraclee</div>
+    <canvas class="edl-sig-canvas" id="edl-sig-her"></canvas>
+    <button class="edl-sig-clear" onclick="edlClearSig('edl-sig-her')">✕ Effacer</button>
+  </div>
+  <div class="edl-nav">
+    <button class="edl-back" onclick="edlGoStep(3)">← Retour</button>
+    <button class="edl-next" onclick="edlGoStep(5)">Suivant →</button>
+  </div>
+</div>
+
+<!-- STEP 5 -->
+<div class="edl-section" id="edl-step-5">
+  <div class="edl-title">Récapitulatif</div>
+  <div class="edl-sub">Vérifiez avant de générer le PDF</div>
+  <div id="edl-recap"></div>
+  <button class="edl-btn-primary" onclick="edlSavePDF()">📄 Générer & Sauvegarder le PDF</button>
+  <button class="edl-btn-secondary" onclick="edlGoStep(3)">✎ Modifier les pièces</button>
+  <div class="edl-nav"><button class="edl-back" onclick="edlGoStep(4)">← Retour</button></div>
+</div>
+
+</div><!-- end tab-edl -->
+
+
+<script>
+const SUPABASE_URL='https://fgocsdozvgkpkjbzuyyp.supabase.co';
+const SUPABASE_KEY='eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImZnb2NzZG96dmdrcGtqYnp1eXlwIiwicm9sZSI6ImFub24iLCJpYXQiOjE3Nzg4NDc0ODAsImV4cCI6MjA5NDQyMzQ4MH0.bM0tlZmRLVDooKPlxJ6AwVhKCUyOqcYn7C7hJ42BaUE';
+const ANTHROPIC_URL='https://api.anthropic.com/v1/messages';
+
+let allVillas=[],filteredVillas=[],pendingFilters=null;
+let allHistorique=[],filteredHistorique=[];
+let nextNumDemande=88;
+
+// ========== INIT ==========
+async function sbFetch(path){
+  const controller = new AbortController();
+  const timeout = setTimeout(() => controller.abort(), 10000); // 10s timeout
+  try {
+    const r=await fetch(`${SUPABASE_URL}/rest/v1/${path}`,{
+      headers:{'apikey':SUPABASE_KEY,'Authorization':`Bearer ${SUPABASE_KEY}`},
+      signal: controller.signal
+    });
+    clearTimeout(timeout);
+    if(!r.ok)throw new Error(`HTTP ${r.status}`);
+    return r.json();
+  } catch(e) {
+    clearTimeout(timeout);
+    throw e;
+  }
+}
+async function sbPost(table,data){
+  const r=await fetch(`${SUPABASE_URL}/rest/v1/${table}`,{method:'POST',headers:{'apikey':SUPABASE_KEY,'Authorization':`Bearer ${SUPABASE_KEY}`,'Content-Type':'application/json','Prefer':'return=representation'},body:JSON.stringify(data)});
+  if(!r.ok)throw new Error(`HTTP ${r.status}: ${await r.text()}`);
+  return r.json();
+}
+
+const CACHE_VERSION = 'v20260614';
+const CACHE_KEY = 'heraclee_villas_' + CACHE_VERSION;
+const CACHE_TTL = 24 * 60 * 60 * 1000; // 24h
+
+function getCachedVillas() {
+  try {
+    const cached = localStorage.getItem(CACHE_KEY);
+    if (!cached) return null;
+    const {data, timestamp} = JSON.parse(cached);
+    if (Date.now() - timestamp > CACHE_TTL) return null;
+    return data;
+  } catch(e) { return null; }
+}
+
+function setCachedVillas(data) {
+  try {
+    localStorage.setItem(CACHE_KEY, JSON.stringify({data, timestamp: Date.now()}));
+  } catch(e) {}
+}
+
+async function init(){
+  try{
+    document.getElementById('content').innerHTML=`<div class="loading"><div class="loading-dots"><div></div><div></div><div></div></div><p>Chargement des villas...</p></div>`;
+    
+    // Essayer le cache d'abord
+    const cached = getCachedVillas();
+    if (cached) {
+      allVillas = cached;
+      document.getElementById('villa-count').textContent=`${allVillas.length} villas ⚡`;
+    } else {
+      allVillas=await sbFetch('villas_saisie?select=nom,nb_chambre,prix,lieu,commune,vue_mer,fetes,typologie,helipad,sport,dispo_juin,dispo_juillet,dispo_aout,dispo_septembre,proprio,tel_proprio,email_proprio,service,menage,commodite,adresse,gere_par,date_maj,mandat&order=prix.asc&limit=500');
+      setCachedVillas(allVillas);
+      document.getElementById('villa-count').textContent=`${allVillas.length} villas`;
+    }
+    
+    filteredVillas=[...allVillas];
+    try{
+      const hist=await sbFetch('historique_recherches?select=num_demande&order=num_demande.desc&limit=1');
+      if(hist&&hist.length>0&&hist[0].num_demande) nextNumDemande=hist[0].num_demande+1;
+    }catch(e){nextNumDemande=88;}
+    document.getElementById('num-badge').textContent=`N° ${nextNumDemande}`;
+    document.getElementById('content').innerHTML=`<div class="empty-state"><div class="icon">🔍</div><p>Renseignez vos critères<br>et lancez la recherche</p></div>`;
+    // Si l'onglet Agenda est déjà actif, le construire maintenant
+    if(document.getElementById('tab-agenda').classList.contains('active')) buildAgenda();
+  }catch(e){
+    document.getElementById('error-banner').style.display='block';
+    document.getElementById('error-banner').textContent=`Connexion impossible : ${e.message}`;
+    document.getElementById('content').innerHTML=`<div class="empty-state"><div class="icon">⚠️</div><p>Impossible de charger.<br>Vérifiez votre connexion.</p></div>`;
+  }
+}
+
+// ========== TABS ==========
+function switchTab(tab){
+  document.querySelectorAll('.tab').forEach((t,i)=>t.classList.toggle('active',['search','historique','biens','agenda','saisie'][i]===tab));
+  document.getElementById('tab-search').classList.toggle('active',tab==='search');
+  document.getElementById('tab-historique').classList.toggle('active',tab==='historique');
+  document.getElementById('tab-biens').classList.toggle('active',tab==='biens');
+  document.getElementById('tab-agenda').classList.toggle('active',tab==='agenda');
+  document.getElementById('tab-saisie').classList.toggle('active',tab==='saisie');
+  if(tab==='historique') loadHistorique();
+  if(tab==='biens') loadBiens();
+  if(tab==='saisie') saisieInit();
+  if(tab==='agenda') buildAgenda();
+}
+
+// ========== SEARCH ==========
+function getMoisConcernes(a,d){
+  if(!a||!d)return[];
+  const mois=[],d1=new Date(a),d2=new Date(d);
+  const mm={5:'juin',6:'juillet',7:'aout',8:'septembre'};
+  let c=new Date(d1);
+  while(c<d2){const m=c.getMonth();if(mm[m]&&!mois.includes(mm[m]))mois.push(mm[m]);c.setDate(c.getDate()+1);}
+  return mois;
+}
+// ─── PARSING DISPO INTELLIGENT ──────────────────────────────────────────────
+// Interprète les cellules de disponibilité pour déterminer si une période
+// précise est libre, même quand la cellule contient "B 01-05", "B 12-20 / 25-31", etc.
+
+const MOIS_NUM = {juin:6, juillet:7, aout:8, septembre:9};
+
+/**
+ * Parse une cellule dispo et retourne la liste des plages bloquées pour ce mois.
+ * Ex: "B 01-05 / 25-31" → [{debut:1, fin:5}, {debut:25, fin:31}]
+ * Ex: "BOOKED" → [{debut:1, fin:31}]
+ * Ex: "DISPO" → []
+ */
+function parseBloquees(valeur, moisNom) {
+  const v = (valeur||'').toUpperCase().trim();
+  if(!v || v==='DISPO') return [];
+  if(v==='BOOKED' || v.includes('TRAVAUX') || v.includes('PAS ') || v.includes('NE LOUE') || v.includes('VENDU'))
+    return [{debut:1, fin:31}];
+
+  const plages = [];
+  // Cherche tous les patterns "01-05", "12-20", "25-31" etc.
+  const matches = v.matchAll(/(\d{1,2})\s*[-–]\s*(\d{1,2})/g);
+  for(const m of matches) {
+    plages.push({debut: parseInt(m[1]), fin: parseInt(m[2])});
+  }
+  // Si commence par B mais aucune date trouvée → tout le mois bloqué
+  if(v.startsWith('B') && plages.length === 0) return [{debut:1, fin:31}];
+  return plages;
+}
+
+/**
+ * Vérifie si la période [arrDate, depDate[ chevauche les plages bloquées d'un mois.
+ * Retourne true si la période est LIBRE pour ce mois.
+ */
+function isPeriodeLibrePourMois(arrDate, depDate, moisNom, valeurDispo) {
+  const moisNum = MOIS_NUM[moisNom];
+  if(!moisNum) return true;
+  const annee = arrDate.getFullYear();
+  const bloquees = parseBloquees(valeurDispo, moisNom);
+  if(bloquees.length === 0) return true; // DISPO ou vide
+
+  for(const plage of bloquees) {
+    // Convertir la plage en dates réelles
+    const debutBloc = new Date(annee, moisNum-1, plage.debut);
+    const finBloc   = new Date(annee, moisNum-1, plage.fin + 1); // fin exclusive
+    // Chevauchement : arrDate < finBloc ET depDate > debutBloc
+    if(arrDate < finBloc && depDate > debutBloc) return false;
+  }
+  return true;
+}
+
+/**
+ * Détermine si une villa est disponible sur la période [arr, dep].
+ * Parcourt chaque mois concerné et vérifie les plages bloquées.
+ */
+function isDispoSurPeriode(v, arr, dep) {
+  if(!arr || !dep) return true;
+  const arrDate = new Date(arr);
+  const depDate = new Date(dep);
+  const mm = {5:'juin',6:'juillet',7:'aout',8:'septembre'};
+  let c = new Date(arrDate);
+  const moisVus = new Set();
+  while(c < depDate) {
+    const m = mm[c.getMonth()];
+    if(m && !moisVus.has(m)) {
+      moisVus.add(m);
+      const val = v[`dispo_${m}`]||'';
+      if(!isPeriodeLibrePourMois(arrDate, depDate, m, val)) return false;
+    }
+    c.setDate(c.getDate()+1);
+  }
+  return true;
+}
+
+/**
+ * Détermine si une villa a DISPO confirmé (cellule = "DISPO") sur tous les mois
+ * OU si la période précise est libre malgré un "B xx-yy" partiel.
+ */
+function isDispoConfirmeeOuPartielle(v, mois, arr, dep) {
+  if(mois.length === 0) return false;
+  let toutDispo = true;
+  let periodeLibre = isDispoSurPeriode(v, arr, dep);
+
+  for(const m of mois) {
+    const d = (v[`dispo_${m}`]||'').toUpperCase();
+    if(d !== 'DISPO') toutDispo = false;
+  }
+  // Confirmé si tout DISPO, ou si la période précise est libre
+  return toutDispo || periodeLibre;
+}
+
+function isDispoOk(v, mois, arr, dep) {
+  return isDispoSurPeriode(v, arr, dep);
+}
+
+let currentResultTab = 'exact';
+let exactVillas = [], repliVillas = [], dispoVillas = [];
+
+function isConfirmedDispo(v, mois, arr, dep) {
+  if(mois.length === 0) return false;
+  // Confirmé si toutes les cellules = DISPO
+  let toutDispo = true;
+  for(const m of mois) {
+    const d = (v[`dispo_${m}`]||'').toUpperCase();
+    if(d !== 'DISPO') { toutDispo = false; break; }
+  }
+  if(toutDispo) return true;
+  // OU si la période précise est libre (parsing des dates "B xx-yy")
+  return isDispoSurPeriode(v, arr, dep);
+}
+
+function isNonConfirmed(v, mois) {
+  // Cellule vide sur tous les mois concernés — ni DISPO ni BOOKED
+  if(mois.length === 0) return true;
+  for(const m of mois) {
+    const d = (v[`dispo_${m}`]||'').toUpperCase().trim();
+    if(d !== '') return false;
+  }
+  return true;
+}
+
+function matchesCriteres(v, pMin, pMax, ch, com, lieu, qrt, vue, fetes, heli, typo, sport) {
+  if(v.prix < pMin || v.prix > pMax) return false;
+  if(ch && (v.nb_chambre||0) < ch) return false;
+  if(com && !(v.commune||'').toLowerCase().includes(com)) return false;
+  if(lieu && !(v.lieu||'').toLowerCase().includes(lieu)) return false;
+  if(qrt && !(v.lieu||'').toLowerCase().includes(qrt) && !(v.adresse||'').toLowerCase().includes(qrt)) return false;
+  if(vue && (v.vue_mer||'').toLowerCase() !== vue) return false;
+  if(fetes && (v.fetes||'').toLowerCase() !== fetes) return false;
+  if(heli && (v.helipad||'').toLowerCase() !== heli) return false;
+ if(typo && (v.typologie||'').toLowerCase() !== typo) return false;
+  if(sport && !(v.sport||'').toLowerCase().includes(sport)) return false;
+  return true;
+}
+
+function doSearch() {
+  const pMin=parseInt(document.getElementById('f-prix-min').value)||0;
+  const pMax=parseInt(document.getElementById('f-prix-max').value)||999999;
+  const ch=parseInt(document.getElementById('f-chambres').value)||0;
+  const com=document.getElementById('f-commune').value.toLowerCase();
+  const lieu=document.getElementById('f-lieu').value.toLowerCase().trim();
+  const qrt=document.getElementById('f-quartier').value.toLowerCase().trim();
+  const vue=document.getElementById('f-vue').value.toLowerCase();
+  const fetes=document.getElementById('f-fetes').value.toLowerCase();
+  const heli=document.getElementById('f-helipad').value.toLowerCase();
+  const typo=document.getElementById('f-typo').value.toLowerCase();
+  const sport=document.getElementById('f-sport').value.toLowerCase().trim();
+  const arr=document.getElementById('f-arrivee').value;
+  const dep=document.getElementById('f-depart').value;
+  const mois=getMoisConcernes(arr,dep);
+
+  const allMatch = allVillas.filter(v => matchesCriteres(v, pMin, pMax, ch, com, lieu, qrt, vue, fetes, heli, typo, sport));
+
+  // Liste 1 — DISPO confirmé : "DISPO" écrit sur tous les mois concernés
+  exactVillas = allMatch.filter(v => mois.length > 0 ? isConfirmedDispo(v, mois, arr, dep) : false);
+
+  // Liste 2 — Non confirmé : cellule vide sur tous les mois (ni DISPO ni BOOKED)
+  repliVillas = allMatch.filter(v => mois.length > 0 ? isNonConfirmed(v, mois) : true);
+
+  // Liste 3 — Tous les critères : tous les matchs peu importe la dispo
+  dispoVillas = allMatch;
+
+  // Mettre à jour les compteurs
+  document.getElementById('count-exact').textContent = exactVillas.length;
+  document.getElementById('count-repli').textContent = repliVillas.length;
+  document.getElementById('count-dispo').textContent = dispoVillas.length;
+  document.getElementById('result-tabs').style.display = 'block';
+  document.getElementById('save-bar').classList.add('show');
+
+  currentResultTab = 'exact';
+  document.querySelectorAll('.result-tab').forEach(t => t.classList.remove('active'));
+  document.getElementById('rtab-exact').classList.add('active');
+  document.getElementById('result-legend').textContent = '✅ Villas avec disponibilité confirmée (DISPO) sur la période';
+
+  filteredVillas = [...exactVillas];
+  doSort();
+}
+
+function filterResultsByName() {
+  const q = (document.getElementById('result-search').value || '').toLowerCase().trim();
+  document.querySelectorAll('.villa-card').forEach(card => {
+    const nom = (card.querySelector('.villa-nom, h3, .villa-title') || card).textContent.toLowerCase();
+    card.style.display = (!q || nom.includes(q)) ? '' : 'none';
+  });
+}
+
+function switchResultTab(tab) {
+  currentResultTab = tab;
+  document.querySelectorAll('.result-tab').forEach(t => t.classList.remove('active'));
+  document.getElementById(`rtab-${tab}`).classList.add('active');
+
+  const legends = {
+    exact: '✅ Disponibilité confirmée (DISPO) sur la période',
+    repli: '🔄 Non confirmées — cellule vide, ni DISPO ni BOOKED',
+    dispo: '📋 Toutes les villas correspondant aux critères (toutes dispos)'
+  };
+  document.getElementById('result-legend').textContent = legends[tab];
+
+  if(tab === 'exact') filteredVillas = [...exactVillas];
+  else if(tab === 'repli') filteredVillas = [...repliVillas];
+  else filteredVillas = [...dispoVillas];
+  const rs = document.getElementById('result-search');
+  if(rs) rs.value = '';
+  doSort();
+}
+
+function doSort() {
+  const s=document.getElementById('sort-select').value;
+  filteredVillas.sort((a,b)=>{
+    if(s==='prix-asc')return(a.prix||0)-(b.prix||0);
+    if(s==='prix-desc')return(b.prix||0)-(a.prix||0);
+    if(s==='nom')return(a.nom||'').localeCompare(b.nom||'');
+    if(s==='chambres')return(b.nb_chambre||0)-(a.nb_chambre||0);
+    return 0;
+  });
+  renderResults();
+}
+
+function renderResults(){
+  const n=filteredVillas.length;
+  if(n===0){
+    document.getElementById('content').innerHTML=`<div class="empty-state"><div class="icon">${currentResultTab==='exact'?'🔍':currentResultTab==='repli'?'🔄':'📅'}</div><p>Aucune villa dans cette liste</p></div>`;
+    return;
+  }
+  document.getElementById('content').innerHTML=`<div class="cards-container" id="cards"></div>`;
+  const cards=document.getElementById('cards');
+  filteredVillas.forEach((v,i)=>cards.appendChild(buildCard(v,i)));
+  document.getElementById('save-bar').classList.add('show');
+  updateSelectedCount();
+}
+
+function buildCard(v,idx){
+  const card=document.createElement('div');
+  card.className='villa-card';card.id=`card-${idx}`;
+  const prix=v.prix?v.prix.toLocaleString('fr-FR')+' €':'—';
+  card.innerHTML=`
+    <div class="card-main" onclick="toggleCard(${idx})">
+      <div class="card-left">
+        <div class="villa-name">${v.nom||'—'}</div>
+        <div class="villa-location">${v.lieu?v.lieu+' · ':''}<span class="commune">${v.commune||''}</span></div>
+      </div>
+      <div class="card-right">
+        <div class="villa-price">${prix}<span class="chambres">${v.nb_chambre?v.nb_chambre+' ch.':''}</span></div>
+        <div class="villa-price-sub">/ semaine</div>
+      </div>
+    </div>
+    <div class="card-select" id="sel-row-${idx}">
+      <input type="checkbox" id="sel-${idx}" onchange="toggleSelect(${idx})">
+      <label for="sel-${idx}">Envoyer au client</label>
+    </div>
+    <div class="card-tags">${buildTags(v)}</div>
+    <div class="card-details" id="details-${idx}">${buildDetails(v)}</div>`;
+  return card;
+}
+
+function toggleSelect(idx){
+  const cb=document.getElementById(`sel-${idx}`);
+  const card=document.getElementById(`card-${idx}`);
+  const row=document.getElementById(`sel-row-${idx}`);
+  card.classList.toggle('selected-for-send',cb.checked);
+  row.classList.toggle('checked',cb.checked);
+  updateSelectedCount();
+}
+
+function updateSelectedCount(){
+  const n=document.querySelectorAll('.card-select input:checked').length;
+  const el=document.getElementById('selected-count');
+  el.textContent=n>0?`${n} villa${n>1?'s':''} sélectionnée${n>1?'s':''} pour envoi`:'Cochez les villas envoyées au client';
+}
+
+function getSelectedVillas(){
+  const selected=[];
+  document.querySelectorAll('.card-select input:checked').forEach(cb=>{
+    const idx=parseInt(cb.id.replace('sel-',''));
+    if(filteredVillas[idx])selected.push(filteredVillas[idx].nom);
+  });
+  return selected;
+}
+
+function buildTags(v){
+  let t='';
+  const j=(v.dispo_juillet||'').toUpperCase(),a=(v.dispo_aout||'').toUpperCase();
+  if(j==='DISPO')t+=`<span class="tag tag-dispo">Juil. DISPO</span>`;
+  else if(j==='BOOKED')t+=`<span class="tag tag-booked">Juil. COMPLET</span>`;
+  else if(j.startsWith('B '))t+=`<span class="tag tag-partial">Juil. partiel</span>`;
+  else if(j.includes('TRAVAUX'))t+=`<span class="tag tag-travaux">Travaux</span>`;
+  if(a==='DISPO')t+=`<span class="tag tag-dispo">Août DISPO</span>`;
+  else if(a==='BOOKED')t+=`<span class="tag tag-booked">Août COMPLET</span>`;
+  else if(a.startsWith('B '))t+=`<span class="tag tag-partial">Août partiel</span>`;
+  if((v.vue_mer||'').toLowerCase()==='oui')t+=`<span class="tag tag-info">Vue mer</span>`;
+  if((v.fetes||'').toLowerCase()==='oui')t+=`<span class="tag tag-info">Fêtes OK</span>`;
+  if((v.helipad||'').toLowerCase()==='oui')t+=`<span class="tag tag-info">Hélipad</span>`;
+  if(v.sport)v.sport.split(',').forEach(s=>{if(s.trim())t+=`<span class="tag tag-sport">${s.trim()}</span>`;});
+  return t;
+}
+
+function buildDetails(v){
+  const ms=['juin','juillet','aout','septembre'],lb=['Juin','Juillet','Août','Sept.'];
+  let dr='<div class="dispo-row">';
+  ms.forEach((m,i)=>{const{cls,label}=fmtD(v[`dispo_${m}`]||'');dr+=`<div class="dispo-cell"><div class="month">${lb[i]}</div><div class="status ${cls}">${label||'—'}</div></div>`;});
+  dr+='</div>';
+  const ex=[];
+  if(v.typologie)ex.push(`<div class="detail-item"><label>Typologie</label><value>${v.typologie}</value></div>`);
+  if(v.helipad)ex.push(`<div class="detail-item"><label>Hélipad</label><value>${v.helipad}</value></div>`);
+  if(v.sport)ex.push(`<div class="detail-item"><label>Sports</label><value>${v.sport}</value></div>`);
+  if(v.service)ex.push(`<div class="detail-item"><label>Service</label><value>${v.service}</value></div>`);
+  if(v.menage)ex.push(`<div class="detail-item"><label>Ménage</label><value>${v.menage}</value></div>`);
+  if(v.commodite)ex.push(`<div class="detail-item"><label>Commodités</label><value>${v.commodite}</value></div>`);
+  if(v.adresse)ex.push(`<div class="detail-item full"><label>Adresse</label><value>${v.adresse}</value></div>`);
+  if(v.gere_par)ex.push(`<div class="detail-item"><label>Géré par</label><value>${v.gere_par}</value></div>`);
+  if(v.date_maj)ex.push(`<div class="detail-item"><label>MAJ</label><value>${v.date_maj}</value></div>`);
+  const ct=(v.proprio||v.tel_proprio||v.email_proprio)?`<div class="contact-block">${v.proprio?`<div style="font-size:12px;color:var(--white);margin-bottom:3px">${v.proprio}</div>`:''}${v.tel_proprio?`<div><a href="tel:${v.tel_proprio}">📞 ${v.tel_proprio}</a></div>`:''}${v.email_proprio?`<div><a href="mailto:${v.email_proprio}">✉ ${v.email_proprio}</a></div>`:''}</div>`:'';
+  return `<div class="details-grid">${ex.join('')}</div>${dr}${ct}`;
+}
+
+function fmtD(val){const v=(val||'').toUpperCase();if(v==='DISPO')return{cls:'status-dispo',label:'DISPO'};if(v==='BOOKED')return{cls:'status-booked',label:'COMPLET'};if(v.startsWith('B '))return{cls:'status-partial',label:val};if(v.includes('TRAVAUX'))return{cls:'status-travaux',label:'TRAVAUX'};if(!val)return{cls:'status-empty',label:''};return{cls:'status-partial',label:val};}
+function toggleCard(i){document.getElementById(`details-${i}`).classList.toggle('show');document.getElementById(`card-${i}`).classList.toggle('expanded');}
+
+// ========== SAVE DEMANDE ==========
+async function saveDemande(){
+  const client=document.getElementById('f-client').value.trim();
+  const commercial=document.getElementById('f-commercial').value==='autre'?document.getElementById('f-commercial-autre').value.trim():document.getElementById('f-commercial').value;
+  if(!client){showToast('⚠️ Nom du client requis','#e67e22');return;}
+  if(!commercial){showToast('⚠️ Commercial requis','#e67e22');return;}
+
+  const villasSend=getSelectedVillas();
+  const record={
+    num_demande:nextNumDemande,
+    client,
+    apporteur:document.getElementById('f-apporteur').value.trim()||null,
+    commercial,
+    prix_min:parseInt(document.getElementById('f-prix-min').value)||null,
+    prix_max:parseInt(document.getElementById('f-prix-max').value)||null,
+    chambres_min:parseInt(document.getElementById('f-chambres').value)||null,
+    arrivee:document.getElementById('f-arrivee').value||null,
+    depart:document.getElementById('f-depart').value||null,
+    commune:document.getElementById('f-commune').value||null,
+    lieu:document.getElementById('f-lieu').value.trim()||null,
+    quartier:document.getElementById('f-quartier').value.trim()||null,
+    vue_mer:document.getElementById('f-vue').value||null,
+    fetes:document.getElementById('f-fetes').value||null,
+    helipad:document.getElementById('f-helipad').value||null,
+    sport:document.getElementById('f-sport').value.trim()||null,
+    typologie:document.getElementById('f-typo').value||null,
+    nb_resultats:filteredVillas.length,
+    villas_envoyees:villasSend.length>0?villasSend.join(', '):null,
+    source:'site'
+  };
+
+  try{
+    await sbPost('historique_recherches',record);
+    nextNumDemande++;
+    document.getElementById('num-badge').textContent=`N° ${nextNumDemande}`;
+    showToast(`✅ Demande N°${record.num_demande} enregistrée !`);
+    // Reset client info for next search
+    document.getElementById('f-client').value='';
+    document.getElementById('f-apporteur').value='';
+    // Uncheck all
+    document.querySelectorAll('.card-select input:checked').forEach(cb=>{cb.checked=false;toggleSelect(parseInt(cb.id.replace('sel-','')));});
+    updateSelectedCount();
+  }catch(e){
+    showToast(`❌ Erreur : ${e.message}`,'#e74c3c');
+  }
+}
+
+// ========== HISTORIQUE ==========
+async function loadHistorique(){
+  try{
+    allHistorique=await sbFetch('historique_recherches?select=*&order=num_demande.desc');
+    filteredHistorique=[...allHistorique];
+    renderHistorique();
+  }catch(e){
+    document.getElementById('hist-list').innerHTML=`<div class="empty-state"><div class="icon">⚠️</div><p>${e.message}</p></div>`;
+  }
+}
+
+function filterHistorique(){
+  const q=document.getElementById('hist-search').value.toLowerCase().trim();
+  filteredHistorique=q?allHistorique.filter(h=>(h.client||'').toLowerCase().includes(q)||(h.commercial||'').toLowerCase().includes(q)||(h.apporteur||'').toLowerCase().includes(q)||(h.num_demande+'').includes(q)):allHistorique;
+  renderHistorique();
+}
+
+function renderHistorique(){
+  const n=filteredHistorique.length;
+  document.getElementById('hist-count').textContent=`${n} demande${n>1?'s':''} — ${allHistorique.length} au total`;
+  if(n===0){document.getElementById('hist-list').innerHTML=`<div class="empty-state"><div class="icon">📋</div><p>Aucune demande enregistrée</p></div>`;return;}
+  document.getElementById('hist-list').innerHTML=filteredHistorique.map((h,i)=>buildHistCard(h,i)).join('');
+}
+
+function buildHistCard(h,idx){
+  const date=h.date_recherche?new Date(h.date_recherche).toLocaleDateString('fr-FR',{day:'2-digit',month:'2-digit',year:'2-digit',hour:'2-digit',minute:'2-digit'}):'—';
+  const criteres=[];
+  if(h.arrivee&&h.depart)criteres.push(`📅 ${h.arrivee} → ${h.depart}`);
+  if(h.prix_min||h.prix_max)criteres.push(`💶 ${h.prix_min||'—'} → ${h.prix_max||'—'} €`);
+  if(h.chambres_min)criteres.push(`🛏 ${h.chambres_min} ch. min`);
+  if(h.commune)criteres.push(`📍 ${h.commune}`);
+  if(h.lieu)criteres.push(`📌 Lieu: ${h.lieu}`);
+  if(h.quartier)criteres.push(`📌 Quartier: ${h.quartier}`);
+  if(h.vue_mer==='oui')criteres.push(`🌊 Vue mer`);
+  if(h.fetes==='oui')criteres.push(`🎉 Fêtes OK`);
+  if(h.helipad==='oui')criteres.push(`🚁 Hélipad`);
+  if(h.sport)criteres.push(`🎾 ${h.sport}`);
+  if(h.typologie)criteres.push(`🏠 ${h.typologie}`);
+
+  return `<div class="hist-card">
+    <div class="hist-card-header" onclick="toggleHist(${idx})">
+      <div>
+        <div style="display:flex;align-items:center;gap:8px;margin-bottom:2px">
+          <span class="hist-num">N°${h.num_demande||'—'}</span>
+          <span class="hist-client">${h.client||'—'}</span>
+        </div>
+        <div style="display:flex;gap:10px;align-items:center">
+          <span class="hist-commercial">${h.commercial||''}</span>
+          ${h.apporteur?`<span style="font-size:9px;color:var(--grey)">via ${h.apporteur}</span>`:''}
+        </div>
+      </div>
+      <span class="hist-date">${date}</span>
+    </div>
+    <div class="hist-details" id="hist-${idx}">
+      <div class="hist-grid">
+        ${criteres.map(c=>`<div class="hist-item full"><value>${c}</value></div>`).join('')}
+        <div class="hist-item"><label>Résultats</label><value>${h.nb_resultats??'—'} villas</value></div>
+      </div>
+      ${h.villas_envoyees?`<div class="hist-villas"><div class="hist-villas-title">✉ Villas envoyées</div><div class="hist-villas-list">${h.villas_envoyees}</div></div>`:'<div style="font-size:10px;color:var(--grey);margin-top:6px">Aucune villa envoyée enregistrée</div>'}
+      ${h.statut||h.commentaires?`<div class="hist-grid" style="margin-top:8px">
+        ${h.statut?`<div class="hist-item"><label>Statut</label><value style="font-weight:600;color:var(--gold)">${h.statut}</value></div>`:''}
+        ${h.commentaires?`<div class="hist-item full"><label>Commentaires</label><value>${h.commentaires}</value></div>`:''}
+      </div>`:''}
+    </div>
+  </div>`;
+}
+
+function toggleHist(idx){document.getElementById(`hist-${idx}`).classList.toggle('show');}
+
+// ========== BIENS LOC ==========
+let allBiens = [], filteredBiens = [];
+
+const CACHE_KEY_BIENS = 'heraclee_biens_' + CACHE_VERSION;
+
+async function loadBiens() {
+  if(allBiens.length > 0) { renderBiens(); return; }
+  try {
+    // Cache
+    try {
+      const cached = localStorage.getItem(CACHE_KEY_BIENS);
+      if (cached) {
+        const {data, timestamp} = JSON.parse(cached);
+        if (Date.now() - timestamp < CACHE_TTL) {
+          allBiens = data;
+          filteredBiens = [...allBiens];
+          renderBiens();
+          return;
+        }
+      }
+    } catch(e) {}
+    
+    allBiens = await sbFetch('biens_loc?select=*&order=nom.asc');
+    try { localStorage.setItem(CACHE_KEY_BIENS, JSON.stringify({data: allBiens, timestamp: Date.now()})); } catch(e) {}
+    filteredBiens = [...allBiens];
+    renderBiens();
+  } catch(e) {
+    document.getElementById('biens-list').innerHTML = `<div class="empty-state"><div class="icon">⚠️</div><p>${e.message}</p></div>`;
+  }
+}
+
+function filterBiens() {
+  const q = document.getElementById('biens-search').value.toLowerCase().trim();
+  const commune = document.getElementById('biens-commune').value.toLowerCase();
+  const categorie = document.getElementById('biens-categorie').value.toLowerCase();
+  filteredBiens = allBiens.filter(b => {
+    if(q && !(b.nom||'').toLowerCase().includes(q) && !(b.commune||'').toLowerCase().includes(q) && !(b.quartier||'').toLowerCase().includes(q)) return false;
+    if(commune && !(b.commune||'').toLowerCase().includes(commune)) return false;
+    if(categorie && !(b.categorie||'').toLowerCase().includes(categorie)) return false;
+    return true;
+  });
+  renderBiens();
+}
+
+function renderBiens() {
+  const n = filteredBiens.length;
+  document.getElementById('biens-count').textContent = `${n} bien${n>1?'s':''} — ${allBiens.length} au total`;
+  if(n === 0) {
+    document.getElementById('biens-list').innerHTML = `<div class="empty-state"><div class="icon">🏠</div><p>Aucun bien trouvé</p></div>`;
+    return;
+  }
+  document.getElementById('biens-list').innerHTML = filteredBiens.map((b,i) => `
+    <div class="hist-card">
+      <div class="hist-card-header" onclick="toggleBien(${i})">
+        <div>
+          <div style="display:flex;align-items:center;gap:8px;margin-bottom:2px">
+            ${b.categorie?`<span style="font-size:9px;letter-spacing:1px;color:var(--gold);text-transform:uppercase">${b.categorie}</span>`:''}
+            <span class="hist-client">${b.nom||'—'}</span>
+          </div>
+          <div style="font-size:10px;color:var(--grey)">
+            ${b.quartier?b.quartier+' · ':''}${b.commune||''}
+            ${b.brooms?` · ${b.brooms} ch.`:''}
+          </div>
+        </div>
+        <div style="text-align:right;flex-shrink:0">
+          ${b.prix?`<div style="font-family:'Cormorant Garamond',serif;font-size:18px;color:var(--gold)">${parseInt(b.prix).toLocaleString('fr-FR')} €</div>`:''}
+          <div style="font-size:9px;color:var(--grey)">/ sem.</div>
+        </div>
+      </div>
+      <div class="hist-details" id="bien-${i}">
+        <div class="hist-grid">
+          ${b.proprietaire?`<div class="hist-item"><label>Propriétaire</label><value>${b.proprietaire}</value></div>`:''}
+          ${b.contact?`<div class="hist-item"><label>Contact</label><value>${b.contact}</value></div>`:''}
+          ${b.commercial?`<div class="hist-item"><label>Commercial</label><value>${b.commercial}</value></div>`:''}
+          ${b.surf?`<div class="hist-item"><label>Surface</label><value>${b.surf} m²</value></div>`:''}
+          ${b.terrain?`<div class="hist-item"><label>Terrain</label><value>${b.terrain}</value></div>`:''}
+          ${b.ref_apimo?`<div class="hist-item"><label>Réf APIMO</label><value>${b.ref_apimo}</value></div>`:''}
+          ${b.commentaires?`<div class="hist-item full"><label>Commentaires</label><value>${b.commentaires}</value></div>`:''}
+        </div>
+      </div>
+    </div>`).join('');
+}
+
+function toggleBien(i) { document.getElementById(`bien-${i}`).classList.toggle('show'); }
+
+
+function exportExcel(){
+  if(!filteredHistorique.length){showToast('Aucune donnée à exporter','#e67e22');return;}
+  const headers=['N°','Client','Commercial','Apporteur','Date','Arrivée','Départ','Budget min','Budget max','Chambres min','Commune','Lieu','Quartier','Vue mer','Fêtes','Hélipad','Sport','Typologie','Nb résultats','Villas envoyées','Statut','Commentaires'];
+  const rows=filteredHistorique.map(h=>[
+    h.num_demande,h.client,h.commercial,h.apporteur,
+    h.date_recherche?new Date(h.date_recherche).toLocaleDateString('fr-FR'):'',
+    h.arrivee,h.depart,h.prix_min,h.prix_max,h.chambres_min,
+    h.commune,h.lieu,h.quartier,h.vue_mer,h.fetes,h.helipad,h.sport,h.typologie,
+    h.nb_resultats,h.villas_envoyees,h.statut,h.commentaires
+  ]);
+  const csv=[headers,...rows].map(r=>r.map(v=>`"${(v??'').toString().replace(/"/g,'""')}"`).join(';')).join('\n');
+  const blob=new Blob(['\uFEFF'+csv],{type:'text/csv;charset=utf-8'});
+  const a=document.createElement('a');
+  a.href=URL.createObjectURL(blob);
+  a.download=`Heraclee_Demandes_${new Date().toISOString().split('T')[0]}.csv`;
+  a.click();
+  showToast('✅ Export téléchargé !');
+}
+
+// ========== AI SCAN ==========
+function openModal(){document.getElementById('modal').classList.add('show');}
+function closeModal(){
+  document.getElementById('modal').classList.remove('show');
+  document.getElementById('preview-img').style.display='none';
+  document.getElementById('upload-zone').style.display='block';
+  document.getElementById('analyzing').classList.remove('show');
+  document.getElementById('ai-result').classList.remove('show');
+  document.getElementById('btn-apply').classList.remove('show');
+  document.getElementById('file-input').value='';
+  pendingFilters=null;
+}
+function closeModalOutside(e){if(e.target===document.getElementById('modal'))closeModal();}
+
+async function handleFile(e){
+  const file=e.target.files[0];if(!file)return;
+  const reader=new FileReader();
+  reader.onload=async(ev)=>{
+    const base64=ev.target.result.split(',')[1];
+    document.getElementById('preview-img').src=ev.target.result;
+    document.getElementById('preview-img').style.display='block';
+    document.getElementById('upload-zone').style.display='none';
+    document.getElementById('analyzing').classList.add('show');
+    document.getElementById('ai-result').classList.remove('show');
+    document.getElementById('btn-apply').classList.remove('show');
+    try{
+      const result=await analyzeWithClaude(base64,file.type);
+      document.getElementById('analyzing').classList.remove('show');
+      pendingFilters=result;
+      document.getElementById('ai-result-text').innerHTML=formatResult(result);
+      document.getElementById('ai-result').classList.add('show');
+      document.getElementById('btn-apply').classList.add('show');
+    }catch(err){
+      document.getElementById('analyzing').classList.remove('show');
+      document.getElementById('ai-result-text').innerHTML=`Erreur : ${err.message}`;
+      document.getElementById('ai-result').classList.add('show');
+    }
+  };
+  reader.readAsDataURL(file);
+}
+
+async function analyzeWithClaude(base64,mediaType){
+  const prompt=`Tu es un assistant pour une agence de location de villas de luxe à Saint-Tropez.
+Analyse cette image et extrais les critères de recherche du client.
+Réponds UNIQUEMENT en JSON valide sans texte avant ou après :
+{
+  "client": string ou null,
+  "prix_min": number ou null,
+  "prix_max": number ou null,
+  "chambres_min": number ou null,
+  "arrivee": "YYYY-MM-DD" ou null,
+  "depart": "YYYY-MM-DD" ou null,
+  "commune": "Saint-Tropez"|"Ramatuelle"|"Gassin"|"Grimaud"|"La Croix Valmer"|"Les Issambres"|null,
+  "lieu": string ou null,
+  "quartier": string ou null,
+  "vue_mer": "oui"|"non"|null,
+  "fetes": "oui"|"non"|null,
+  "helipad": "oui"|"non"|null,
+  "sport": string ou null,
+  "resume": "phrase courte en français"
+}
+Si l'année n'est pas précisée pour les dates, utilise 2026. Prix en euros/semaine.`;
+
+  const res=await fetch(ANTHROPIC_URL,{method:'POST',headers:{'Content-Type':'application/json','anthropic-dangerous-direct-browser-access':'true'},body:JSON.stringify({model:'claude-sonnet-4-20250514',max_tokens:1000,messages:[{role:'user',content:[{type:'image',source:{type:'base64',media_type:mediaType,data:base64}},{type:'text',text:prompt}]}]})});
+  if(!res.ok)throw new Error(`API ${res.status}`);
+  const data=await res.json();
+  return JSON.parse(data.content[0].text.trim().replace(/```json|```/g,'').trim());
+}
+
+function formatResult(r){
+  const lines=[];
+  if(r.resume)lines.push(`<em style="color:var(--white)">${r.resume}</em><br>`);
+  if(r.client)lines.push(`👤 Client détecté : <strong>${r.client}</strong>`);
+  if(r.arrivee)lines.push(`📅 Arrivée : <strong>${r.arrivee}</strong>`);
+  if(r.depart)lines.push(`📅 Départ : <strong>${r.depart}</strong>`);
+  if(r.prix_min||r.prix_max)lines.push(`💶 Budget : <strong>${r.prix_min||'—'} → ${r.prix_max||'—'} €</strong>`);
+  if(r.chambres_min)lines.push(`🛏 Chambres min : <strong>${r.chambres_min}</strong>`);
+  if(r.commune)lines.push(`📍 Commune : <strong>${r.commune}</strong>`);
+  if(r.lieu)lines.push(`📌 Lieu : <strong>${r.lieu}</strong>`);
+  if(r.vue_mer==='oui')lines.push(`🌊 Vue mer demandée`);
+  if(r.fetes==='oui')lines.push(`🎉 Fêtes autorisées`);
+  if(r.sport)lines.push(`🎾 Sport : <strong>${r.sport}</strong>`);
+  return lines.join('<br>')||'Aucun critère détecté.';
+}
+
+function applyFilters(){
+  if(!pendingFilters)return;
+  const r=pendingFilters;
+  document.querySelectorAll('.ai-filled').forEach(el=>el.classList.remove('ai-filled'));
+  const set=(id,val)=>{if(val===null||val===undefined)return;const el=document.getElementById(id);if(!el)return;el.value=val;el.classList.add('ai-filled');};
+  if(r.client)set('f-client',r.client);
+  if(r.prix_min)set('f-prix-min',r.prix_min);
+  if(r.prix_max)set('f-prix-max',r.prix_max);
+  if(r.chambres_min)set('f-chambres',r.chambres_min);
+  if(r.arrivee)set('f-arrivee',r.arrivee);
+  if(r.depart)set('f-depart',r.depart);
+  if(r.commune)set('f-commune',r.commune);
+  if(r.lieu)set('f-lieu',r.lieu);
+  if(r.quartier)set('f-quartier',r.quartier);
+  if(r.vue_mer)set('f-vue',r.vue_mer);
+  if(r.fetes)set('f-fetes',r.fetes);
+  if(r.helipad)set('f-helipad',r.helipad);
+  if(r.sport)set('f-sport',r.sport);
+  if(r.vue_mer||r.fetes||r.helipad||r.sport){document.getElementById('filters-extra').classList.add('show');document.getElementById('toggle-advanced').classList.add('open');}
+  closeModal();doSearch();
+  setTimeout(()=>document.getElementById('results-header').scrollIntoView({behavior:'smooth'}),300);
+}
+
+// ========== UI HELPERS ==========
+function toggleAdvanced(){document.getElementById('filters-extra').classList.toggle('show');document.getElementById('toggle-advanced').classList.toggle('open');}
+
+function resetFilters(){
+  ['f-prix-min','f-prix-max','f-chambres','f-lieu','f-quartier','f-sport','f-arrivee','f-depart'].forEach(id=>document.getElementById(id).value='');
+  ['f-commune','f-vue','f-fetes','f-helipad','f-typo'].forEach(id=>document.getElementById(id).value='');
+  document.querySelectorAll('.ai-filled').forEach(el=>el.classList.remove('ai-filled'));
+  document.getElementById('result-tabs').style.display='none';
+  document.getElementById('save-bar').classList.remove('show');
+  document.getElementById('content').innerHTML='';
+  exactVillas=[];repliVillas=[];dispoVillas=[];filteredVillas=[];
+}
+
+function showToast(msg,color='#2ecc71'){
+  const t=document.getElementById('toast');
+  t.textContent=msg;t.style.background=color;t.style.color=color==='#2ecc71'?'#0a1628':'#fff';
+  t.classList.add('show');setTimeout(()=>t.classList.remove('show'),3000);
+}
+
+// Commercial "autre"
+document.getElementById('f-commercial').addEventListener('change',function(){
+  document.getElementById('commercial-autre-group').style.display=this.value==='autre'?'block':'none';
+});
+
+// Dates
+const today=new Date().toISOString().split('T')[0];
+document.getElementById('f-arrivee').min=today;
+document.getElementById('f-depart').min=today;
+
+function updateNuits(){
+  const arr = document.getElementById('f-arrivee').value;
+  const dep = document.getElementById('f-depart').value;
+  const el = document.getElementById('f-nuits-display');
+  if(arr && dep && dep > arr){
+    const n = Math.round((new Date(dep)-new Date(arr))/(1000*60*60*24));
+    el.textContent = `↳ ${n} nuit${n>1?'s':''}`;
+    el.style.display = 'block';
+  } else {
+    el.style.display = 'none';
+  }
+}
+
+document.getElementById('f-arrivee').addEventListener('change',function(){
+  const val = this.value;
+  if(val) {
+    document.getElementById('f-depart').min = val;
+    const dep = document.getElementById('f-depart').value;
+    if(dep && dep < val) document.getElementById('f-depart').value = '';
+  }
+  updateNuits();
+});
+document.getElementById('f-depart').addEventListener('change', updateNuits);
+
+// Placeholder dynamique pour montrer le format attendu
+document.getElementById('f-arrivee').placeholder = '2026-07-01';
+document.getElementById('f-depart').placeholder = '2026-08-01';
+
+// ========== ÉTAT DES LIEUX ==========
+let edlLang='fr', edlType='entree', edlStep=0, edlPieces=[], edlSigCtx={}, edlInitDone=false;
+
+const edlPiecesDefaut=['Entrée / Hall','Salon','Cuisine','Salle à manger',
+  'Chambre 1','Chambre 2','Chambre 3','Chambre 4','Chambre 5','Chambre 6',
+  'Salle de bain 1','Salle de bain 2','WC','Terrasse','Piscine'];
+
+function edlInit(){
+  if(edlInitDone) return;
+  document.getElementById('edl-date').value = new Date().toISOString().split('T')[0];
+  edlInitDone = true;
+}
+
+function edlSetLang(l,btn){
+  edlLang=l;
+  document.querySelectorAll('.edl-lang-btn').forEach(b=>b.classList.remove('active'));
+  btn.classList.add('active');
+}
+
+function edlSetType(tp,btn){
+  edlType=tp;
+  document.querySelectorAll('.edl-type-btn').forEach(b=>b.classList.remove('active'));
+  btn.classList.add('active');
+}
+
+function edlGoStep(n){
+  document.querySelectorAll('.edl-section').forEach((s,i)=>s.classList.toggle('active',i===n));
+  document.querySelectorAll('.edl-step').forEach((s,i)=>{
+    s.classList.remove('active','done');
+    if(i===n)s.classList.add('active');
+    else if(i<n)s.classList.add('done');
+  });
+  edlStep=n;
+  if(n===3&&edlPieces.length===0) edlInitPieces();
+  if(n===4) edlInitSigs();
+  if(n===5) edlBuildRecap();
+  document.getElementById('tab-edl').scrollTop=0;
+  window.scrollTo(0,0);
+}
+
+function edlInitPieces(){
+  edlPiecesDefaut.slice(0,10).forEach(nom=>edlAddPiece(nom));
+}
+
+function edlAddPiece(nom){
+  edlPieces.push({id:Date.now()+Math.random(),nom:nom||'',etat:'',proprete:'',commentaire:'',photos:[]});
+  edlRenderPieces();
+}
+
+function edlRenderPieces(){
+  document.getElementById('edl-pieces-container').innerHTML=edlPieces.map((p,i)=>edlBuildPiece(p,i)).join('');
+}
+
+function edlBuildPiece(p,i){
+  const bc={bon:'#2ecc71',moyen:'#e67e22',mauvais:'#e74c3c'};
+  const badgeStyle=p.etat?`background:${bc[p.etat]}20;color:${bc[p.etat]};border:1px solid ${bc[p.etat]}40`:'background:rgba(255,255,255,0.05);color:var(--grey);border:1px solid rgba(255,255,255,0.1)';
+  const photos=p.photos.map((ph,pi)=>`<div class="edl-photo-thumb"><img src="${ph}"><button class="edl-photo-del" onclick="edlDelPhoto(${i},${pi})">✕</button></div>`).join('');
+  return `<div class="edl-piece-card">
+    <div class="edl-piece-header" onclick="edlTogglePiece(${i})">
+      <div class="edl-piece-name">${p.nom||'Pièce'}</div>
+      <span class="edl-piece-badge" style="${badgeStyle}">${p.etat?p.etat.toUpperCase():'—'}</span>
+    </div>
+    <div class="edl-piece-body" id="edl-body-${i}">
+      <div style="margin-top:10px">
+        <div style="font-size:9px;letter-spacing:1px;text-transform:uppercase;color:var(--gold);margin-bottom:5px">État général</div>
+        <div class="edl-etat-row">
+          ${['bon','moyen','mauvais'].map(e=>`<button class="edl-etat-b ${e}${p.etat===e?' active':''}" onclick="edlSetEtat(${i},'etat','${e}')">${e.toUpperCase()}</button>`).join('')}
+        </div>
+        <div style="font-size:9px;letter-spacing:1px;text-transform:uppercase;color:var(--gold);margin-bottom:5px;margin-top:8px">Propreté</div>
+        <div class="edl-etat-row">
+          ${['bon','moyen','mauvais'].map(e=>`<button class="edl-etat-b ${e}${p.proprete===e?' active':''}" onclick="edlSetEtat(${i},'proprete','${e}')">${e.toUpperCase()}</button>`).join('')}
+        </div>
+        <div style="margin-top:8px">
+          <textarea style="width:100%;background:rgba(255,255,255,0.05);border:1px solid rgba(201,168,76,0.2);border-radius:5px;color:var(--white);font-family:'Montserrat',sans-serif;font-size:12px;padding:8px;outline:none;resize:vertical;min-height:55px" placeholder="Commentaire..." onchange="edlPieces[${i}].commentaire=this.value">${p.commentaire}</textarea>
+        </div>
+        <div style="margin-top:8px">
+          <div style="font-size:9px;letter-spacing:1px;text-transform:uppercase;color:var(--gold);margin-bottom:4px">Photos (${p.photos.length}/5)</div>
+          <div class="edl-photos-grid">${photos}</div>
+          ${p.photos.length<5?`<label><input type="file" style="display:none" accept="image/*" capture="environment" onchange="edlAddPhoto(${i},this)"><div class="edl-add-photo">📷 Ajouter une photo</div></label>`:''}
+        </div>
+        <button onclick="edlPieces.splice(${i},1);edlRenderPieces()" style="width:100%;padding:7px;background:transparent;border:1px solid rgba(231,76,60,0.3);border-radius:5px;color:#e74c3c;font-family:'Montserrat',sans-serif;font-size:10px;cursor:pointer;margin-top:8px">🗑 Supprimer</button>
+      </div>
+    </div>
+  </div>`;
+}
+
+function edlTogglePiece(i){document.getElementById(`edl-body-${i}`).classList.toggle('open');}
+function edlSetEtat(i,field,val){edlPieces[i][field]=val;edlRenderPieces();document.getElementById(`edl-body-${i}`).classList.add('open');}
+function edlAddPhoto(i,input){
+  const file=input.files[0];if(!file)return;
+  const reader=new FileReader();
+  reader.onload=e=>{edlPieces[i].photos.push(e.target.result);edlRenderPieces();document.getElementById(`edl-body-${i}`).classList.add('open');};
+  reader.readAsDataURL(file);
+}
+function edlDelPhoto(i,pi){edlPieces[i].photos.splice(pi,1);edlRenderPieces();document.getElementById(`edl-body-${i}`).classList.add('open');}
+
+function edlInitSigs(){
+  ['edl-sig-loc','edl-sig-prop','edl-sig-her'].forEach(id=>{
+    const canvas=document.getElementById(id);
+    if(!canvas||edlSigCtx[id]) return;
+    canvas.width=canvas.offsetWidth||300;canvas.height=140;
+    const ctx=canvas.getContext('2d');
+    ctx.fillStyle='#fff';ctx.fillRect(0,0,canvas.width,canvas.height);
+    ctx.strokeStyle='#000';ctx.lineWidth=2;ctx.lineCap='round';
+    let drawing=false,lx=0,ly=0;
+    const pos=e=>{const r=canvas.getBoundingClientRect();const t=e.touches?e.touches[0]:e;return{x:(t.clientX-r.left)*(canvas.width/r.width),y:(t.clientY-r.top)*(canvas.height/r.height)};};
+    canvas.addEventListener('mousedown',e=>{const p=pos(e);drawing=true;lx=p.x;ly=p.y;});
+    canvas.addEventListener('mousemove',e=>{if(!drawing)return;const p=pos(e);ctx.beginPath();ctx.moveTo(lx,ly);ctx.lineTo(p.x,p.y);ctx.stroke();lx=p.x;ly=p.y;});
+    canvas.addEventListener('mouseup',()=>drawing=false);
+    canvas.addEventListener('touchstart',e=>{e.preventDefault();const p=pos(e);drawing=true;lx=p.x;ly=p.y;},{passive:false});
+    canvas.addEventListener('touchmove',e=>{e.preventDefault();if(!drawing)return;const p=pos(e);ctx.beginPath();ctx.moveTo(lx,ly);ctx.lineTo(p.x,p.y);ctx.stroke();lx=p.x;ly=p.y;},{passive:false});
+    canvas.addEventListener('touchend',()=>drawing=false);
+    edlSigCtx[id]=ctx;
+  });
+}
+
+function edlClearSig(id){
+  const canvas=document.getElementById(id);
+  const ctx=canvas.getContext('2d');
+  ctx.fillStyle='#fff';ctx.fillRect(0,0,canvas.width,canvas.height);
+}
+
+function edlBuildRecap(){
+  const villa=document.getElementById('edl-villa').value||'—';
+  const date=document.getElementById('edl-date').value||'—';
+  const loc=[document.getElementById('edl-loc-prenom').value,document.getElementById('edl-loc-nom').value].filter(Boolean).join(' ')||'—';
+  const piecesHtml=edlPieces.map(p=>`<div class="edl-recap-row"><span class="edl-lbl">${p.nom}</span><span style="color:${p.etat==='bon'?'#2ecc71':p.etat==='moyen'?'#e67e22':p.etat==='mauvais'?'#e74c3c':'var(--grey)'}">${p.etat?p.etat.toUpperCase():'—'} ${p.photos.length>0?'📷'+p.photos.length:''}</span></div>`).join('');
+  document.getElementById('edl-recap').innerHTML=`
+    <div class="edl-recap-box"><h3>Informations</h3>
+      <div class="edl-recap-row"><span class="edl-lbl">Villa</span><span>${villa}</span></div>
+      <div class="edl-recap-row"><span class="edl-lbl">Date</span><span>${date}</span></div>
+      <div class="edl-recap-row"><span class="edl-lbl">Type</span><span>${edlType==='entree'?'Entrée':'Sortie'}</span></div>
+      <div class="edl-recap-row"><span class="edl-lbl">Locataire</span><span>${loc}</span></div>
+    </div>
+    <div class="edl-recap-box"><h3>Pièces (${edlPieces.length})</h3>${piecesHtml}</div>`;
+}
+
+async function edlSavePDF(){
+  showToast('⏳ Génération...','#c9a84c');
+  const data={
+    type:edlType,langue:edlLang,
+    villa_nom:document.getElementById('edl-villa').value,
+    villa_adresse:document.getElementById('edl-adresse').value,
+    date_etat:document.getElementById('edl-date').value||new Date().toISOString().split('T')[0],
+    nom_locataire:document.getElementById('edl-loc-nom').value,
+    prenom_locataire:document.getElementById('edl-loc-prenom').value,
+    nom_proprietaire:document.getElementById('edl-proprio').value,
+    commercial:document.getElementById('edl-commercial').value,
+    compteur_eau_entree:document.getElementById('edl-eau-e').value,
+    compteur_elec_entree:document.getElementById('edl-elec-e').value,
+    compteur_gaz_entree:document.getElementById('edl-gaz-e').value,
+    compteur_eau_sortie:document.getElementById('edl-eau-s').value,
+    compteur_elec_sortie:document.getElementById('edl-elec-s').value,
+    compteur_gaz_sortie:document.getElementById('edl-gaz-s').value,
+    nb_cles:parseInt(document.getElementById('edl-cles').value)||0,
+    nb_telecommandes:parseInt(document.getElementById('edl-tel').value)||0,
+    observations_generales:document.getElementById('edl-obs').value,
+    signature_locataire:document.getElementById('edl-sig-loc').toDataURL(),
+    signature_proprietaire:document.getElementById('edl-sig-prop').toDataURL(),
+    signature_commercial:document.getElementById('edl-sig-her').toDataURL(),
+  };
+  let etatId=null;
+  try{
+    const res=await sbPost('etats_lieux',data);
+    etatId=res[0]?.id;
+  }catch(e){console.log('Save error:',e);}
+  edlGeneratePDF(data,etatId);
+  showToast('✅ PDF généré !');
+}
+
+function edlGeneratePDF(data,etatId){
+  const villa=data.villa_nom||'Villa';
+  const bc={bon:'#2ecc71',moyen:'#e67e22',mauvais:'#e74c3c'};
+  const badge=e=>e?`<span style="background:${bc[e]}20;color:${bc[e]};padding:2px 8px;border-radius:10px;font-size:11px;font-weight:600">${e.toUpperCase()}</span>`:'<span style="color:#999">—</span>';
+  const piecesRows=edlPieces.map(p=>`<tr>
+    <td style="padding:8px 12px;border-bottom:1px solid #eee;font-weight:500">${p.nom}</td>
+    <td style="padding:8px 12px;border-bottom:1px solid #eee;text-align:center">${badge(p.etat)}</td>
+    <td style="padding:8px 12px;border-bottom:1px solid #eee;text-align:center">${badge(p.proprete)}</td>
+    <td style="padding:8px 12px;border-bottom:1px solid #eee;font-size:12px;color:#666">${p.commentaire||''}</td>
+    <td style="padding:8px 12px;border-bottom:1px solid #eee;text-align:center">${p.photos.length>0?'📷 '+p.photos.length:'—'}</td>
+  </tr>`).join('');
+  const photos=edlPieces.filter(p=>p.photos.length>0).map(p=>`<div style="margin-bottom:16px"><h4 style="font-size:13px;color:#0a1628;margin-bottom:8px;border-bottom:1px solid #eee;padding-bottom:4px">${p.nom}</h4><div style="display:grid;grid-template-columns:repeat(3,1fr);gap:8px">${p.photos.map(ph=>`<img src="${ph}" style="width:100%;height:110px;object-fit:cover;border-radius:5px;border:1px solid #eee">`).join('')}</div></div>`).join('');
+  const sigImg=id=>`<img src="${document.getElementById(id).toDataURL()}" style="width:100%;height:90px;object-fit:contain">`;
+  const loc=[data.prenom_locataire,data.nom_locataire].filter(Boolean).join(' ');
+  const html=`<!DOCTYPE html><html><head><meta charset="UTF-8"><style>body{font-family:'Helvetica Neue',Arial,sans-serif;color:#333;margin:0;padding:0;}@media print{body{margin:0;}}table{width:100%;border-collapse:collapse;}th{background:#0a1628;color:white;padding:8px 12px;text-align:left;font-size:11px;text-transform:uppercase;letter-spacing:1px;}</style></head><body><div style="max-width:800px;margin:0 auto;padding:28px">
+  <div style="display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:20px;padding-bottom:14px;border-bottom:3px solid #c9a84c">
+    <div><div style="font-size:26px;font-weight:300;letter-spacing:6px;color:#c9a84c;font-family:Georgia,serif">HERACLEE</div><div style="font-size:10px;letter-spacing:3px;color:#666;text-transform:uppercase">Saint-Tropez · Villas</div></div>
+    <div style="text-align:right"><div style="font-size:16px;font-weight:600;color:#0a1628;text-transform:uppercase">${edlLang==='fr'?'ÉTAT DES LIEUX':'PROPERTY INSPECTION'}</div><div style="font-size:13px;color:#c9a84c;font-weight:500">${edlType==='entree'?'Entrée':'Sortie'}</div>${etatId?`<div style="font-size:10px;color:#999">Réf. #${etatId}</div>`:''}</div>
+  </div>
+  <div style="display:grid;grid-template-columns:1fr 1fr;gap:14px;margin-bottom:18px">
+    <div style="background:#f8f8f8;border-radius:8px;padding:12px"><div style="font-size:10px;text-transform:uppercase;letter-spacing:1px;color:#666;margin-bottom:6px">Bien immobilier</div><div style="font-size:15px;font-weight:600;color:#0a1628">${villa}</div><div style="font-size:12px;color:#666;margin-top:2px">${data.villa_adresse||''}</div><div style="font-size:12px;color:#666;margin-top:5px">📅 ${data.date_etat}</div></div>
+    <div style="background:#f8f8f8;border-radius:8px;padding:12px"><div style="font-size:10px;text-transform:uppercase;letter-spacing:1px;color:#666;margin-bottom:6px">Parties</div><div style="font-size:12px;margin-bottom:3px"><strong>Locataire:</strong> ${loc||'—'}</div><div style="font-size:12px;margin-bottom:3px"><strong>Propriétaire:</strong> ${data.nom_proprietaire||'—'}</div><div style="font-size:12px"><strong>Heraclee:</strong> ${data.commercial||'—'}</div></div>
+  </div>
+  <h3 style="font-size:12px;text-transform:uppercase;letter-spacing:2px;color:#0a1628;margin-bottom:8px;border-bottom:1px solid #eee;padding-bottom:5px">Compteurs</h3>
+  <table style="margin-bottom:16px"><thead><tr><th>Compteur</th><th>Entrée</th><th>Sortie</th></tr></thead><tbody>
+    <tr><td style="padding:7px 12px;border-bottom:1px solid #eee">💧 Eau (m³)</td><td style="padding:7px 12px;border-bottom:1px solid #eee">${data.compteur_eau_entree||'—'}</td><td style="padding:7px 12px;border-bottom:1px solid #eee">${data.compteur_eau_sortie||'—'}</td></tr>
+    <tr><td style="padding:7px 12px;border-bottom:1px solid #eee">⚡ Électricité (kWh)</td><td style="padding:7px 12px;border-bottom:1px solid #eee">${data.compteur_elec_entree||'—'}</td><td style="padding:7px 12px;border-bottom:1px solid #eee">${data.compteur_elec_sortie||'—'}</td></tr>
+    <tr><td style="padding:7px 12px">🔥 Gaz (m³)</td><td style="padding:7px 12px">${data.compteur_gaz_entree||'—'}</td><td style="padding:7px 12px">${data.compteur_gaz_sortie||'—'}</td></tr>
+  </tbody></table>
+  <div style="font-size:12px;margin-bottom:14px"><strong>Clés:</strong> ${data.nb_cles} &nbsp;&nbsp; <strong>Télécommandes:</strong> ${data.nb_telecommandes}</div>
+  <h3 style="font-size:12px;text-transform:uppercase;letter-spacing:2px;color:#0a1628;margin-bottom:8px;border-bottom:1px solid #eee;padding-bottom:5px">État des pièces</h3>
+  <table style="margin-bottom:16px"><thead><tr><th>Pièce</th><th style="text-align:center">État</th><th style="text-align:center">Propreté</th><th>Commentaires</th><th style="text-align:center">Photos</th></tr></thead><tbody>${piecesRows}</tbody></table>
+  ${data.observations_generales?`<div style="margin-bottom:16px;background:#fff8e8;border:1px solid #c9a84c;border-radius:6px;padding:10px"><div style="font-size:10px;text-transform:uppercase;letter-spacing:1px;color:#c9a84c;margin-bottom:3px">Observations générales</div><div style="font-size:12px">${data.observations_generales}</div></div>`:''}
+  ${photos?`<h3 style="font-size:12px;text-transform:uppercase;letter-spacing:2px;color:#0a1628;margin-bottom:8px;border-bottom:1px solid #eee;padding-bottom:5px">Photos</h3>${photos}`:''}
+  <h3 style="font-size:12px;text-transform:uppercase;letter-spacing:2px;color:#0a1628;margin-bottom:12px;border-bottom:1px solid #eee;padding-bottom:5px">Signatures</h3>
+  <div style="display:flex;gap:14px;margin-bottom:16px">
+    <div style="flex:1;text-align:center"><div style="font-size:10px;text-transform:uppercase;letter-spacing:1px;color:#666;margin-bottom:5px">Locataire</div><div style="border:1px solid #ddd;border-radius:6px;overflow:hidden;height:90px">${sigImg('edl-sig-loc')}</div></div>
+    <div style="flex:1;text-align:center"><div style="font-size:10px;text-transform:uppercase;letter-spacing:1px;color:#666;margin-bottom:5px">Propriétaire</div><div style="border:1px solid #ddd;border-radius:6px;overflow:hidden;height:90px">${sigImg('edl-sig-prop')}</div></div>
+    <div style="flex:1;text-align:center"><div style="font-size:10px;text-transform:uppercase;letter-spacing:1px;color:#666;margin-bottom:5px">Heraclee</div><div style="border:1px solid #ddd;border-radius:6px;overflow:hidden;height:90px">${sigImg('edl-sig-her')}</div></div>
+  </div>
+  <div style="font-size:11px;color:#999;text-align:center;margin-bottom:14px">Les parties reconnaissent avoir pris connaissance de cet état des lieux et en certifient l'exactitude.</div>
+  <div style="border-top:1px solid #eee;padding-top:10px;display:flex;justify-content:space-between;font-size:10px;color:#999"><span>Heraclee Agency — Saint-Tropez</span><span>${data.date_etat} — ${villa}</span><span>${etatId?'Réf. #'+etatId:''}</span></div>
+</div></body></html>`;
+  const w=window.open('','_blank');
+  w.document.write(html);w.document.close();
+  setTimeout(()=>w.print(),600);
+}
+
+
+function refreshCache() {
+  try {
+    localStorage.removeItem(CACHE_KEY);
+    localStorage.removeItem(CACHE_KEY_BIENS);
+  } catch(e) {}
+  allVillas = []; allBiens = [];
+  showToast('🔄 Actualisation...');
+  init();
+}
+
+// ========== SAISIE RAPIDE ==========
+let saisieVillaCourante = null;
+let saisieDispos = {juin:'', juillet:'', aout:'', septembre:''};
+
+function saisieInit(){
+  // Rien à charger, les villas sont déjà dans allVillas
+}
+
+function saisieSearch(q){
+  const sugg = document.getElementById('saisie-suggestions');
+  if(!q || q.length < 2){sugg.style.display='none';return;}
+  const matches = allVillas.filter(v=>(v.nom||'').toLowerCase().includes(q.toLowerCase())).slice(0,8);
+  if(!matches.length){sugg.style.display='none';return;}
+  sugg.innerHTML = matches.map(v=>`<div class="saisie-suggestion" onclick="saisieSelect(${JSON.stringify(v).replace(/"/g,'&quot;')})">${v.nom} <span style="color:var(--grey);font-size:10px">· ${v.commune||''}</span></div>`).join('');
+  sugg.style.display='block';
+}
+
+function saisieSelect(v){
+  saisieVillaCourante = v;
+  saisieDispos = {
+    juin: v.dispo_juin||'',
+    juillet: v.dispo_juillet||'',
+    aout: v.dispo_aout||'',
+    septembre: v.dispo_septembre||''
+  };
+  document.getElementById('saisie-search').value = v.nom;
+  document.getElementById('saisie-suggestions').style.display='none';
+  document.getElementById('saisie-villa-nom').textContent = v.nom;
+  document.getElementById('saisie-villa-info').textContent = [v.lieu, v.commune].filter(Boolean).join(' · ');
+  document.getElementById('saisie-prix').value = v.prix||'';
+  document.getElementById('saisie-notes').value = '';
+  ['juin','juillet','aout','septembre'].forEach(m=>saisieBuildMois(m));
+  document.getElementById('saisie-card').classList.add('show');
+  document.getElementById('saisie-status').classList.remove('show');
+}
+
+function saisieBuildMois(mois){
+  const labels={juin:'Juin',juillet:'Juillet',aout:'Août',septembre:'Sept.'};
+  const val = (saisieDispos[mois]||'').toUpperCase();
+  const isBooked = val==='BOOKED';
+  const isDispo = val==='DISPO';
+  const isPartiel = val.startsWith('B ') || (val!=='' && !isBooked && !isDispo);
+  const partielVal = isPartiel ? saisieDispos[mois] : '';
+  document.getElementById(`saisie-mois-${mois}`).innerHTML = `
+    <div class="saisie-mois-label">${labels[mois]}</div>
+    <div class="saisie-dispo-btns">
+      <button class="saisie-dispo-btn dispo${isDispo?' active':''}" onclick="saisieSetDispo('${mois}','DISPO')">DISPO</button>
+      <button class="saisie-dispo-btn booked${isBooked?' active':''}" onclick="saisieSetDispo('${mois}','BOOKED')">FULL</button>
+      <button class="saisie-dispo-btn partiel${isPartiel?' active':''}" onclick="saisieSetDispo('${mois}','PARTIEL')">PART.</button>
+    </div>
+    <div class="saisie-partial-input${isPartiel?' show':''}" id="saisie-partial-${mois}">
+      <input type="text" class="saisie-input" style="margin-bottom:0" placeholder="ex: B 1-15" value="${partielVal}" oninput="saisieDispos['${mois}']=this.value">
+    </div>`;
+}
+
+function saisieSetDispo(mois, val){
+  if(val==='PARTIEL'){
+    saisieDispos[mois] = 'B ';
+  } else {
+    saisieDispos[mois] = val;
+  }
+  saisieBuildMois(mois);
+}
+
+async function saisieEnregistrer(){
+  if(!saisieVillaCourante){return;}
+  const btn = document.querySelector('.saisie-save-btn');
+  btn.textContent = '⏳ Enregistrement...';
+  btn.disabled = true;
+  const prix = parseInt(document.getElementById('saisie-prix').value)||saisieVillaCourante.prix;
+  const payload = {
+    dispo_juin: saisieDispos.juin||null,
+    dispo_juillet: saisieDispos.juillet||null,
+    dispo_aout: saisieDispos.aout||null,
+    dispo_septembre: saisieDispos.septembre||null,
+    prix: prix,
+    date_maj: new Date().toISOString().split('T')[0]
+  };
+  try{
+    const r = await fetch(`${SUPABASE_URL}/rest/v1/villas_saisie?id=eq.${saisieVillaCourante.id}`,{
+      method:'PATCH',
+      headers:{'apikey':SUPABASE_KEY,'Authorization':`Bearer ${SUPABASE_KEY}`,'Content-Type':'application/json','Prefer':'return=representation'},
+      body:JSON.stringify(payload)
+    });
+    if(!r.ok) throw new Error('HTTP '+r.status);
+    // Mettre à jour le cache local
+    const idx = allVillas.findIndex(v=>v.id===saisieVillaCourante.id);
+    if(idx>=0) Object.assign(allVillas[idx], payload);
+    setCachedVillas(allVillas);
+    showToast('✅ '+saisieVillaCourante.nom+' mis à jour !');
+    const st = document.getElementById('saisie-status');
+    st.textContent = '✅ Sauvegardé le '+new Date().toLocaleTimeString('fr-FR');
+    st.style.color='#2ecc71';
+    st.classList.add('show');
+  }catch(e){
+    showToast('❌ Erreur: '+e.message,'#e74c3c');
+  }
+  btn.textContent = '✓  ENREGISTRER';
+  btn.disabled = false;
+}
+
+async function saisieCreerVilla(){
+  const nom = document.getElementById('saisie-new-nom').value.trim().toUpperCase();
+  if(!nom){showToast('Nom obligatoire','#e67e22');return;}
+  const payload={
+    nom,
+    commune: document.getElementById('saisie-new-commune').value.trim()||null,
+    lieu: document.getElementById('saisie-new-lieu').value.trim()||null,
+    nb_chambre: parseInt(document.getElementById('saisie-new-chambres').value)||null,
+    prix: parseInt(document.getElementById('saisie-new-prix').value)||null,
+    date_maj: new Date().toISOString().split('T')[0]
+  };
+  try{
+    const r = await fetch(`${SUPABASE_URL}/rest/v1/villas_saisie`,{
+      method:'POST',
+      headers:{'apikey':SUPABASE_KEY,'Authorization':`Bearer ${SUPABASE_KEY}`,'Content-Type':'application/json','Prefer':'return=representation'},
+      body:JSON.stringify(payload)
+    });
+    if(!r.ok) throw new Error('HTTP '+r.status);
+    const created = await r.json();
+    allVillas.push(created[0]);
+    setCachedVillas(allVillas);
+    showToast('✅ '+nom+' créée !');
+    document.getElementById('saisie-new-form').classList.remove('show');
+    ['saisie-new-nom','saisie-new-commune','saisie-new-lieu','saisie-new-chambres','saisie-new-prix'].forEach(id=>document.getElementById(id).value='');
+    // Sélectionner la nouvelle villa directement
+    saisieSelect(created[0]);
+    document.getElementById('saisie-search').value = nom;
+  }catch(e){
+    showToast('❌ Erreur: '+e.message,'#e74c3c');
+  }
+}
+
+function saisieExportExcel(){
+  if(!allVillas.length){showToast('Aucune villa à exporter','#e67e22');return;}
+  const headers=['Nom','Commune','Lieu','Chambres','Prix','Juin','Juillet','Août','Septembre','MAJ'];
+  const rows = allVillas.map(v=>[
+    v.nom||'', v.commune||'', v.lieu||'', v.nb_chambre||'', v.prix||'',
+    v.dispo_juin||'', v.dispo_juillet||'', v.dispo_aout||'', v.dispo_septembre||'',
+    v.date_maj||''
+  ]);
+  const csv=[headers,...rows].map(r=>r.map(c=>`"${(c+'').replace(/"/g,'""')}"`).join(';')).join('\n');
+  const blob=new Blob(['\uFEFF'+csv],{type:'text/csv;charset=utf-8'});
+  const a=document.createElement('a');
+  a.href=URL.createObjectURL(blob);
+  a.download=`Heraclee_SAISIE_${new Date().toISOString().split('T')[0]}.csv`;
+  a.click();
+  showToast('✅ Export téléchargé !');
+}
+
+
+init();
+</script>
+
+<!-- =================== ONGLET SAISIE RAPIDE =================== -->
+
+<div id="tab-agenda" class="tab-content">
+  <div style="padding:12px 14px;border-bottom:1px solid rgba(201,168,76,0.15);">
+    <div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(140px,1fr));gap:8px;margin-bottom:8px;">
+      <div>
+        <div style="font-size:8px;color:rgba(255,255,255,0.4);letter-spacing:1px;margin-bottom:3px;">COMMERCIAL</div>
+        <select id="agenda-commercial" style="width:100%;background:rgba(255,255,255,0.05);border:1px solid rgba(255,255,255,0.1);color:#fff;padding:7px 8px;border-radius:7px;font-family:Montserrat,sans-serif;font-size:10px;">
+          <option value="">Tous</option>
+          <option value="Ben">Ben</option>
+          <option value="Dani">Dani</option>
+          <option value="Lola">Lola</option>
+          <option value="Edouard">Edouard</option>
+          <option value="Olivier">Olivier</option>
+          <option value="Alexis">Alexis</option>
+        </select>
+      </div>
+      <div>
+        <div style="font-size:8px;color:rgba(255,255,255,0.4);letter-spacing:1px;margin-bottom:3px;">COMMUNE</div>
+        <select id="agenda-commune" style="width:100%;background:rgba(255,255,255,0.05);border:1px solid rgba(255,255,255,0.1);color:#fff;padding:7px 8px;border-radius:7px;font-family:Montserrat,sans-serif;font-size:10px;">
+          <option value="">Toutes</option>
+          <option value="saint-tropez">Saint-Tropez</option>
+          <option value="ramatuelle">Ramatuelle</option>
+          <option value="gassin">Gassin</option>
+          <option value="grimaud">Grimaud</option>
+          <option value="cogolin">Cogolin</option>
+        </select>
+      </div>
+      <div>
+        <div style="font-size:8px;color:rgba(255,255,255,0.4);letter-spacing:1px;margin-bottom:3px;">PRIX MIN €</div>
+        <input type="number" id="agenda-prix-min" placeholder="ex: 5000" step="500" style="width:100%;background:rgba(255,255,255,0.05);border:1px solid rgba(255,255,255,0.1);color:#fff;padding:7px 8px;border-radius:7px;font-family:Montserrat,sans-serif;font-size:10px;box-sizing:border-box;">
+      </div>
+      <div>
+        <div style="font-size:8px;color:rgba(255,255,255,0.4);letter-spacing:1px;margin-bottom:3px;">PRIX MAX €</div>
+        <input type="number" id="agenda-prix-max" placeholder="ex: 200000" step="500" style="width:100%;background:rgba(255,255,255,0.05);border:1px solid rgba(255,255,255,0.1);color:#fff;padding:7px 8px;border-radius:7px;font-family:Montserrat,sans-serif;font-size:10px;box-sizing:border-box;">
+      </div>
+      <div>
+        <div style="font-size:8px;color:rgba(255,255,255,0.4);letter-spacing:1px;margin-bottom:3px;">CHAMBRES MIN</div>
+        <input type="number" id="agenda-chambres" placeholder="ex: 4" min="1" max="15" style="width:100%;background:rgba(255,255,255,0.05);border:1px solid rgba(255,255,255,0.1);color:#fff;padding:7px 8px;border-radius:7px;font-family:Montserrat,sans-serif;font-size:10px;box-sizing:border-box;">
+      </div>
+      <div>
+        <div style="font-size:8px;color:rgba(255,255,255,0.4);letter-spacing:1px;margin-bottom:3px;">VUE MER</div>
+        <select id="agenda-vue" style="width:100%;background:rgba(255,255,255,0.05);border:1px solid rgba(255,255,255,0.1);color:#fff;padding:7px 8px;border-radius:7px;font-family:Montserrat,sans-serif;font-size:10px;">
+          <option value="">Indif.</option><option value="oui">Oui</option><option value="non">Non</option>
+        </select>
+      </div>
+      <div>
+        <div style="font-size:8px;color:rgba(255,255,255,0.4);letter-spacing:1px;margin-bottom:3px;">FÊTES OK</div>
+        <select id="agenda-fetes" style="width:100%;background:rgba(255,255,255,0.05);border:1px solid rgba(255,255,255,0.1);color:#fff;padding:7px 8px;border-radius:7px;font-family:Montserrat,sans-serif;font-size:10px;">
+          <option value="">Indif.</option><option value="oui">Oui</option><option value="non">Non</option>
+        </select>
+      </div>
+      <div>
+        <div style="font-size:8px;color:rgba(255,255,255,0.4);letter-spacing:1px;margin-bottom:3px;">HÉLIPAD</div>
+        <select id="agenda-helipad" style="width:100%;background:rgba(255,255,255,0.05);border:1px solid rgba(255,255,255,0.1);color:#fff;padding:7px 8px;border-radius:7px;font-family:Montserrat,sans-serif;font-size:10px;">
+          <option value="">Indif.</option><option value="oui">Oui</option><option value="non">Non</option>
+        </select>
+      </div>
+      <div>
+        <div style="font-size:8px;color:rgba(255,255,255,0.4);letter-spacing:1px;margin-bottom:3px;">TYPOLOGIE</div>
+        <select id="agenda-typo" style="width:100%;background:rgba(255,255,255,0.05);border:1px solid rgba(255,255,255,0.1);color:#fff;padding:7px 8px;border-radius:7px;font-family:Montserrat,sans-serif;font-size:10px;">
+          <option value="">Toutes</option><option>Provencale</option><option>Moderne</option><option>Provencale-Moderne</option>
+        </select>
+      </div>
+      <div>
+        <div style="font-size:8px;color:rgba(255,255,255,0.4);letter-spacing:1px;margin-bottom:3px;">DISPO</div>
+        <select id="agenda-dispo-filtre" style="width:100%;background:rgba(255,255,255,0.05);border:1px solid rgba(255,255,255,0.1);color:#fff;padding:7px 8px;border-radius:7px;font-family:Montserrat,sans-serif;font-size:10px;">
+          <option value="">Toutes</option>
+          <option value="dispo">Avec DISPO</option>
+        </select>
+      </div>
+    </div>
+    <div style="display:flex;align-items:center;gap:10px;flex-wrap:wrap;">
+      <button onclick="buildAgenda()" style="background:linear-gradient(135deg,#C9A84C,#e8c96d);color:#1B2A4A;border:none;padding:8px 20px;border-radius:7px;font-family:Montserrat,sans-serif;font-size:10px;font-weight:700;letter-spacing:1px;cursor:pointer;">🔍 FILTRER</button>
+      <button onclick="resetAgendaFiltres()" style="background:transparent;border:1px solid rgba(255,255,255,0.15);color:rgba(255,255,255,0.5);padding:8px 14px;border-radius:7px;font-family:Montserrat,sans-serif;font-size:10px;cursor:pointer;">Réinitialiser</button>
+      <span id="agenda-count" style="color:rgba(255,255,255,0.4);font-size:10px;letter-spacing:1px;"></span>
+      <div style="display:flex;align-items:center;gap:6px;margin-left:8px;padding:5px 10px;background:rgba(201,168,76,0.08);border:1px solid rgba(201,168,76,0.25);border-radius:8px;">
+        <span style="font-size:8px;color:#C9A84C;letter-spacing:1px;white-space:nowrap;">📅 PÉRIODE</span>
+        <input type="date" id="agenda-arr" onchange="agendaArrChange()" style="background:transparent;border:none;color:#fff;font-family:Montserrat,sans-serif;font-size:9px;cursor:pointer;outline:none;width:110px;">
+        <span style="font-size:9px;color:rgba(255,255,255,0.4);">→</span>
+        <input type="date" id="agenda-dep" onchange="renderAgendaMois()" style="background:transparent;border:none;color:#fff;font-family:Montserrat,sans-serif;font-size:9px;cursor:pointer;outline:none;width:110px;">
+        <button onclick="document.getElementById('agenda-arr').value='';document.getElementById('agenda-dep').value='';renderAgendaMois();" style="background:none;border:none;color:rgba(255,255,255,0.3);cursor:pointer;font-size:11px;padding:0 2px;" title="Effacer">✕</button>
+      </div>
+      <div style="margin-left:auto;display:flex;gap:12px;align-items:center;">
+        <div style="display:flex;align-items:center;gap:4px;"><div style="width:12px;height:12px;border-radius:3px;background:rgba(46,204,113,0.5);border:1px solid #2ecc71;"></div><span style="font-size:8px;color:rgba(255,255,255,0.4);letter-spacing:1px;">DISPO</span></div>
+        <div style="display:flex;align-items:center;gap:4px;"><div style="width:12px;height:12px;border-radius:3px;background:rgba(230,126,34,0.3);border:1px solid rgba(230,126,34,0.4);"></div><span style="font-size:8px;color:rgba(255,255,255,0.4);letter-spacing:1px;">PARTIEL</span></div>
+        <div style="display:flex;align-items:center;gap:4px;"><div style="width:12px;height:12px;border-radius:3px;background:rgba(255,255,255,0.03);border:1px solid rgba(255,255,255,0.08);"></div><span style="font-size:8px;color:rgba(255,255,255,0.4);letter-spacing:1px;">NON DISPO</span></div>
+      </div>
+    </div>
+  </div>
+  <div style="overflow-x:auto;-webkit-overflow-scrolling:touch;">
+    <div id="agenda-calendar" style="min-width:900px;">
+      <div id="agenda-header" style="display:flex;position:sticky;top:0;z-index:10;background:#1B2A4A;border-bottom:1px solid rgba(201,168,76,0.2);"></div>
+      <div id="agenda-body" style="text-align:center;padding:40px;color:rgba(255,255,255,0.3);font-size:11px;letter-spacing:1px;">Chargement...</div>
+    </div>
+  </div>
+</div>
+
+<div id="tab-saisie" class="tab-content">
+<style>
+.saisie-wrap{padding:14px;}
+.saisie-search-box{position:relative;margin-bottom:10px;}
+.saisie-search-box input{width:100%;background:rgba(255,255,255,0.05);border:1px solid rgba(201,168,76,0.3);border-radius:8px;color:var(--white);font-family:'Montserrat',sans-serif;font-size:14px;padding:12px 14px;outline:none;letter-spacing:1px;}
+.saisie-search-box input:focus{border-color:var(--gold);}
+.saisie-suggestions{background:var(--navy-light);border:1px solid rgba(201,168,76,0.2);border-radius:8px;margin-top:2px;overflow:hidden;display:none;}
+.saisie-suggestion{padding:11px 14px;font-size:12px;color:var(--white);cursor:pointer;border-bottom:1px solid rgba(255,255,255,0.05);}
+.saisie-suggestion:last-child{border-bottom:none;}
+.saisie-suggestion.selected{background:rgba(201,168,76,0.1);color:var(--gold);}
+.saisie-suggestion:hover{background:rgba(201,168,76,0.08);}
+.saisie-card{background:rgba(255,255,255,0.03);border:1px solid rgba(201,168,76,0.15);border-radius:10px;padding:14px;margin-bottom:10px;display:none;}
+.saisie-card.show{display:block;}
+.saisie-card-title{font-family:'Cormorant Garamond',serif;font-size:20px;color:var(--gold);margin-bottom:4px;}
+.saisie-card-sub{font-size:10px;color:var(--grey);letter-spacing:1px;text-transform:uppercase;margin-bottom:12px;}
+.saisie-section-title{font-size:9px;letter-spacing:2px;text-transform:uppercase;color:var(--gold);margin-bottom:8px;margin-top:12px;}
+.saisie-dispo-grid{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:4px;}
+.saisie-mois-label{font-size:9px;color:var(--grey);letter-spacing:1px;text-transform:uppercase;margin-bottom:4px;}
+.saisie-dispo-btns{display:flex;gap:4px;margin-bottom:6px;}
+.saisie-dispo-btn{flex:1;padding:7px 3px;border-radius:6px;border:1px solid;font-family:'Montserrat',sans-serif;font-size:9px;font-weight:600;cursor:pointer;text-align:center;background:transparent;transition:all 0.15s;}
+.saisie-dispo-btn.dispo{border-color:rgba(46,204,113,0.4);color:#2ecc71;}
+.saisie-dispo-btn.dispo.active{background:rgba(46,204,113,0.2);border-color:#2ecc71;}
+.saisie-dispo-btn.booked{border-color:rgba(231,76,60,0.4);color:#e74c3c;}
+.saisie-dispo-btn.booked.active{background:rgba(231,76,60,0.2);border-color:#e74c3c;}
+.saisie-dispo-btn.partiel{border-color:rgba(230,126,34,0.4);color:#e67e22;}
+.saisie-dispo-btn.partiel.active{background:rgba(230,126,34,0.2);border-color:#e67e22;}
+.saisie-input{width:100%;background:rgba(255,255,255,0.05);border:1px solid rgba(201,168,76,0.2);border-radius:6px;color:var(--white);font-family:'Montserrat',sans-serif;font-size:12px;padding:8px 10px;outline:none;margin-bottom:8px;}
+.saisie-input:focus{border-color:var(--gold);}
+.saisie-partial-input{display:none;margin-top:4px;}
+.saisie-partial-input.show{display:block;}
+.saisie-save-btn{width:100%;padding:13px;background:linear-gradient(135deg,var(--gold),var(--gold-light));border:none;border-radius:8px;color:var(--navy);font-family:'Montserrat',sans-serif;font-size:11px;font-weight:600;letter-spacing:2px;cursor:pointer;margin-top:6px;}
+.saisie-new-btn{width:100%;padding:10px;background:transparent;border:1px dashed rgba(201,168,76,0.3);border-radius:8px;color:var(--gold);font-family:'Montserrat',sans-serif;font-size:10px;letter-spacing:1px;cursor:pointer;margin-top:8px;}
+.saisie-export-btn{width:100%;padding:10px;background:rgba(46,204,113,0.1);border:1px solid rgba(46,204,113,0.3);border-radius:8px;color:#2ecc71;font-family:'Montserrat',sans-serif;font-size:10px;font-weight:600;letter-spacing:1px;cursor:pointer;margin-top:8px;}
+.saisie-status{text-align:center;padding:10px;font-size:11px;color:var(--grey);display:none;}
+.saisie-status.show{display:block;}
+.saisie-new-form{background:rgba(255,255,255,0.03);border:1px solid rgba(201,168,76,0.15);border-radius:10px;padding:14px;margin-bottom:10px;display:none;}
+.saisie-new-form.show{display:block;}
+</style>
+
+<div class="saisie-wrap">
+  <div style="font-family:'Cormorant Garamond',serif;font-size:22px;color:var(--gold);margin-bottom:4px">Saisie rapide</div>
+  <div style="font-size:10px;color:var(--grey);letter-spacing:1px;text-transform:uppercase;margin-bottom:14px">Mise à jour des disponibilités</div>
+
+  <div class="saisie-search-box">
+    <input type="text" id="saisie-search" placeholder="🔍  Tapez le nom de la villa..." oninput="saisieSearch(this.value)" autocomplete="off">
+    <div class="saisie-suggestions" id="saisie-suggestions"></div>
+  </div>
+
+  <!-- Formulaire villa existante -->
+  <div class="saisie-card" id="saisie-card">
+    <div class="saisie-card-title" id="saisie-villa-nom">—</div>
+    <div class="saisie-card-sub" id="saisie-villa-info">—</div>
+
+    <div class="saisie-section-title">Disponibilités</div>
+    <div class="saisie-dispo-grid">
+      <div id="saisie-mois-juin"></div>
+      <div id="saisie-mois-juillet"></div>
+      <div id="saisie-mois-aout"></div>
+      <div id="saisie-mois-septembre"></div>
+    </div>
+
+    <div class="saisie-section-title">Prix & infos</div>
+    <input type="number" class="saisie-input" id="saisie-prix" placeholder="Prix / semaine (€)">
+    <textarea class="saisie-input" id="saisie-notes" placeholder="Notes rapides (optionnel)" style="min-height:60px;resize:vertical"></textarea>
+
+    <button class="saisie-save-btn" onclick="saisieEnregistrer()">✓  ENREGISTRER</button>
+    <div class="saisie-status" id="saisie-status"></div>
+  </div>
+
+  <!-- Formulaire nouvelle villa -->
+  <div class="saisie-new-form" id="saisie-new-form">
+    <div style="font-size:11px;color:var(--gold);letter-spacing:1px;margin-bottom:10px;text-transform:uppercase">Nouvelle villa</div>
+    <input type="text" class="saisie-input" id="saisie-new-nom" placeholder="Nom de la villa *">
+    <input type="text" class="saisie-input" id="saisie-new-commune" placeholder="Commune (Saint-Tropez, Ramatuelle...)">
+    <input type="text" class="saisie-input" id="saisie-new-lieu" placeholder="Lieu / quartier">
+    <input type="number" class="saisie-input" id="saisie-new-chambres" placeholder="Nombre de chambres">
+    <input type="number" class="saisie-input" id="saisie-new-prix" placeholder="Prix / semaine (€)">
+    <button class="saisie-save-btn" onclick="saisieCreerVilla()">✓  CRÉER LA VILLA</button>
+    <button onclick="document.getElementById('saisie-new-form').classList.remove('show')" style="width:100%;padding:8px;background:transparent;border:none;color:var(--grey);font-family:'Montserrat',sans-serif;font-size:10px;cursor:pointer;margin-top:6px">Annuler</button>
+    <div class="saisie-status" id="saisie-new-status"></div>
+  </div>
+
+  <button class="saisie-new-btn" onclick="document.getElementById('saisie-new-form').classList.toggle('show')">+ Ajouter une nouvelle villa</button>
+  <button class="saisie-export-btn" onclick="saisieExportExcel()">⬇ Exporter vers Excel</button>
+</div>
+</div>
+
+
+<script>
+// ========== AGENDA JOUR PAR JOUR ==========
+
+// Mois de la saison 2026
+const AGENDA_MOIS = [
+  {nom:'juin',    num:6,  jours:30, label:'JUIN'},
+  {nom:'juillet', num:7,  jours:31, label:'JUILLET'},
+  {nom:'aout',    num:8,  jours:31, label:'AOÛT'},
+  {nom:'septembre',num:9, jours:30, label:'SEPT.'},
+];
+
+// Parse la valeur dispo d'un mois et retourne un Set des jours bloqués
+function getJoursBloqués(valeur) {
+  const v = (valeur||'').toUpperCase().trim();
+  if (!v) return null; // non renseigné
+  if (v === 'DISPO') return new Set(); // tout libre
+  if (v === 'BOOKED' || v.includes('TRAVAUX') || v.includes('PAS ') || v.includes('NE LOUE') || v.includes('VENDU')) {
+    // Tout bloqué — on retourne un set avec tous les jours (31 max)
+    const s = new Set();
+    for(let i=1;i<=31;i++) s.add(i);
+    return s;
+  }
+  // Cas partiel : "B 01-05" ou "B 12-20 / 25-31"
+  if (v.startsWith('B') || v.includes('-')) {
+    const bloqués = new Set();
+    const matches = v.matchAll(/(\d{1,2})\s*[-–]\s*(\d{1,2})/g);
+    for(const m of matches) {
+      const d1 = parseInt(m[1]), d2 = parseInt(m[2]);
+      for(let d=d1; d<=d2; d++) bloqués.add(d);
+    }
+    if(bloqués.size > 0) return bloqués; // jours bloqués, reste = libre
+    // B sans dates → tout bloqué
+    const s = new Set();
+    for(let i=1;i<=31;i++) s.add(i);
+    return s;
+  }
+  return null; // non renseigné
+}
+
+// Couleur d'un jour donné
+function couleurJour(joursBloqués, jour) {
+  if (joursBloqués === null) return 'grey';    // non renseigné
+  if (joursBloqués.has(jour)) return 'red';    // bloqué
+  return 'green';                               // libre
+}
+
+function hasAtLeastOneDispo(v) {
+  return true;
+}
+
+let agendaMoisActif = 0;
+let agendaResultTab = 'confirmed'; // index dans AGENDA_MOIS
+let agendaVillasFiltrees = [];
+
+async function buildAgenda() {
+  if(!allVillas || allVillas.length === 0) {
+    try {
+      const cached = getCachedVillas();
+      if(cached && cached.length > 0) { allVillas = cached; document.getElementById('villa-count').textContent=allVillas.length+' villas'; }
+      else { allVillas = await sbFetch('villas_saisie?select=nom,nb_chambre,prix,lieu,commune,vue_mer,fetes,typologie,helipad,sport,dispo_juin,dispo_juillet,dispo_aout,dispo_septembre,proprio,tel_proprio,email_proprio,service,menage,commodite,adresse,gere_par,date_maj,mandat&order=prix.asc&limit=500'); setCachedVillas(allVillas); document.getElementById('villa-count').textContent=allVillas.length+' villas'; }
+    } catch(e) { document.getElementById('agenda-body').innerHTML='<div style="padding:40px;text-align:center;color:rgba(255,255,255,0.3);">Erreur chargement</div>'; return; }
+  }
+
+  const com = (document.getElementById('agenda-commercial').value||'').toLowerCase();
+  const commune = (document.getElementById('agenda-commune').value||'').toLowerCase();
+  const pMin = parseInt(document.getElementById('agenda-prix-min').value)||0;
+  const pMax = parseInt(document.getElementById('agenda-prix-max').value)||999999;
+  const ch = parseInt(document.getElementById('agenda-chambres').value)||0;
+  const vue = document.getElementById('agenda-vue').value.toLowerCase();
+  const fetes = document.getElementById('agenda-fetes').value.toLowerCase();
+  const heli = document.getElementById('agenda-helipad').value.toLowerCase();
+  const typo = document.getElementById('agenda-typo').value.toLowerCase();
+  const dispoFiltre = document.getElementById('agenda-dispo-filtre').value;
+
+  agendaVillasFiltrees = allVillas.filter(v => {
+    if(com && (v.gere_par||'').toLowerCase() !== com) return false;
+    if(commune && !(v.commune||'').toLowerCase().includes(commune)) return false;
+    if(pMin && (v.prix||0) < pMin) return false;
+    if(pMax < 999999 && (v.prix||0) > pMax) return false;
+    if(ch && (v.nb_chambre||0) < ch) return false;
+    if(vue && (v.vue_mer||'').toLowerCase() !== vue) return false;
+    if(fetes && (v.fetes||'').toLowerCase() !== fetes) return false;
+    if(heli && (v.helipad||'').toLowerCase() !== heli) return false;
+    if(typo && (v.typologie||'').toLowerCase() !== typo) return false;
+    if(dispoFiltre === 'dispo' && !['dispo_juin','dispo_juillet','dispo_aout','dispo_septembre'].some(k => (v[k]||'').toUpperCase() === 'DISPO')) return false;
+    return true;
+  });
+
+  agendaVillasFiltrees.sort((a,b) => (a.nom||'').localeCompare(b.nom||''));
+  document.getElementById('agenda-count').textContent = agendaVillasFiltrees.length + ' villa' + (agendaVillasFiltrees.length > 1 ? 's' : '');
+  renderAgendaMois();
+}
+
+// Retourne true si le jour j du mois m est dans la période sélectionnée
+function jourDansPeriode(moisNum, j) {
+  const arr = document.getElementById('agenda-arr').value;
+  const dep = document.getElementById('agenda-dep').value;
+  if(!arr || !dep) return false;
+  const d = new Date(2026, moisNum-1, j);
+  const dArr = new Date(arr);
+  const dDep = new Date(dep);
+  // Normaliser à minuit pour comparaison juste
+  d.setHours(0,0,0,0); dArr.setHours(0,0,0,0); dDep.setHours(0,0,0,0);
+  return d >= dArr && d <= dDep;
+}
+
+function isMobile() {
+  return window.innerWidth < 768;
+}
+
+function renderAgendaMois() {
+  if(isMobile()) {
+    renderAgendaMobile();
+  } else {
+    renderAgendaDesktop();
+  }
+}
+
+function renderAgendaDesktop() {
+  const body = document.getElementById('agenda-body');
+  if(!body) return;
+
+  const m = AGENDA_MOIS[agendaMoisActif];
+  const villas = agendaVillasFiltrees;
+
+  if(villas.length === 0) {
+    body.innerHTML = '<div style="padding:40px;text-align:center;color:rgba(255,255,255,0.3);">Aucune villa disponible</div>';
+    return;
+  }
+
+  const CELL = 26;
+  const NAME_W = 190;
+  const ROW_H = 28;
+  const HEAD_H = 44;
+  const jours_labels = ['Di','Lu','Ma','Me','Je','Ve','Sa'];
+
+  let nav = '<div style="display:flex;align-items:center;justify-content:center;gap:12px;padding:8px 0;background:#0d1b2a;">';
+  nav += '<button onclick="agendaNavMois(-1)" style="background:rgba(255,255,255,0.08);border:1px solid rgba(255,255,255,0.15);color:#fff;width:28px;height:28px;border-radius:50%;cursor:pointer;font-size:13px;line-height:1;'+(agendaMoisActif===0?'opacity:0.3;pointer-events:none;':'')+'">‹</button>';
+  AGENDA_MOIS.forEach((mo,i) => {
+    const active = i === agendaMoisActif;
+    nav += '<span onclick="agendaMoisActif='+i+';renderAgendaMois()" style="font-size:9px;letter-spacing:2px;font-family:Montserrat,sans-serif;cursor:pointer;padding:4px 10px;border-radius:20px;'+(active?'background:rgba(201,168,76,0.2);color:#C9A84C;font-weight:700;border:1px solid rgba(201,168,76,0.4);':'color:rgba(255,255,255,0.4);border:1px solid transparent;')+'">'+mo.label+'</span>';
+  });
+  nav += '<button onclick="agendaNavMois(1)" style="background:rgba(255,255,255,0.08);border:1px solid rgba(255,255,255,0.15);color:#fff;width:28px;height:28px;border-radius:50%;cursor:pointer;font-size:13px;line-height:1;'+(agendaMoisActif===AGENDA_MOIS.length-1?'opacity:0.3;pointer-events:none;':'')+'">›</button>';
+  nav += '</div>';
+
+  let html = '<table style="border-collapse:collapse;min-width:'+(NAME_W+m.jours*CELL)+'px;">';
+  html += '<thead><tr>';
+  html += '<th style="position:sticky;left:0;top:0;z-index:40;background:#1B2A4A;min-width:'+NAME_W+'px;width:'+NAME_W+'px;height:'+HEAD_H+'px;padding:0 10px;text-align:left;font-size:8px;letter-spacing:1.5px;color:#C9A84C;font-weight:600;border-right:2px solid rgba(201,168,76,0.4);border-bottom:2px solid rgba(201,168,76,0.3);">VILLA</th>';
+  for(let j=1;j<=m.jours;j++) {
+    const date = new Date(2026, m.num-1, j);
+    const dow = date.getDay();
+    const isWE = dow===0||dow===6;
+    html += '<th id="head-day-'+m.nom+'-'+j+'" style="position:sticky;top:0;z-index:30;background:#1B2A4A;width:'+CELL+'px;min-width:'+CELL+'px;height:'+HEAD_H+'px;text-align:center;padding:0;border-bottom:2px solid rgba(201,168,76,0.3);border-left:1px solid rgba(255,255,255,'+(isWE?'0.12':'0.04')+');">';
+    html += '<div style="font-size:9px;font-weight:700;color:'+(isWE?'#C9A84C':'rgba(255,255,255,0.85)')+';">'+j+'</div>';
+    html += '<div style="font-size:6px;color:'+(isWE?'rgba(201,168,76,0.8)':'rgba(255,255,255,0.3)')+';margin-top:1px;">'+['Di','Lu','Ma','Me','Je','Ve','Sa'][dow]+'</div>';
+    html += '</th>';
+  }
+  html += '</tr></thead><tbody>';
+
+  villas.forEach((v, i) => {
+    const bgRow = i%2===0 ? '#111f30' : '#0f1c2b';
+    const cl = v.gere_par ? '<br><span style="font-size:7px;color:rgba(255,255,255,0.35);font-weight:400;">'+v.gere_par+'</span>' : '';
+    const px = v.prix ? ' <span style="font-size:7px;color:rgba(255,255,255,0.3);">'+v.prix.toLocaleString('fr-FR')+'€</span>' : '';
+    const val = v['dispo_'+m.nom]||'';
+    const bloqués = getJoursBloqués(val);
+
+    html += '<tr>';
+    html += '<td style="position:sticky;left:0;z-index:20;background:'+bgRow+';min-width:'+NAME_W+'px;width:'+NAME_W+'px;height:'+ROW_H+'px;padding:0 10px;font-size:9px;font-weight:600;color:#fff;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;border-right:2px solid rgba(201,168,76,0.2);border-bottom:1px solid rgba(255,255,255,0.04);" title="'+(v.nom||'')+'">'+(v.nom||'')+px+cl+'</td>';
+
+    for(let j=1;j<=m.jours;j++) {
+      const c = couleurJour(bloqués, j);
+      const isWE = new Date(2026,m.num-1,j).getDay()===0||new Date(2026,m.num-1,j).getDay()===6;
+      let cellBg;
+      if(c==='green')    cellBg='rgba(46,190,110,0.75)';
+      else if(c==='red') cellBg='rgba(190,55,45,0.8)';
+      else               cellBg=isWE?'rgba(255,255,255,0.05)':'rgba(255,255,255,0.01)';
+      html += '<td style="width:'+CELL+'px;min-width:'+CELL+'px;height:'+ROW_H+'px;background:'+cellBg+';border-left:1px solid rgba(0,0,0,0.2);border-bottom:1px solid rgba(0,0,0,0.15);" title="'+(v.nom||'')+' — '+j+' '+m.label+'"></td>';
+    }
+    html += '</tr>';
+  });
+
+  html += '</tbody></table>';
+  // Résultat tabs si période sélectionnée
+  const arr = document.getElementById('agenda-arr').value;
+  const dep = document.getElementById('agenda-dep').value;
+
+  let resultTabs = '';
+  if(arr && dep) {
+    // Calculer les 3 listes
+    const dArr = new Date(arr); dArr.setHours(0,0,0,0);
+    const dDep = new Date(dep); dDep.setHours(0,0,0,0);
+
+    // Pour chaque villa, vérifier le statut sur TOUS les mois de la période
+    function getStatutVilla(v) {
+      let hasRed = false, hasGrey = false, hasGreen = false;
+
+      // Parcourir chaque jour de la période
+      let d = new Date(dArr);
+      while(d <= dDep) {
+        const moisNum = d.getMonth() + 1;
+        const mo = AGENDA_MOIS.find(m => m.num === moisNum);
+        if(mo) {
+          const val = v['dispo_'+mo.nom]||'';
+          const bloqués = getJoursBloqués(val);
+          const c = couleurJour(bloqués, d.getDate());
+          if(c === 'green') hasGreen = true;
+          else if(c === 'red') hasRed = true;
+          else hasGrey = true;
+        }
+        d.setDate(d.getDate() + 1);
+      }
+
+      if(!hasRed && !hasGrey && hasGreen) return 'confirmed'; // tout vert
+      if(!hasRed) return 'partial'; // vert + gris mais pas rouge
+      return 'blocked'; // au moins un rouge
+    }
+
+    const confirmed = villas.filter(v => getStatutVilla(v) === 'confirmed');
+    const partial   = villas.filter(v => getStatutVilla(v) === 'partial');
+    const all       = villas;
+
+    const tabStyle = (active) => 'flex:1;text-align:center;padding:8px 4px;font-size:9px;letter-spacing:1px;font-family:Montserrat,sans-serif;cursor:pointer;border:none;background:transparent;color:'+(active?'#C9A84C':'rgba(255,255,255,0.4)')+';border-bottom:2px solid '+(active?'#C9A84C':'transparent')+';transition:all 0.2s;';
+
+    resultTabs =
+      '<div style="display:flex;border-bottom:1px solid rgba(201,168,76,0.15);margin-bottom:0;background:#0d1b2a;">'+
+        '<button style="'+tabStyle(agendaResultTab==='confirmed')+'" onclick="agendaResultTab=&quot;confirmed&quot;;renderAgendaDesktop()">✅ '+confirmed.length+' CONFIRMÉ</button>'+
+        '<button style="'+tabStyle(agendaResultTab==='partial')+'" onclick="agendaResultTab=&quot;partial&quot;;renderAgendaDesktop()">❓ '+partial.length+' NON CONFIRMÉ</button>'+
+        '<button style="'+tabStyle(agendaResultTab==='all')+'" onclick="agendaResultTab=&quot;all&quot;;renderAgendaDesktop()">📋 '+all.length+' TOUS</button>'+
+      '</div>';
+
+    // Filtrer les villas selon l'onglet actif
+    const villasTab = agendaResultTab === 'confirmed' ? confirmed :
+                      agendaResultTab === 'partial'   ? partial   : all;
+
+    // Rebuild table HTML avec les villas filtrées
+    html = '<table style="border-collapse:collapse;min-width:'+(NAME_W+m.jours*CELL)+'px;">';
+    html += '<thead><tr>';
+    html += '<th style="position:sticky;left:0;top:0;z-index:40;background:#1B2A4A;min-width:'+NAME_W+'px;width:'+NAME_W+'px;height:'+HEAD_H+'px;padding:0 10px;text-align:left;font-size:8px;letter-spacing:1.5px;color:#C9A84C;font-weight:600;border-right:2px solid rgba(201,168,76,0.4);border-bottom:2px solid rgba(201,168,76,0.3);">VILLA</th>';
+    for(let j=1;j<=m.jours;j++) {
+      const date = new Date(2026, m.num-1, j);
+      const dow = date.getDay();
+      const isWE = dow===0||dow===6;
+      html += '<th id="head-day-'+m.nom+'-'+j+'" style="position:sticky;top:0;z-index:30;background:#1B2A4A;width:'+CELL+'px;min-width:'+CELL+'px;height:'+HEAD_H+'px;text-align:center;padding:0;border-bottom:2px solid rgba(201,168,76,0.3);border-left:1px solid rgba(255,255,255,'+(isWE?'0.12':'0.04')+');">';
+      html += '<div style="font-size:9px;font-weight:700;color:'+(isWE?'#C9A84C':'rgba(255,255,255,0.85)')+';">'+j+'</div>';
+      html += '<div style="font-size:6px;color:'+(isWE?'rgba(201,168,76,0.8)':'rgba(255,255,255,0.3)')+';margin-top:1px;">'+['Di','Lu','Ma','Me','Je','Ve','Sa'][dow]+'</div>';
+      html += '</th>';
+    }
+    html += '</tr></thead><tbody>';
+
+    villasTab.forEach((v, i) => {
+      const bgRow = i%2===0 ? '#111f30' : '#0f1c2b';
+      const cl = v.gere_par ? '<br><span style="font-size:7px;color:rgba(255,255,255,0.35);font-weight:400;">'+v.gere_par+'</span>' : '';
+      const px = v.prix ? ' <span style="font-size:7px;color:rgba(255,255,255,0.3);">'+v.prix.toLocaleString('fr-FR')+'€</span>' : '';
+      const val = v['dispo_'+m.nom]||'';
+      const bloqués = getJoursBloqués(val);
+      html += '<tr>';
+      html += '<td style="position:sticky;left:0;z-index:20;background:'+bgRow+';min-width:'+NAME_W+'px;width:'+NAME_W+'px;height:'+ROW_H+'px;padding:0 10px;font-size:9px;font-weight:600;color:#fff;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;border-right:2px solid rgba(201,168,76,0.2);border-bottom:1px solid rgba(255,255,255,0.04);" title="'+(v.nom||'')+'">'+(v.nom||'')+px+cl+'</td>';
+      for(let j=1;j<=m.jours;j++) {
+        const c = couleurJour(bloqués, j);
+        const isWE = new Date(2026,m.num-1,j).getDay()===0||new Date(2026,m.num-1,j).getDay()===6;
+        let cellBg;
+        if(c==='green')    cellBg='rgba(46,190,110,0.75)';
+        else if(c==='red') cellBg='rgba(190,55,45,0.8)';
+        else               cellBg=isWE?'rgba(255,255,255,0.05)':'rgba(255,255,255,0.01)';
+        html += '<td style="width:'+CELL+'px;min-width:'+CELL+'px;height:'+ROW_H+'px;background:'+cellBg+';border-left:1px solid rgba(0,0,0,0.2);border-bottom:1px solid rgba(0,0,0,0.15);" title="'+(v.nom||'')+' — '+j+' '+m.label+'"></td>';
+      }
+      html += '</tr>';
+    });
+    html += '</tbody></table>';
+  }
+
+  // Wrapper avec position relative pour l'overlay
+  body.innerHTML = resultTabs + nav + '<div id="agenda-scroll" style="overflow:auto;max-height:calc(100vh - 340px);position:relative;">' + html + '</div>';
+
+  // Dessiner l'overlay période après rendu
+  requestAnimationFrame(() => {
+    const arr = document.getElementById('agenda-arr').value;
+    const dep = document.getElementById('agenda-dep').value;
+    if(!arr || !dep) return;
+
+    const scroll = document.getElementById('agenda-scroll');
+    if(!scroll) return;
+
+    // Trouver le premier et dernier jour dans la période pour CE mois
+    const dArr = new Date(arr); dArr.setHours(0,0,0,0);
+    const dDep = new Date(dep); dDep.setHours(0,0,0,0);
+
+    let firstCol = null, lastCol = null;
+    for(let j=1;j<=m.jours;j++) {
+      const d = new Date(2026, m.num-1, j); d.setHours(0,0,0,0);
+      if(d >= dArr && d <= dDep) {
+        if(firstCol===null) firstCol = j;
+        lastCol = j;
+      }
+    }
+    if(firstCol===null) return;
+
+    // Trouver les positions X des colonnes via les th
+    const firstTh = document.getElementById('head-day-'+m.nom+'-'+firstCol);
+    const lastTh  = document.getElementById('head-day-'+m.nom+'-'+lastCol);
+    if(!firstTh || !lastTh) return;
+
+    const scrollRect = scroll.getBoundingClientRect();
+    const firstRect  = firstTh.getBoundingClientRect();
+    const lastRect   = lastTh.getBoundingClientRect();
+
+    const x = firstRect.left - scrollRect.left + scroll.scrollLeft;
+    const w = lastRect.right - firstRect.left;
+    const h = scroll.scrollHeight;
+
+    // Supprimer ancien overlay
+    const old = document.getElementById('agenda-periode-overlay');
+    if(old) old.remove();
+
+    const overlay = document.createElement('div');
+    overlay.id = 'agenda-periode-overlay';
+    overlay.style.cssText = 'position:absolute;top:0;left:'+x+'px;width:'+w+'px;height:'+h+'px;pointer-events:none;border:2px solid #C9A84C;border-radius:4px;box-shadow:0 0 0 1px rgba(201,168,76,0.2),inset 0 0 20px rgba(201,168,76,0.06);z-index:50;';
+    scroll.appendChild(overlay);
+
+    // Mettre à jour l'overlay au scroll
+    scroll.onscroll = function() {
+      const o = document.getElementById('agenda-periode-overlay');
+      if(o) o.style.left = (x - scroll.scrollLeft + scroll.scrollLeft) + 'px';
+    };
+  });
+}
+
+// ── VUE MOBILE : semaine par semaine ──────────────────────────────────────
+let agendaSemaine = 0; // index semaine dans le mois
+
+function getSemainesduMois(mois) {
+  // Retourne les semaines : [{debut:1,fin:7}, ...]
+  const semaines = [];
+  let d = 1;
+  while(d <= mois.jours) {
+    semaines.push({debut: d, fin: Math.min(d+6, mois.jours)});
+    d += 7;
+  }
+  return semaines;
+}
+
+function renderAgendaMobile() {
+  const body = document.getElementById('agenda-body');
+  if(!body) return;
+
+  const m = AGENDA_MOIS[agendaMoisActif];
+  const semaines = getSemainesduMois(m);
+  if(agendaSemaine >= semaines.length) agendaSemaine = 0;
+  const sem = semaines[agendaSemaine];
+  const jours_labels = ['Di','Lu','Ma','Me','Je','Ve','Sa'];
+  const jours = [];
+  for(let j=sem.debut;j<=sem.fin;j++) jours.push(j);
+
+  // Filtrer villas
+  let villas = agendaVillasFiltrees;
+  if(villas.length === 0) {
+    body.innerHTML = '<div style="padding:40px;text-align:center;color:rgba(255,255,255,0.3);">Aucune villa disponible</div>';
+    return;
+  }
+
+  // Nav mois
+  let nav = '<div style="display:flex;align-items:center;justify-content:center;gap:8px;padding:6px 0;background:#0d1b2a;">';
+  nav += '<button onclick="agendaNavMois(-1)" style="background:rgba(255,255,255,0.08);border:1px solid rgba(255,255,255,0.15);color:#fff;width:26px;height:26px;border-radius:50%;cursor:pointer;font-size:12px;'+(agendaMoisActif===0?'opacity:0.3;pointer-events:none;':'')+'">‹</button>';
+  AGENDA_MOIS.forEach((mo,i) => {
+    const active = i === agendaMoisActif;
+    nav += '<span onclick="agendaMoisActif='+i+';agendaSemaine=0;renderAgendaMois()" style="font-size:9px;letter-spacing:1px;font-family:Montserrat,sans-serif;cursor:pointer;padding:3px 8px;border-radius:15px;'+(active?'background:rgba(201,168,76,0.2);color:#C9A84C;font-weight:700;border:1px solid rgba(201,168,76,0.4);':'color:rgba(255,255,255,0.4);border:1px solid transparent;')+'">'+mo.label+'</span>';
+  });
+  nav += '<button onclick="agendaNavMois(1)" style="background:rgba(255,255,255,0.08);border:1px solid rgba(255,255,255,0.15);color:#fff;width:26px;height:26px;border-radius:50%;cursor:pointer;font-size:12px;'+(agendaMoisActif===AGENDA_MOIS.length-1?'opacity:0.3;pointer-events:none;':'')+'">›</button>';
+  nav += '</div>';
+
+  // Nav semaine
+  let navSem = '<div style="display:flex;align-items:center;justify-content:space-between;padding:6px 12px;background:#152238;border-bottom:1px solid rgba(201,168,76,0.15);">';
+  navSem += '<button onclick="agendaNavSemaine(-1)" style="background:rgba(255,255,255,0.08);border:1px solid rgba(255,255,255,0.15);color:#fff;padding:4px 10px;border-radius:6px;cursor:pointer;font-size:10px;'+(agendaSemaine===0?'opacity:0.3;pointer-events:none;':'')+'">◀</button>';
+  navSem += '<span style="font-size:10px;color:#C9A84C;font-weight:600;letter-spacing:1px;">'+sem.debut+' – '+sem.fin+' '+m.label+'</span>';
+  navSem += '<button onclick="agendaNavSemaine(1)" style="background:rgba(255,255,255,0.08);border:1px solid rgba(255,255,255,0.15);color:#fff;padding:4px 10px;border-radius:6px;cursor:pointer;font-size:10px;'+(agendaSemaine===semaines.length-1?'opacity:0.3;pointer-events:none;':'')+'">▶</button>';
+  navSem += '</div>';
+
+  // Onglets résultats si période sélectionnée
+  const arrM = document.getElementById('agenda-arr').value;
+  const depM = document.getElementById('agenda-dep').value;
+  let resultTabsMobile = '';
+
+  if(arrM && depM) {
+    const dArrM = new Date(arrM); dArrM.setHours(0,0,0,0);
+    const dDepM = new Date(depM); dDepM.setHours(0,0,0,0);
+
+    function getStatutMobile(v) {
+      let hasRed=false, hasGrey=false, hasGreen=false;
+      let d = new Date(dArrM);
+      while(d <= dDepM) {
+        const mo = AGENDA_MOIS.find(x => x.num === d.getMonth()+1);
+        if(mo) {
+          const blq = getJoursBloqués(v['dispo_'+mo.nom]||'');
+          const c = couleurJour(blq, d.getDate());
+          if(c==='green') hasGreen=true;
+          else if(c==='red') hasRed=true;
+          else hasGrey=true;
+        }
+        d.setDate(d.getDate()+1);
+      }
+      if(!hasRed && !hasGrey && hasGreen) return 'confirmed';
+      if(!hasRed) return 'partial';
+      return 'blocked';
+    }
+
+    const confirmed = villas.filter(v => getStatutMobile(v)==='confirmed');
+    const partial   = villas.filter(v => getStatutMobile(v)==='partial');
+
+    const tStyle = (active) => 'flex:1;text-align:center;padding:7px 2px;font-size:8px;letter-spacing:1px;font-family:Montserrat,sans-serif;cursor:pointer;border:none;background:transparent;color:'+(active?'#C9A84C':'rgba(255,255,255,0.4)')+';border-bottom:2px solid '+(active?'#C9A84C':'transparent')+';';
+
+    resultTabsMobile =
+      '<div style="display:flex;border-bottom:1px solid rgba(201,168,76,0.15);background:#0d1b2a;">'+
+        '<button style="'+tStyle(agendaResultTab==="confirmed")+'" onclick="agendaResultTab=&quot;confirmed&quot;;renderAgendaMobile()">✅ '+confirmed.length+' OK</button>'+
+        '<button style="'+tStyle(agendaResultTab==="partial")+'" onclick="agendaResultTab=&quot;partial&quot;;renderAgendaMobile()">❓ '+partial.length+' PARTIEL</button>'+
+        '<button style="'+tStyle(agendaResultTab==="all")+'" onclick="agendaResultTab=&quot;all&quot;;renderAgendaMobile()">📋 '+villas.length+' TOUS</button>'+
+      '</div>';
+
+    villas = agendaResultTab==='confirmed' ? confirmed :
+             agendaResultTab==='partial'   ? partial   : villas;
+  }
+
+  // Table
+  let html = '<table style="border-collapse:collapse;width:100%;">';
+  html += '<thead><tr>';
+  html += '<th style="position:sticky;left:0;top:0;z-index:40;background:#1B2A4A;width:120px;min-width:120px;padding:6px 8px;text-align:left;font-size:8px;color:#C9A84C;border-right:2px solid rgba(201,168,76,0.3);border-bottom:2px solid rgba(201,168,76,0.3);">VILLA</th>';
+  jours.forEach(j => {
+    const date = new Date(2026, m.num-1, j);
+    const dow = date.getDay();
+    const isWE = dow===0||dow===6;
+    html += '<th style="position:sticky;top:0;z-index:30;text-align:center;padding:4px 2px;border-bottom:2px solid rgba(201,168,76,0.3);border-left:1px solid rgba(255,255,255,0.06);background:#1B2A4A;">';
+    html += '<div style="font-size:11px;font-weight:700;color:'+(isWE?'#C9A84C':'#fff')+';">'+j+'</div>';
+    html += '<div style="font-size:9px;color:'+(isWE?'rgba(201,168,76,0.7)':'rgba(255,255,255,0.4)')+';">'+jours_labels[dow]+'</div>';
+    html += '</th>';
+  });
+  html += '</tr></thead><tbody>';
+
+  villas.forEach((v, i) => {
+    const bgRow = i%2===0 ? '#111f30' : '#0f1c2b';
+    const val = v['dispo_'+m.nom]||'';
+    const bloqués = getJoursBloqués(val);
+
+    html += '<tr style="border-bottom:1px solid rgba(255,255,255,0.04);">';
+    html += '<td style="position:sticky;left:0;z-index:5;background:'+bgRow+';width:120px;min-width:120px;padding:6px 8px;border-right:2px solid rgba(201,168,76,0.15);">';
+    html += '<div style="font-size:10px;font-weight:600;color:#fff;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:110px;">'+(v.nom||'')+'</div>';
+    if(v.gere_par) html += '<div style="font-size:8px;color:rgba(255,255,255,0.35);">'+v.gere_par+'</div>';
+    if(v.prix) html += '<div style="font-size:8px;color:rgba(201,168,76,0.7);">'+v.prix.toLocaleString('fr-FR')+'€</div>';
+    html += '</td>';
+
+    jours.forEach(j => {
+      const c = couleurJour(bloqués, j);
+      const inPer = jourDansPeriode(m.num, j);
+      let cellBg;
+      if(c==='green')    cellBg='rgba(46,190,110,0.75)';
+      else if(c==='red') cellBg='rgba(190,55,45,0.8)';
+      else               cellBg='rgba(255,255,255,0.03)';
+      const perStyle = inPer ? 'box-shadow:inset 0 4px 0 #C9A84C;' : '';
+      html += '<td style="padding:0;height:44px;background:'+cellBg+';border-left:1px solid rgba(0,0,0,0.2);'+perStyle+'"></td>';
+    });
+    html += '</tr>';
+  });
+  html += '</tbody></table>';
+
+  body.innerHTML = nav + navSem + resultTabsMobile + '<div style="overflow:auto;max-height:calc(100vh - 280px);-webkit-overflow-scrolling:touch;">' + html + '</div>';
+}
+function agendaNavSemaine(dir) {
+  const m = AGENDA_MOIS[agendaMoisActif];
+  const semaines = getSemainesduMois(m);
+  agendaSemaine = Math.max(0, Math.min(semaines.length-1, agendaSemaine + dir));
+  renderAgendaMobile();
+}
+function agendaNavMois(dir) {
+  agendaMoisActif = Math.max(0, Math.min(AGENDA_MOIS.length-1, agendaMoisActif + dir));
+  renderAgendaMois();
+}
+
+function agendaArrChange() {
+  const arr = document.getElementById('agenda-arr').value;
+  if(arr) {
+    const depEl = document.getElementById('agenda-dep');
+    
+    // Auto-remplir départ à J+7 si vide ou antérieur
+    if(depEl) {
+      const dArr = new Date(arr);
+      const dDep = depEl.value ? new Date(depEl.value) : null;
+      if(!dDep || dDep <= dArr) {
+        const dDepAuto = new Date(dArr);
+        dDepAuto.setDate(dDepAuto.getDate() + 7);
+        depEl.value = dDepAuto.toISOString().split('T')[0];
+      }
+      depEl.min = arr;
+    }
+
+    // Basculer sur le bon mois
+    const moisNum = new Date(arr).getMonth() + 1;
+    const idx = AGENDA_MOIS.findIndex(m => m.num === moisNum);
+    if(idx >= 0) agendaMoisActif = idx;
+
+    // Sur mobile : basculer sur la bonne semaine
+    if(isMobile() && idx >= 0) {
+      const jourArr = new Date(arr).getDate();
+      const semaines = getSemainesduMois(AGENDA_MOIS[idx]);
+      const semIdx = semaines.findIndex(s => jourArr >= s.debut && jourArr <= s.fin);
+      if(semIdx >= 0) agendaSemaine = semIdx;
+    }
+  }
+  renderAgendaMois();
+  // Réappliquer min après rendu
+  if(arr) {
+    const depEl = document.getElementById('agenda-dep');
+    if(depEl) depEl.min = arr;
+  }
+}
+function resetAgendaFiltres() {
+  ['agenda-commercial','agenda-commune','agenda-vue','agenda-fetes','agenda-helipad','agenda-typo','agenda-dispo-filtre'].forEach(id => document.getElementById(id).value = '');
+  ['agenda-prix-min','agenda-prix-max','agenda-chambres','agenda-arr','agenda-dep'].forEach(id => document.getElementById(id).value = '');
+  buildAgenda();
+}
+</script>
+<script>
+if('serviceWorker' in navigator) {
+  window.addEventListener('load', () => {
+    navigator.serviceWorker.register('/Heraclee/sw.js')
+      .then(() => console.log('SW registered'))
+      .catch(e => console.log('SW error', e));
+  });
+}
+</script>
+</body>
+</html>
