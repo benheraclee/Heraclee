@@ -1,0 +1,22 @@
+{
+  "name": "Heraclee - Recherche Villas",
+  "short_name": "Heraclee",
+  "description": "Recherche de villas Saint-Tropez - Heraclee Agency",
+  "start_url": "/Heraclee/heraclee-search.html",
+  "display": "standalone",
+  "background_color": "#0d1b2a",
+  "theme_color": "#1B2A4A",
+  "orientation": "any",
+  "icons": [
+    {
+      "src": "icon-192.png",
+      "sizes": "192x192",
+      "type": "image/png"
+    },
+    {
+      "src": "icon-512.png",
+      "sizes": "512x512",
+      "type": "image/png"
+    }
+  ]
+}
