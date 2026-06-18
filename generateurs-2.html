@@ -1,0 +1,345 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Heraclee — Générateurs de documents</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@400;600&family=Inter:wght@400;500;600&display=swap');
+
+  :root {
+    --gold: #b89a5a;
+    --gold-light: #d4b87a;
+    --gold-faint: #f5efe3;
+    --dark: #0e0e0e;
+    --mid: #1c1c1c;
+    --surface: #f9f6f1;
+    --text: #1a1a1a;
+    --muted: #7a6e5f;
+    --border: rgba(184,154,90,0.2);
+  }
+
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+
+  body {
+    font-family: 'Inter', sans-serif;
+    background: var(--surface);
+    color: var(--text);
+    min-height: 100vh;
+  }
+
+  /* ── Header ── */
+  header {
+    background: var(--dark);
+    padding: 32px 40px 28px;
+    display: flex;
+    align-items: center;
+    gap: 20px;
+    border-bottom: 1px solid rgba(184,154,90,0.3);
+  }
+
+  .logo-mark {
+    width: 44px; height: 44px;
+    border: 1.5px solid var(--gold);
+    border-radius: 50%;
+    display: flex; align-items: center; justify-content: center;
+    flex-shrink: 0;
+  }
+
+  .logo-mark svg { width: 22px; height: 22px; }
+
+  .logo-text {
+    font-family: 'Cormorant Garamond', serif;
+    font-size: 22px;
+    font-weight: 600;
+    color: #fff;
+    letter-spacing: 0.08em;
+  }
+
+  .logo-sub {
+    font-size: 11px;
+    color: var(--gold);
+    letter-spacing: 0.18em;
+    text-transform: uppercase;
+    margin-top: 2px;
+  }
+
+  /* ── Hero ── */
+  .hero {
+    background: var(--dark);
+    padding: 48px 40px 56px;
+    position: relative;
+    overflow: hidden;
+  }
+
+  .hero::after {
+    content: '';
+    position: absolute;
+    bottom: 0; left: 0; right: 0;
+    height: 1px;
+    background: linear-gradient(90deg, transparent, var(--gold), transparent);
+  }
+
+  .hero-label {
+    font-size: 11px;
+    letter-spacing: 0.22em;
+    text-transform: uppercase;
+    color: var(--gold);
+    margin-bottom: 14px;
+  }
+
+  .hero h1 {
+    font-family: 'Cormorant Garamond', serif;
+    font-size: clamp(32px, 5vw, 52px);
+    font-weight: 400;
+    color: #fff;
+    line-height: 1.15;
+    max-width: 600px;
+  }
+
+  .hero h1 em {
+    font-style: italic;
+    color: var(--gold-light);
+  }
+
+  .hero-desc {
+    margin-top: 16px;
+    font-size: 14px;
+    color: #8a8070;
+    max-width: 480px;
+    line-height: 1.7;
+  }
+
+  /* ── Grid ── */
+  .section {
+    padding: 56px 40px;
+    max-width: 1100px;
+    margin: 0 auto;
+  }
+
+  .section-label {
+    font-size: 11px;
+    letter-spacing: 0.2em;
+    text-transform: uppercase;
+    color: var(--gold);
+    margin-bottom: 28px;
+    display: flex;
+    align-items: center;
+    gap: 12px;
+  }
+
+  .section-label::after {
+    content: '';
+    flex: 1;
+    height: 1px;
+    background: var(--border);
+  }
+
+  .cards {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+    gap: 20px;
+  }
+
+  .card {
+    background: #fff;
+    border: 1px solid var(--border);
+    border-radius: 4px;
+    padding: 32px 28px;
+    text-decoration: none;
+    color: inherit;
+    display: flex;
+    flex-direction: column;
+    gap: 0;
+    transition: border-color 0.2s, box-shadow 0.2s, transform 0.2s;
+    position: relative;
+    overflow: hidden;
+  }
+
+  .card::before {
+    content: '';
+    position: absolute;
+    top: 0; left: 0; right: 0;
+    height: 2px;
+    background: linear-gradient(90deg, var(--gold), var(--gold-light));
+    transform: scaleX(0);
+    transform-origin: left;
+    transition: transform 0.3s ease;
+  }
+
+  .card:hover {
+    border-color: rgba(184,154,90,0.5);
+    box-shadow: 0 8px 32px rgba(184,154,90,0.1);
+    transform: translateY(-2px);
+  }
+
+  .card:hover::before {
+    transform: scaleX(1);
+  }
+
+  .card-icon {
+    width: 40px; height: 40px;
+    background: var(--gold-faint);
+    border-radius: 4px;
+    display: flex; align-items: center; justify-content: center;
+    margin-bottom: 20px;
+    font-size: 18px;
+  }
+
+  .card-type {
+    font-size: 10px;
+    letter-spacing: 0.18em;
+    text-transform: uppercase;
+    color: var(--gold);
+    margin-bottom: 8px;
+  }
+
+  .card h2 {
+    font-family: 'Cormorant Garamond', serif;
+    font-size: 22px;
+    font-weight: 600;
+    color: var(--text);
+    line-height: 1.25;
+    margin-bottom: 10px;
+  }
+
+  .card p {
+    font-size: 13px;
+    color: var(--muted);
+    line-height: 1.65;
+    flex: 1;
+  }
+
+  .card-cta {
+    margin-top: 24px;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    font-size: 12px;
+    font-weight: 600;
+    color: var(--gold);
+    letter-spacing: 0.06em;
+  }
+
+  .card-cta svg {
+    width: 14px; height: 14px;
+    transition: transform 0.2s;
+  }
+
+  .card:hover .card-cta svg {
+    transform: translateX(4px);
+  }
+
+  /* ── Notice ── */
+  .notice {
+    background: #fff;
+    border: 1px solid var(--border);
+    border-left: 3px solid var(--gold);
+    border-radius: 0 4px 4px 0;
+    padding: 16px 20px;
+    font-size: 13px;
+    color: var(--muted);
+    line-height: 1.6;
+    margin-top: 32px;
+  }
+
+  .notice strong { color: var(--text); }
+
+  /* ── Footer ── */
+  footer {
+    border-top: 1px solid var(--border);
+    padding: 24px 40px;
+    text-align: center;
+    font-size: 12px;
+    color: #bbb0a0;
+  }
+
+  @media (max-width: 600px) {
+    header, .hero, .section { padding-left: 20px; padding-right: 20px; }
+    .hero { padding-top: 32px; padding-bottom: 40px; }
+    .section { padding-top: 36px; padding-bottom: 36px; }
+  }
+</style>
+</head>
+<body>
+
+<header>
+  <div class="logo-mark">
+    <svg viewBox="0 0 24 24" fill="none" stroke="#b89a5a" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+      <path d="M3 9.5L12 3l9 6.5V20a1 1 0 01-1 1H4a1 1 0 01-1-1V9.5z"/>
+      <path d="M9 21V12h6v9"/>
+    </svg>
+  </div>
+  <div>
+    <div class="logo-text">HERACLEE</div>
+    <div class="logo-sub">Saint-Tropez · Genève · Dubai</div>
+  </div>
+</header>
+
+<div class="hero">
+  <div class="hero-label">Outils internes · Usage équipe</div>
+  <h1>Générateurs de<br><em>documents juridiques</em></h1>
+  <p class="hero-desc">Remplis le formulaire, télécharge le contrat Word prêt à envoyer. Aucune installation, aucune macro — fonctionne directement dans le navigateur.</p>
+</div>
+
+<div class="section">
+  <div class="section-label">Contrats de location</div>
+  <div class="cards">
+
+    <a class="card" href="generateur_contrat_locataire.html">
+      <div class="card-icon">🏖️</div>
+      <div class="card-type">Côté locataire</div>
+      <h2>Contrat de location saisonnière</h2>
+      <p>Contrat FR ou EN au choix. Inclut loyer, caution, services, coordonnées bancaires et conditions de séjour. Inclut loyer, caution, services, coordonnées bancaires et conditions de séjour.</p>
+      <div class="card-cta">
+        Ouvrir le générateur
+        <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M3 8h10M9 4l4 4-4 4"/>
+        </svg>
+      </div>
+    </a>
+
+    <a class="card" href="generateur_contrat_proprietaire.html">
+      <div class="card-icon">🏡</div>
+      <div class="card-type">Côté propriétaire</div>
+      <h2>Contrat de location saisonnière</h2>
+      <p>Contrat FR ou EN au choix. Même structure, conditions adaptées à la relation agence–propriétaire. Même structure, conditions adaptées à la relation agence–propriétaire.</p>
+      <div class="card-cta">
+        Ouvrir le générateur
+        <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M3 8h10M9 4l4 4-4 4"/>
+        </svg>
+      </div>
+    </a>
+
+  </div>
+
+  <div class="section-label" style="margin-top:48px;">Mandats</div>
+  <div class="cards">
+
+    <a class="card" href="generateur_mandat_gestion.html">
+      <div class="card-icon">📋</div>
+      <div class="card-type">Personne physique · Personne morale</div>
+      <h2>Mandat de gestion sans exclusivité</h2>
+      <p>Deux templates en un : personne physique ou morale. Choix de langue FR ou EN, commission paramétrable, bilingue FR/EN.</p>
+      <div class="card-cta">
+        Ouvrir le générateur
+        <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M3 8h10M9 4l4 4-4 4"/>
+        </svg>
+      </div>
+    </a>
+
+  </div>
+
+  <div class="notice">
+    <strong>Rappel</strong> — Tout contrat généré doit être relu et validé avant envoi. Ces outils ne remplacent pas la vérification par Benoît ou le bureau de Genève.
+  </div>
+</div>
+
+<footer>
+  Heraclee SAS · 5 rue du Quadrille, 83990 Saint-Tropez · Usage interne uniquement
+</footer>
+
+</body>
+</html>
