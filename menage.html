@@ -1,0 +1,279 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="Heraclee Ménage">
+<meta name="theme-color" content="#1A1612">
+<title>Heraclee — Ménage</title>
+<link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@400;600&family=DM+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+:root{
+  --gold:#C4A96B;--gold-l:#E8D9B5;--gold-d:#8A7245;
+  --ink:#1A1612;--ink2:#2C2720;--ink3:#3D3528;
+  --ink-s:#7A6E5F;--ink-xs:#9A8E82;
+  --parch:#FAF7F2;--parch2:#F0EAE0;--parch3:#E8E0D4;
+  --white:#fff;
+  --border:rgba(196,169,107,.2);--border2:rgba(196,169,107,.4);
+  --sh:0 2px 20px rgba(26,22,18,.12);--sh2:0 8px 32px rgba(26,22,18,.2);
+  --r:10px;--rs:7px
+}
+*{box-sizing:border-box}
+body{font-family:'DM Sans',sans-serif;background:var(--ink);color:var(--parch);min-height:100vh;margin:0}
+
+/* ── LOGIN ── */
+#loginScreen{position:fixed;inset:0;background:var(--ink);z-index:9999;display:flex;align-items:center;justify-content:center;padding:20px;}
+.login-box{background:var(--ink2);border:1px solid var(--border);border-radius:16px;padding:40px 32px;width:100%;max-width:360px;text-align:center;}
+.login-logo{font-family:'Cormorant Garamond',serif;font-size:28px;font-weight:300;letter-spacing:6px;color:var(--gold);margin-bottom:4px;}
+.login-sub{font-size:9px;letter-spacing:3px;text-transform:uppercase;color:var(--ink-xs);margin-bottom:32px;}
+.login-label{font-size:10px;letter-spacing:2px;text-transform:uppercase;color:var(--ink-s);margin-bottom:10px;display:block;}
+.login-input{width:100%;padding:12px 16px;background:rgba(255,255,255,0.04);border:1px solid var(--border);border-radius:8px;color:var(--parch);font-family:'DM Sans',sans-serif;font-size:16px;text-align:center;letter-spacing:4px;outline:none;margin-bottom:12px;}
+.login-input:focus{border-color:var(--border2);}
+.login-btn{width:100%;padding:13px;background:var(--gold);border:none;border-radius:8px;color:var(--ink);font-family:'DM Sans',sans-serif;font-size:13px;font-weight:600;letter-spacing:2px;cursor:pointer;margin-bottom:10px;}
+.login-error{font-size:11px;color:#E07070;letter-spacing:1px;min-height:16px;}
+
+/* ── HEADER ── */
+header{background:var(--ink);height:60px;padding:0 1.2rem;display:flex;align-items:center;justify-content:space-between;position:sticky;top:0;z-index:300;border-bottom:1px solid var(--border)}
+.brand{font-family:'Cormorant Garamond',serif;font-size:19px;font-weight:600;color:var(--white);letter-spacing:.04em}
+.brand em{font-style:italic;color:var(--gold)}
+.brand-sub{font-size:8px;letter-spacing:.15em;text-transform:uppercase;color:var(--ink-xs);display:block;margin-top:1px}
+.logout-btn{font-size:11px;color:var(--ink-xs);background:none;border:1px solid var(--border);border-radius:20px;padding:6px 14px;cursor:pointer;font-family:'DM Sans',sans-serif;}
+.logout-btn:hover{color:var(--gold);border-color:var(--border2)}
+
+/* ── MENAGE VIEW ── */
+.menage-wrap{max-width:680px;margin:0 auto;padding:1.5rem 1.2rem 4rem}
+.menage-topbar{margin-bottom:1.3rem}
+.menage-topbar h1{font-family:'Cormorant Garamond',serif;font-size:26px;font-weight:400;color:var(--parch);letter-spacing:.02em;margin:0}
+.menage-select{background:var(--ink2);border:1px solid var(--border);border-radius:8px;color:var(--parch);font-family:'DM Sans',sans-serif;font-size:14px;padding:11px 12px;width:100%;margin-bottom:1.3rem}
+.menage-card{background:var(--ink2);border:1px solid var(--border);border-radius:var(--r);overflow:hidden;margin-bottom:1rem}
+.menage-card-header{padding:14px 18px;background:rgba(196,169,107,0.06);border-bottom:1px solid var(--border);font-size:11px;letter-spacing:.1em;text-transform:uppercase;color:var(--gold)}
+.menage-item{display:flex;align-items:center;justify-content:space-between;padding:16px 18px;border-bottom:1px solid rgba(196,169,107,0.06);cursor:pointer;transition:background .15s}
+.menage-item:last-child{border-bottom:none}
+.menage-item:active{background:rgba(255,255,255,0.04)}
+.menage-item.done{opacity:0.6}
+.menage-item-left{display:flex;align-items:center;gap:12px}
+.menage-check{width:24px;height:24px;border-radius:50%;border:1.5px solid var(--border2);display:flex;align-items:center;justify-content:center;flex-shrink:0;transition:all .2s;font-size:14px}
+.menage-item.done .menage-check{background:var(--gold);border-color:var(--gold);color:#000}
+.menage-label{font-size:14px;color:var(--parch)}
+.menage-item.done .menage-label{text-decoration:line-through;color:var(--ink-xs)}
+.menage-log{font-size:10px;color:var(--ink-xs);text-align:right;line-height:1.4}
+.menage-notes{padding:14px 18px}
+.menage-notes textarea{width:100%;background:transparent;border:1px solid var(--border);border-radius:6px;color:var(--parch);font-family:'DM Sans',sans-serif;font-size:13px;padding:10px;resize:vertical;min-height:80px;box-sizing:border-box}
+.menage-notes textarea:focus{outline:none;border-color:var(--gold)}
+.menage-notes label{font-size:10px;text-transform:uppercase;letter-spacing:.1em;color:var(--ink-xs);display:block;margin-bottom:6px}
+.menage-empty{text-align:center;padding:3rem 1rem;color:var(--ink-xs);font-size:13px}
+</style>
+</head>
+<body>
+
+<!-- LOGIN SCREEN -->
+<div id="loginScreen">
+  <div class="login-box">
+    <div class="login-logo">HERACLEE</div>
+    <div class="login-sub">Ménage &amp; Préparation</div>
+    <label class="login-label">Code d'accès</label>
+    <input type="password" class="login-input" id="loginInput" placeholder="••••••••" onkeydown="if(event.key==='Enter')doLogin()" autocomplete="off">
+    <button class="login-btn" onclick="doLogin()">ACCÉDER</button>
+    <div class="login-error" id="loginError"></div>
+  </div>
+</div>
+
+<header id="appHeader" style="display:none">
+  <div>
+    <div class="brand">HERACLEE <em>Ménage</em></div>
+    <span class="brand-sub">Saint-Tropez · Villas</span>
+  </div>
+  <button class="logout-btn" onclick="logout()">Déconnexion</button>
+</header>
+
+<div class="menage-wrap" id="menageWrap" style="display:none">
+  <div class="menage-topbar">
+    <h1>🧹 Tâches du jour</h1>
+  </div>
+  <select class="menage-select" id="menageDossierSelect" onchange="loadMenageDossier()">
+    <option value="">— Sélectionner un dossier —</option>
+  </select>
+  <div id="menageContent" style="display:none">
+    <div class="menage-card">
+      <div class="menage-card-header">Tâches ménage</div>
+      <div id="menageItems"></div>
+      <div class="menage-notes">
+        <label>Notes ménage</label>
+        <textarea id="menageNotesField" placeholder="Instructions spécifiques, remarques…" onchange="saveMenageNotes()"></textarea>
+      </div>
+    </div>
+  </div>
+  <div class="menage-empty" id="menageEmpty" style="display:none">Aucun dossier disponible pour le moment.</div>
+</div>
+
+<script>
+const SB='https://fgocsdozvgkpkjbzuyyp.supabase.co';
+const KEY='eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImZnb2NzZG96dmdrcGtqYnp1eXlwIiwicm9sZSI6ImFub24iLCJpYXQiOjE3Nzg4NDc0ODAsImV4cCI6MjA5NDQyMzQ4MH0.bM0tlZmRLVDooKPlxJ6AwVhKCUyOqcYn7C7hJ42BaUE';
+const H={'apikey':KEY,'Authorization':'Bearer '+KEY,'Content-Type':'application/json','Prefer':'return=representation'};
+
+// Codes d'accès ménage — ajouter d'autres codes ici si plusieurs personnes
+const USERS = {
+  'MENAGE2026': {nom:'Ménage'},
+  'Tim2026':    {nom:'Tim'},
+};
+const LOGIN_KEY = 'heraclee_menage_login';
+const LOGIN_TTL = 1000*60*60*24*30; // 30 jours
+
+let currentUser = null;
+let menageCurrentId = null;
+let menageCurrentData = null;
+
+const MENAGE_ITEMS = [
+  {k:'menage_fait',   l:'Ménage fait et validé'},
+  {k:'linge_propre',  l:'Linge de maison propre et en place'},
+  {k:'equipements',   l:'Équipements vérifiés (électros, clim, WiFi, TV)'},
+  {k:'pq',            l:'Papier toilette rechargé'},
+  {k:'eau_frigo',     l:"Frigos remplis d'eau"},
+  {k:'nuxe',          l:'Produits Nuxe en place (salle de bain)'},
+  {k:'sel_poivre',    l:'Sel et poivre en cuisine'},
+  {k:'piscine',       l:'Piscine vérifiée et propre'},
+  {k:'exterieur',     l:'Extérieur rangé et propre'},
+];
+
+function checkLogin() {
+  try {
+    const saved = localStorage.getItem(LOGIN_KEY);
+    if (saved) {
+      const {user, ts} = JSON.parse(saved);
+      if (Date.now() - ts < LOGIN_TTL && USERS[user]) {
+        currentUser = USERS[user];
+        enterApp();
+        return;
+      }
+    }
+  } catch(e) {}
+  document.getElementById('loginScreen').style.display = 'flex';
+}
+
+function doLogin() {
+  const code = document.getElementById('loginInput').value.trim();
+  if (USERS[code]) {
+    currentUser = USERS[code];
+    localStorage.setItem(LOGIN_KEY, JSON.stringify({user: code, ts: Date.now()}));
+    document.getElementById('loginError').textContent = '';
+    enterApp();
+  } else {
+    document.getElementById('loginError').textContent = 'Code incorrect';
+    document.getElementById('loginInput').value = '';
+  }
+}
+
+function enterApp() {
+  document.getElementById('loginScreen').style.display = 'none';
+  document.getElementById('appHeader').style.display = 'flex';
+  document.getElementById('menageWrap').style.display = 'block';
+  loadMenageList();
+}
+
+function logout() {
+  localStorage.removeItem(LOGIN_KEY);
+  currentUser = null;
+  document.getElementById('loginInput').value = '';
+  document.getElementById('appHeader').style.display = 'none';
+  document.getElementById('menageWrap').style.display = 'none';
+  document.getElementById('loginScreen').style.display = 'flex';
+}
+
+async function loadMenageList() {
+  try {
+    const resp = await fetch(`${SB}/rest/v1/reservations?select=id,villa,client_nom,date_arrivee,date_depart&order=date_arrivee.asc&limit=100`, {headers: H});
+    const data = await resp.json();
+    const sel = document.getElementById('menageDossierSelect');
+    sel.innerHTML = '<option value="">— Sélectionner un dossier —</option>';
+    const today = new Date();
+    const limit = new Date(today); limit.setDate(limit.getDate() - 30);
+    const filtered = data.filter(r => !r.date_depart || new Date(r.date_depart) >= limit);
+    if (!filtered.length) {
+      document.getElementById('menageEmpty').style.display = 'block';
+      return;
+    }
+    document.getElementById('menageEmpty').style.display = 'none';
+    filtered.forEach(r => {
+      const opt = document.createElement('option');
+      opt.value = r.id;
+      const arr = r.date_arrivee ? new Date(r.date_arrivee).toLocaleDateString('fr-FR',{day:'2-digit',month:'2-digit'}) : '?';
+      const dep = r.date_depart ? new Date(r.date_depart).toLocaleDateString('fr-FR',{day:'2-digit',month:'2-digit'}) : '?';
+      opt.textContent = `${r.villa || '?'} — ${r.client_nom || '?'} (${arr}→${dep})`;
+      sel.appendChild(opt);
+    });
+  } catch(e) {
+    console.error(e);
+    document.getElementById('menageEmpty').textContent = 'Erreur de chargement. Vérifiez la connexion.';
+    document.getElementById('menageEmpty').style.display = 'block';
+  }
+}
+
+async function loadMenageDossier() {
+  const id = document.getElementById('menageDossierSelect').value;
+  if (!id) { document.getElementById('menageContent').style.display='none'; return; }
+  try {
+    const resp = await fetch(`${SB}/rest/v1/reservations?id=eq.${id}&select=*`, {headers: H});
+    const data = await resp.json();
+    if (!data.length) return;
+    menageCurrentId = id;
+    menageCurrentData = data[0];
+    renderMenageItems();
+    document.getElementById('menageContent').style.display='block';
+    document.getElementById('menageNotesField').value = menageCurrentData.notes_menage || '';
+  } catch(e) { console.error(e); }
+}
+
+function renderMenageItems() {
+  const cl = menageCurrentData.menage_checklist || {};
+  const container = document.getElementById('menageItems');
+  container.innerHTML = MENAGE_ITEMS.map(item => {
+    const done = !!cl[item.k];
+    const log = cl[item.k + '_log'];
+    return `<div class="menage-item ${done ? 'done' : ''}" onclick="toggleMenageItem('${item.k}')">
+      <div class="menage-item-left">
+        <div class="menage-check">${done ? '✓' : ''}</div>
+        <span class="menage-label">${item.l}</span>
+      </div>
+      ${log ? `<div class="menage-log">${log}</div>` : ''}
+    </div>`;
+  }).join('');
+}
+
+async function toggleMenageItem(key) {
+  if (!menageCurrentId) return;
+  const cl = {...(menageCurrentData.menage_checklist || {})};
+  const isDone = !cl[key];
+  cl[key] = isDone;
+  if (isDone) {
+    const now = new Date().toLocaleString('fr-FR', {day:'2-digit',month:'2-digit',hour:'2-digit',minute:'2-digit'});
+    const who = currentUser ? currentUser.nom : '?';
+    cl[key + '_log'] = `${who} — ${now}`;
+  } else {
+    delete cl[key + '_log'];
+  }
+  menageCurrentData.menage_checklist = cl;
+  renderMenageItems();
+  try {
+    await fetch(`${SB}/rest/v1/reservations?id=eq.${menageCurrentId}`, {
+      method:'PATCH', headers:H, body:JSON.stringify({menage_checklist: cl})
+    });
+  } catch(e) { console.error(e); }
+}
+
+async function saveMenageNotes() {
+  if (!menageCurrentId) return;
+  const notes = document.getElementById('menageNotesField').value;
+  try {
+    await fetch(`${SB}/rest/v1/reservations?id=eq.${menageCurrentId}`, {
+      method:'PATCH', headers:H, body:JSON.stringify({notes_menage: notes})
+    });
+  } catch(e) { console.error(e); }
+}
+
+checkLogin();
+</script>
+</body>
+</html>
